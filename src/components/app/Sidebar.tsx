@@ -1,11 +1,49 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname } from "next/navigation";
-import { LogOut } from "lucide-react";
+import { LogOut, Building2 } from "lucide-react";
 import { Logo } from "@/components/brand/Logo";
 import { APP_NAV, APP_NAV_SECONDARY, type NavItem } from "@/lib/navigation";
+import { useCompanyProfile } from "@/lib/companyProfile";
 import { cn } from "@/lib/utils";
+
+/** Carte entreprise : logo + nom du profil, repris automatiquement. */
+function CompanyBadge() {
+  const { profile } = useCompanyProfile();
+  if (!profile.name && !profile.logo) return null;
+  return (
+    <Link
+      href="/profil"
+      className="border-line bg-mist/50 hover:bg-mist mx-3 mb-2 flex items-center gap-2.5 rounded-xl border px-2.5 py-2 transition-colors"
+    >
+      <span className="bg-paper border-line text-brand relative inline-flex h-8 w-8 shrink-0 items-center justify-center overflow-hidden rounded-lg border">
+        {profile.logo ? (
+          <Image
+            src={profile.logo}
+            alt=""
+            fill
+            unoptimized
+            className="object-contain"
+          />
+        ) : (
+          <Building2 size={16} />
+        )}
+      </span>
+      <span className="min-w-0">
+        <span className="text-ink block truncate text-sm font-semibold">
+          {profile.name || "Mon entreprise"}
+        </span>
+        {profile.trade && (
+          <span className="text-muted block truncate text-xs">
+            {profile.trade}
+          </span>
+        )}
+      </span>
+    </Link>
+  );
+}
 
 function NavLink({
   item,
@@ -50,6 +88,8 @@ export function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
       <div className="px-3 py-5">
         <Logo size="md" />
       </div>
+
+      <CompanyBadge />
 
       <nav className="flex-1 space-y-1 overflow-y-auto px-3 py-2">
         {APP_NAV.map((item) => (
