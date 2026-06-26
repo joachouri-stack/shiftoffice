@@ -74,9 +74,9 @@ export const APP_NAV_SECONDARY: NavItem[] = [
 
 /** Liens du site vitrine. */
 export const MARKETING_NAV = [
+  { label: "Pourquoi", href: "/#pourquoi" },
   { label: "Fonctionnalités", href: "/#fonctionnalites" },
-  { label: "Métiers", href: "/#metiers" },
-  { label: "Tarifs", href: "/#tarifs" },
+  { label: "Abonnements", href: "/#abonnements" },
   { label: "FAQ", href: "/#faq" },
 ];
 

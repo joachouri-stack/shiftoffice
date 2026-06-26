@@ -2,9 +2,9 @@ import {
   Sparkles,
   FileText,
   ShieldCheck,
-  FolderClosed,
-  Clock,
-  Zap,
+  Package,
+  BarChart3,
+  Building2,
 } from "lucide-react";
 import { Section, SectionHeading } from "@/components/ui/Section";
 import { Card } from "@/components/ui/Card";
@@ -12,33 +12,33 @@ import { Card } from "@/components/ui/Card";
 const FEATURES = [
   {
     icon: Sparkles,
-    title: "Assistant IA",
-    text: "Posez vos questions, rédigez vos documents, organisez votre journée. L'IA s'occupe des tâches répétitives à votre place.",
+    title: "Assistant IA bâtiment",
+    text: "Dialoguez naturellement : « Prépare un devis », « Réponds à ce client », « Calcule ma TVA ». Un vrai collaborateur spécialisé.",
   },
   {
     icon: FileText,
-    title: "Devis & Factures",
-    text: "Créez des documents professionnels en quelques secondes. Propres, clairs, prêts à envoyer à vos clients.",
+    title: "Devis, factures & documents",
+    text: "Devis, factures, contrats, fiches de paie, quittances — générés en quelques secondes, à votre charte.",
   },
   {
-    icon: FolderClosed,
-    title: "Documents centralisés",
-    text: "Tous vos fichiers au même endroit. Retrouvez n'importe quel document en un instant, où que vous soyez.",
+    icon: Package,
+    title: "Bibliothèque produits",
+    text: "Vos matériaux (prix, référence, fournisseur, TVA, photo) réutilisés automatiquement dans vos devis.",
+  },
+  {
+    icon: Building2,
+    title: "Profil entreprise",
+    text: "Logo, SIRET, TVA, coordonnées : renseignés une fois, repris automatiquement sur tous vos documents.",
+  },
+  {
+    icon: BarChart3,
+    title: "Tableau de bord",
+    text: "Chiffre d'affaires, marges, bénéfices, TVA et évolution — d'un coup d'œil, sans tableur.",
   },
   {
     icon: ShieldCheck,
     title: "Coffre-fort sécurisé",
-    text: "Vos documents importants à l'abri. Chiffrés, sauvegardés, accessibles uniquement par vous.",
-  },
-  {
-    icon: Clock,
-    title: "Gain de temps réel",
-    text: "Plusieurs heures économisées chaque semaine. Concentrez-vous sur votre métier, pas sur la paperasse.",
-  },
-  {
-    icon: Zap,
-    title: "Rapide & fluide",
-    text: "Une interface pensée pour le terrain. Simple sur mobile, puissante sur ordinateur. Toujours instantanée.",
+    text: "Tous vos documents au même endroit, chiffrés. Retrouvez n'importe quel fichier en un instant.",
   },
 ];
 

@@ -1,4 +1,4 @@
-import { ArrowRight, Sparkles } from "lucide-react";
+import { ArrowRight, Sparkles, PlayCircle } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { Container } from "@/components/ui/Container";
 import { Badge } from "@/components/ui/Badge";
@@ -15,15 +15,18 @@ export function Hero() {
           </Badge>
         </div>
 
-        <h1 className="animate-in text-ink mx-auto mt-6 max-w-4xl text-4xl font-semibold tracking-tight text-balance sm:text-6xl lg:text-7xl">
-          L&apos;IA qui travaille pour{" "}
-          <span className="text-brand">votre entreprise</span>.
+        <h1 className="animate-in text-ink mx-auto mt-6 max-w-4xl text-4xl font-semibold tracking-tight text-balance sm:text-6xl lg:text-[4.25rem] lg:leading-[1.05]">
+          Votre premier collaborateur{" "}
+          <span className="text-brand">IA</span> pour les artisans du bâtiment.
         </h1>
 
-        <p className="animate-in text-muted mx-auto mt-6 max-w-2xl text-lg leading-relaxed text-pretty sm:text-xl">
-          Shift Office fait gagner plusieurs heures par semaine aux artisans du
-          bâtiment. Vos documents, devis et factures — gérés intelligemment,
-          sans effort.
+        <p className="animate-in text-ink mx-auto mt-5 max-w-2xl font-serif text-xl font-medium text-pretty sm:text-2xl">
+          L&apos;IA qui travaille pour votre entreprise.
+        </p>
+
+        <p className="animate-in text-muted mx-auto mt-4 max-w-2xl text-lg leading-relaxed text-pretty">
+          Créez vos devis, factures, contrats et documents en quelques secondes
+          afin de vous concentrer sur votre métier.
         </p>
 
         <div className="animate-in mt-9 flex flex-col items-center justify-center gap-3 sm:flex-row">
@@ -32,12 +35,13 @@ export function Hero() {
             <ArrowRight size={18} />
           </Button>
           <Button
-            href="/#fonctionnalites"
+            href="/#demo"
             variant="outline"
             size="lg"
             className="w-full sm:w-auto"
           >
-            Découvrir Shift Office
+            <PlayCircle size={18} />
+            Voir une démonstration
           </Button>
         </div>
 
