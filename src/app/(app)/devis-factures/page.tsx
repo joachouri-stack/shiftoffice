@@ -1,89 +1,405 @@
-import type { Metadata } from "next";
-import { FileText, Plus, Receipt, FileCheck2 } from "lucide-react";
-import { Card } from "@/components/ui/Card";
+"use client";
+
+import { useEffect, useRef, useState } from "react";
+import {
+  Plus,
+  ArrowUp,
+  Sparkles,
+  FileText,
+  Save,
+  Printer,
+  Receipt,
+  Trash2,
+  MessageSquare,
+  Eye,
+  History,
+} from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
 import { PageHeader } from "@/components/app/PageHeader";
+import { QuotePreview } from "@/components/devis/QuotePreview";
+import { useCompanyProfile } from "@/lib/companyProfile";
+import { useProducts } from "@/lib/products";
+import {
+  useDraftQuote,
+  useQuotes,
+  computeTotals,
+  emptyQuote,
+  nextNumber,
+  newId,
+  formatEUR,
+  type Quote,
+} from "@/lib/quotes";
+import { cn } from "@/lib/utils";
 
-export const metadata: Metadata = { title: "Devis & Factures" };
+type Msg = { role: "user" | "assistant"; content: string };
 
-const ITEMS = [
-  { ref: "DEV-2026-018", client: "M. Dupont", amount: "2 480 €", status: "Envoyé", kind: "Devis" },
-  { ref: "FAC-2026-042", client: "Mme Lefèvre", amount: "1 150 €", status: "Payée", kind: "Facture" },
-  { ref: "DEV-2026-017", client: "SCI Lilas", amount: "5 900 €", status: "Accepté", kind: "Devis" },
-  { ref: "FAC-2026-041", client: "M. Bernard", amount: "780 €", status: "En attente", kind: "Facture" },
+const SUGGESTIONS = [
+  "Prépare un devis pour une salle de bain de 6 m²",
+  "Fais un devis pour remplacer une douche par une douche italienne",
+  "Ajoute 20 m² de placo et la main-d'œuvre",
 ];
 
-const STATUS_VARIANT: Record<string, "brand" | "neutral" | "success"> = {
-  Payée: "success",
-  Accepté: "success",
-  Envoyé: "brand",
-  "En attente": "neutral",
-};
+type Tab = "chat" | "preview" | "history";
 
 export default function DevisFacturesPage() {
+  const { profile } = useCompanyProfile();
+  const { products } = useProducts();
+  const { draft, setDraft } = useDraftQuote();
+  const { quotes, save, remove } = useQuotes();
+
+  const [messages, setMessages] = useState<Msg[]>([]);
+  const [input, setInput] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [tab, setTab] = useState<Tab>("chat");
+  const scrollRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight });
+  }, [messages, loading]);
+
+  async function send(text: string) {
+    const content = text.trim();
+    if (!content || loading) return;
+    const next = [...messages, { role: "user" as const, content }];
+    setMessages(next);
+    setInput("");
+    setLoading(true);
+    try {
+      const res = await fetch("/api/devis", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          messages: next,
+          quote: draft,
+          profile,
+          products,
+        }),
+      });
+      const data = await res.json();
+      if (data.quote) setDraft(data.quote);
+      setMessages((m) => [
+        ...m,
+        { role: "assistant", content: data.reply || "C'est fait." },
+      ]);
+      if (data.quote) setTab("preview");
+    } catch {
+      setMessages((m) => [
+        ...m,
+        { role: "assistant", content: "Une erreur est survenue. Réessayez." },
+      ]);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  function newDoc() {
+    setDraft(emptyQuote());
+    setMessages([]);
+    setTab("chat");
+  }
+
+  function saveDoc() {
+    let q = draft;
+    if (!q.id) {
+      const year = new Date().getFullYear();
+      q = {
+        ...q,
+        id: newId(),
+        number: nextNumber(quotes, q.type, year),
+        createdAt: new Date().toISOString(),
+      };
+      setDraft(q);
+    }
+    save(q);
+  }
+
+  function toInvoice() {
+    const year = new Date().getFullYear();
+    const invoice: Quote = {
+      ...draft,
+      id: newId(),
+      type: "facture",
+      number: nextNumber(quotes, "facture", year),
+      createdAt: new Date().toISOString(),
+      status: "sent",
+      paymentTerms: draft.paymentTerms || "Paiement à 30 jours.",
+    };
+    save(invoice);
+    setDraft(invoice);
+    setTab("preview");
+  }
+
+  function load(q: Quote) {
+    setDraft(q);
+    setMessages([]);
+    setTab("preview");
+  }
+
+  const totals = computeTotals(draft);
+  const hasDraft = draft.lines.length > 0 || draft.clientName || draft.title;
+
   return (
-    <>
+    <div className="flex min-h-[calc(100dvh-7rem)] flex-col">
       <PageHeader
         title="Devis & Factures"
-        subtitle="Créez des documents professionnels en quelques secondes."
+        subtitle="Décrivez votre chantier — l'IA construit le document."
         action={
-          <Button size="sm">
+          <Button size="sm" variant="outline" onClick={newDoc}>
             <Plus size={16} />
-            Créer
+            Nouveau
           </Button>
         }
       />
 
-      <div className="mb-6 grid gap-4 sm:grid-cols-2">
-        <Card interactive className="flex items-center gap-4 p-5">
-          <div className="bg-brand-50 text-brand inline-flex h-12 w-12 items-center justify-center rounded-2xl">
-            <FileCheck2 size={22} />
-          </div>
-          <div>
-            <p className="text-ink font-semibold">Nouveau devis</p>
-            <p className="text-muted text-sm">Propre, clair, prêt à envoyer.</p>
-          </div>
-        </Card>
-        <Card interactive className="flex items-center gap-4 p-5">
-          <div className="bg-brand-50 text-brand inline-flex h-12 w-12 items-center justify-center rounded-2xl">
-            <Receipt size={22} />
-          </div>
-          <div>
-            <p className="text-ink font-semibold">Nouvelle facture</p>
-            <p className="text-muted text-sm">Transformez un devis en un clic.</p>
-          </div>
-        </Card>
+      {/* Onglets mobile */}
+      <div className="mb-4 flex gap-1 rounded-xl bg-mist p-1 lg:hidden">
+        {(
+          [
+            ["chat", "Conversation", MessageSquare],
+            ["preview", "Aperçu", Eye],
+            ["history", "Historique", History],
+          ] as const
+        ).map(([key, label, Icon]) => (
+          <button
+            key={key}
+            onClick={() => setTab(key)}
+            className={cn(
+              "flex flex-1 items-center justify-center gap-1.5 rounded-lg py-2 text-sm font-medium transition-colors",
+              tab === key ? "bg-paper text-ink shadow-[var(--shadow-soft)]" : "text-muted"
+            )}
+          >
+            <Icon size={15} />
+            {label}
+          </button>
+        ))}
       </div>
 
-      <Card className="divide-line divide-y">
-        {ITEMS.map((item) => (
+      <div className="grid flex-1 gap-4 lg:grid-cols-[210px_1fr_minmax(360px,420px)]">
+        {/* Historique */}
+        <aside
+          className={cn(
+            "min-h-0 flex-col",
+            tab === "history" ? "flex" : "hidden",
+            "lg:flex"
+          )}
+        >
+          <p className="text-muted mb-2 px-1 text-xs font-semibold uppercase tracking-tight">
+            Historique
+          </p>
+          <div className="border-line bg-paper flex-1 space-y-1 overflow-y-auto rounded-2xl border p-2">
+            {quotes.length === 0 ? (
+              <p className="text-muted p-4 text-center text-xs">
+                Vos devis et factures enregistrés apparaîtront ici.
+              </p>
+            ) : (
+              quotes.map((q) => (
+                <div
+                  key={q.id}
+                  className="hover:bg-mist group flex items-center gap-2 rounded-xl px-2.5 py-2 transition-colors"
+                >
+                  <button
+                    onClick={() => load(q)}
+                    className="min-w-0 flex-1 text-left"
+                  >
+                    <span className="text-ink block truncate text-sm font-medium">
+                      {q.number || "Brouillon"}
+                    </span>
+                    <span className="text-muted block truncate text-xs">
+                      {q.clientName || q.title || "—"} ·{" "}
+                      {formatEUR(computeTotals(q).totalTTC)} €
+                    </span>
+                  </button>
+                  <Badge variant={q.type === "facture" ? "success" : "neutral"}>
+                    {q.type === "facture" ? "Fac." : "Devis"}
+                  </Badge>
+                  <button
+                    onClick={() => remove(q.id)}
+                    aria-label="Supprimer"
+                    className="text-muted opacity-0 transition hover:text-red-500 group-hover:opacity-100"
+                  >
+                    <Trash2 size={15} />
+                  </button>
+                </div>
+              ))
+            )}
+          </div>
+        </aside>
+
+        {/* Conversation */}
+        <section
+          className={cn(
+            "min-h-0 flex-col",
+            tab === "chat" ? "flex" : "hidden",
+            "lg:flex"
+          )}
+        >
           <div
-            key={item.ref}
-            className="hover:bg-mist/50 flex items-center justify-between gap-3 px-5 py-4 transition-colors first:rounded-t-2xl last:rounded-b-2xl"
+            ref={scrollRef}
+            className="border-line bg-paper flex-1 overflow-y-auto rounded-2xl border p-4"
           >
-            <div className="flex min-w-0 items-center gap-3">
-              <div className="bg-mist text-muted inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-lg">
-                <FileText size={18} />
-              </div>
-              <div className="min-w-0">
-                <p className="text-ink truncate text-sm font-medium">
-                  {item.ref} · {item.client}
+            {messages.length === 0 ? (
+              <div className="flex h-full flex-col items-center justify-center py-6 text-center">
+                <div className="bg-brand text-paper inline-flex h-14 w-14 items-center justify-center rounded-2xl shadow-[var(--shadow-brand)]">
+                  <Sparkles size={26} />
+                </div>
+                <h2 className="text-ink mt-4 font-semibold tracking-tight">
+                  Votre devis en quelques mots
+                </h2>
+                <p className="text-muted mt-1 max-w-xs text-sm">
+                  Décrivez le chantier, l&apos;IA s&apos;occupe des lignes, prix
+                  et TVA.
                 </p>
-                <p className="text-muted text-xs">{item.kind}</p>
+                <div className="mt-5 w-full max-w-sm space-y-2">
+                  {SUGGESTIONS.map((s) => (
+                    <button
+                      key={s}
+                      onClick={() => send(s)}
+                      className="border-line bg-paper hover:border-brand/40 hover:bg-mist/50 flex w-full items-start gap-2 rounded-xl border p-3 text-left text-sm transition-all"
+                    >
+                      <FileText size={15} className="text-brand mt-0.5 shrink-0" />
+                      <span className="text-ink">{s}</span>
+                    </button>
+                  ))}
+                </div>
               </div>
-            </div>
-            <div className="flex shrink-0 items-center gap-3">
-              <span className="text-ink text-sm font-semibold tabular">
-                {item.amount}
-              </span>
-              <Badge variant={STATUS_VARIANT[item.status] ?? "neutral"}>
-                {item.status}
-              </Badge>
+            ) : (
+              <div className="space-y-4">
+                {messages.map((m, i) => (
+                  <Bubble key={i} msg={m} />
+                ))}
+                {loading && messages[messages.length - 1]?.role === "user" && (
+                  <Bubble msg={{ role: "assistant", content: "…" }} pending />
+                )}
+              </div>
+            )}
+          </div>
+
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              send(input);
+            }}
+            className="border-line bg-paper mt-3 flex items-end gap-2 rounded-2xl border p-2"
+          >
+            <textarea
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" && !e.shiftKey) {
+                  e.preventDefault();
+                  send(input);
+                }
+              }}
+              rows={1}
+              placeholder="Ex. Ajoute 2 m² de carrelage…"
+              className="text-ink placeholder:text-muted/70 max-h-32 flex-1 resize-none bg-transparent px-2 py-2 text-[0.95rem] outline-none"
+            />
+            <button
+              type="submit"
+              disabled={!input.trim() || loading}
+              aria-label="Envoyer"
+              className={cn(
+                "inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-xl transition-all",
+                input.trim() && !loading
+                  ? "bg-brand text-paper hover:bg-brand-600"
+                  : "bg-mist text-muted"
+              )}
+            >
+              <ArrowUp size={17} />
+            </button>
+          </form>
+        </section>
+
+        {/* Aperçu */}
+        <section
+          className={cn(
+            "min-h-0 flex-col",
+            tab === "preview" ? "flex" : "hidden",
+            "lg:flex"
+          )}
+        >
+          <div className="mb-2 flex items-center justify-between gap-2">
+            <span className="text-ink text-sm font-semibold tabular">
+              {formatEUR(totals.totalTTC)} € TTC
+              {totals.margin > 0 && (
+                <span className="text-muted ml-2 font-normal">
+                  · marge {formatEUR(totals.margin)} €
+                </span>
+              )}
+            </span>
+            <div className="flex gap-1.5">
+              <IconBtn label="Enregistrer" onClick={saveDoc} disabled={!hasDraft}>
+                <Save size={16} />
+              </IconBtn>
+              <IconBtn
+                label="Imprimer / PDF"
+                onClick={() => window.print()}
+                disabled={!hasDraft}
+              >
+                <Printer size={16} />
+              </IconBtn>
+              {draft.type === "devis" && (
+                <IconBtn
+                  label="Transformer en facture"
+                  onClick={toInvoice}
+                  disabled={draft.lines.length === 0}
+                >
+                  <Receipt size={16} />
+                </IconBtn>
+              )}
             </div>
           </div>
-        ))}
-      </Card>
-    </>
+          <div className="border-line bg-mist/40 flex-1 overflow-auto rounded-2xl border p-3">
+            <div className="bg-paper rounded-xl shadow-[var(--shadow-card)]">
+              <QuotePreview quote={draft} profile={profile} />
+            </div>
+          </div>
+        </section>
+      </div>
+    </div>
+  );
+}
+
+function Bubble({ msg, pending }: { msg: Msg; pending?: boolean }) {
+  const isUser = msg.role === "user";
+  return (
+    <div className={cn("flex", isUser ? "justify-end" : "justify-start")}>
+      <div
+        className={cn(
+          "max-w-[88%] rounded-2xl px-3.5 py-2.5 text-sm leading-relaxed whitespace-pre-wrap",
+          isUser
+            ? "bg-ink text-paper rounded-br-md"
+            : "border-line bg-mist/40 text-ink rounded-bl-md border"
+        )}
+      >
+        {pending ? <span className="text-muted">L&apos;IA réfléchit…</span> : msg.content}
+      </div>
+    </div>
+  );
+}
+
+function IconBtn({
+  label,
+  onClick,
+  disabled,
+  children,
+}: {
+  label: string;
+  onClick: () => void;
+  disabled?: boolean;
+  children: React.ReactNode;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      disabled={disabled}
+      aria-label={label}
+      title={label}
+      className="border-line bg-paper text-ink hover:bg-mist inline-flex h-9 w-9 items-center justify-center rounded-lg border transition-colors disabled:opacity-40"
+    >
+      {children}
+    </button>
   );
 }

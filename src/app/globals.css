@@ -154,6 +154,24 @@ body {
     );
 }
 
+/* Impression : ne montrer que le document (.print-area) */
+@media print {
+  body * {
+    visibility: hidden;
+  }
+  .print-area,
+  .print-area * {
+    visibility: visible;
+  }
+  .print-area {
+    position: absolute;
+    inset: 0;
+    margin: 0;
+    max-width: none;
+    box-shadow: none;
+  }
+}
+
 @keyframes float-up {
   from {
     opacity: 0;
