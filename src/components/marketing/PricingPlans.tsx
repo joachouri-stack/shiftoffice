@@ -152,7 +152,7 @@ function PlanCard({
         "relative flex flex-col rounded-[1.75rem] border p-7 transition-all duration-300 sm:p-8",
         dark
           ? "border-ink bg-ink text-paper shadow-[var(--shadow-pop)] lg:-translate-y-3"
-          : "border-line bg-paper text-ink shadow-[var(--shadow-card)]"
+          : "border-line bg-paper text-ink shadow-[var(--shadow-card)] hover:-translate-y-1 hover:shadow-[var(--shadow-pop)]"
       )}
     >
       {dark && (

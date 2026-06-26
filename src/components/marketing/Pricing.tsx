@@ -3,7 +3,7 @@ import { PricingPlans } from "./PricingPlans";
 
 export function Pricing() {
   return (
-    <Section id="abonnements">
+    <Section id="abonnements" className="bg-mist/60">
       <SectionHeading
         eyebrow="Abonnements"
         title="Un prix simple, comme le reste"
