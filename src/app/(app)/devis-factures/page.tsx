@@ -17,6 +17,7 @@ import {
 import { Button } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
 import { PageHeader } from "@/components/app/PageHeader";
+import { useToast } from "@/components/ui/Toast";
 import { QuotePreview } from "@/components/devis/QuotePreview";
 import { useCompanyProfile } from "@/lib/companyProfile";
 import { useProducts } from "@/lib/products";
@@ -47,6 +48,7 @@ export default function DevisFacturesPage() {
   const { products } = useProducts();
   const { draft, setDraft } = useDraftQuote();
   const { quotes, save, remove } = useQuotes();
+  const toast = useToast();
 
   const [messages, setMessages] = useState<Msg[]>([]);
   const [input, setInput] = useState("");
@@ -112,6 +114,7 @@ export default function DevisFacturesPage() {
       setDraft(q);
     }
     save(q);
+    toast(`${q.type === "facture" ? "Facture" : "Devis"} enregistré`);
   }
 
   function toInvoice() {
@@ -128,6 +131,7 @@ export default function DevisFacturesPage() {
     save(invoice);
     setDraft(invoice);
     setTab("preview");
+    toast(`Facture ${invoice.number} créée`);
   }
 
   function load(q: Quote) {

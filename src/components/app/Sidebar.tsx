@@ -63,17 +63,24 @@ function NavLink({
       onClick={onNavigate}
       aria-current={active ? "page" : undefined}
       className={cn(
-        "group flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-all",
+        "group relative flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-colors duration-200",
         active
-          ? "bg-ink text-paper shadow-[var(--shadow-soft)]"
-          : "text-muted hover:bg-mist hover:text-ink"
+          ? "bg-mist text-ink"
+          : "text-muted hover:bg-mist/60 hover:text-ink"
       )}
     >
+      {/* Indicateur actif : barre orange animée */}
+      <span
+        className={cn(
+          "bg-brand absolute left-0 top-1/2 h-5 w-[3px] -translate-y-1/2 rounded-full transition-all duration-300",
+          active ? "opacity-100" : "scale-y-0 opacity-0"
+        )}
+      />
       <Icon
         size={19}
         className={cn(
-          "shrink-0 transition-colors",
-          active ? "text-paper" : "text-muted group-hover:text-ink"
+          "shrink-0 transition-colors duration-200",
+          active ? "text-brand" : "text-muted group-hover:text-ink"
         )}
       />
       <span className="truncate">{item.label}</span>

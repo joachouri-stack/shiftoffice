@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/Input";
 import { Badge } from "@/components/ui/Badge";
 import { Modal } from "@/components/ui/Modal";
 import { PageHeader } from "@/components/app/PageHeader";
+import { useToast } from "@/components/ui/Toast";
 import {
   useProducts,
   PRODUCT_UNITS,
@@ -33,6 +34,7 @@ const eur = (n: number) =>
 
 export default function ProduitsPage() {
   const { products, add, update, remove } = useProducts();
+  const toast = useToast();
   const [query, setQuery] = useState("");
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<Product | null>(null);
@@ -57,8 +59,13 @@ export default function ProduitsPage() {
     setOpen(true);
   }
   function submit(draft: Draft) {
-    if (editing) update(editing.id, draft);
-    else add(draft);
+    if (editing) {
+      update(editing.id, draft);
+      toast("Produit modifié");
+    } else {
+      add(draft);
+      toast("Produit ajouté");
+    }
     setOpen(false);
   }
 
@@ -152,7 +159,10 @@ export default function ProduitsPage() {
                 </button>
                 <button
                   type="button"
-                  onClick={() => remove(p.id)}
+                  onClick={() => {
+                    remove(p.id);
+                    toast("Produit supprimé", "info");
+                  }}
                   aria-label="Supprimer"
                   className="text-muted inline-flex h-9 w-9 items-center justify-center rounded-lg transition-colors hover:bg-red-50 hover:text-red-500"
                 >

@@ -7,6 +7,7 @@ import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { PageHeader } from "@/components/app/PageHeader";
+import { useToast } from "@/components/ui/Toast";
 import {
   useCompanyProfile,
   type CompanyProfile,
@@ -14,6 +15,7 @@ import {
 
 export default function ProfilPage() {
   const { profile, save } = useCompanyProfile();
+  const toast = useToast();
   const [form, setForm] = useState<CompanyProfile>(profile);
   const [base, setBase] = useState<CompanyProfile>(profile);
   const [saved, setSaved] = useState(false);
@@ -56,6 +58,7 @@ export default function ProfilPage() {
     e.preventDefault();
     save(form);
     setSaved(true);
+    toast("Profil enregistré");
   }
 
   return (

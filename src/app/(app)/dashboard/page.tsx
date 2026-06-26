@@ -1,10 +1,12 @@
-import type { Metadata } from "next";
+"use client";
+
 import Link from "next/link";
 import {
   Sparkles,
   FileText,
-  FolderClosed,
-  Clock,
+  Receipt,
+  TrendingUp,
+  Percent,
   ArrowUpRight,
   Plus,
 } from "lucide-react";
@@ -12,56 +14,165 @@ import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
 import { PageHeader } from "@/components/app/PageHeader";
+import { useCompanyProfile } from "@/lib/companyProfile";
+import { useQuotes, computeTotals, formatEUR, type Quote } from "@/lib/quotes";
 
-export const metadata: Metadata = { title: "Dashboard" };
-
-const STATS = [
-  { label: "Temps gagné ce mois", value: "9 h", icon: Clock, trend: "+12 %" },
-  { label: "Documents", value: "24", icon: FolderClosed, trend: "+3" },
-  { label: "Devis en cours", value: "5", icon: FileText, trend: "2 à relancer" },
-];
-
-const RECENT = [
-  { name: "Devis — Salle de bain Dupont", date: "Aujourd'hui", tag: "Devis" },
-  { name: "Facture — Chantier Lefèvre", date: "Hier", tag: "Facture" },
-  { name: "Photo chantier — Rue des Lilas", date: "Il y a 2 j", tag: "Document" },
-  { name: "Devis — Rénovation cuisine", date: "Il y a 3 j", tag: "Devis" },
-];
+function monthKey(iso: string) {
+  const d = new Date(iso);
+  return `${d.getFullYear()}-${d.getMonth()}`;
+}
 
 export default function DashboardPage() {
+  const { profile } = useCompanyProfile();
+  const { quotes } = useQuotes();
+
+  const invoices = quotes.filter((q) => q.type === "facture");
+  const devis = quotes.filter((q) => q.type === "devis");
+
+  const ca = invoices.reduce((s, q) => s + computeTotals(q).totalTTC, 0);
+  const profit = invoices.reduce((s, q) => s + computeTotals(q).margin, 0);
+  const tva = invoices.reduce((s, q) => s + computeTotals(q).totalTVA, 0);
+
+  // CA des 6 derniers mois
+  const now = new Date();
+  const months = Array.from({ length: 6 }, (_, i) => {
+    const d = new Date(now.getFullYear(), now.getMonth() - (5 - i), 1);
+    return {
+      key: `${d.getFullYear()}-${d.getMonth()}`,
+      label: d.toLocaleDateString("fr-FR", { month: "short" }),
+      value: 0,
+    };
+  });
+  for (const inv of invoices) {
+    if (!inv.createdAt) continue;
+    const m = months.find((x) => x.key === monthKey(inv.createdAt));
+    if (m) m.value += computeTotals(inv).totalTTC;
+  }
+  const maxMonth = Math.max(1, ...months.map((m) => m.value));
+
+  const recent = [...quotes]
+    .sort((a, b) => (b.createdAt || "").localeCompare(a.createdAt || ""))
+    .slice(0, 5);
+
+  const stats = [
+    {
+      icon: TrendingUp,
+      label: "Chiffre d'affaires",
+      value: `${formatEUR(ca)} €`,
+      sub: `${invoices.length} facture${invoices.length > 1 ? "s" : ""}`,
+    },
+    {
+      icon: Sparkles,
+      label: "Bénéfices estimés",
+      value: `${formatEUR(profit)} €`,
+      sub: "marge sur factures",
+    },
+    {
+      icon: Percent,
+      label: "TVA collectée",
+      value: `${formatEUR(tva)} €`,
+      sub: "à reverser",
+    },
+    {
+      icon: FileText,
+      label: "Devis en cours",
+      value: String(devis.length),
+      sub: "à suivre",
+    },
+  ];
+
+  const greeting = profile.name ? `Bonjour, ${profile.name}` : "Bonjour 👋";
+
   return (
     <>
       <PageHeader
-        title="Bonjour 👋"
-        subtitle="Voici un aperçu de votre activité."
+        title={greeting}
+        subtitle="Voici votre activité en un coup d'œil."
         action={
           <Button href="/devis-factures" size="sm">
             <Plus size={16} />
-            Nouveau document
+            Nouveau devis
           </Button>
         }
       />
 
       {/* Stats */}
-      <div className="grid gap-4 sm:grid-cols-3">
-        {STATS.map((s) => (
-          <Card key={s.label} className="p-5">
-            <div className="flex items-center justify-between">
-              <div className="bg-mist text-ink inline-flex h-10 w-10 items-center justify-center rounded-xl">
-                <s.icon size={18} />
-              </div>
-              <Badge variant="neutral">{s.trend}</Badge>
+      <div className="stagger grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        {stats.map((s) => (
+          <Card key={s.label} interactive className="p-5">
+            <div className="bg-brand-50 text-brand inline-flex h-10 w-10 items-center justify-center rounded-xl">
+              <s.icon size={18} />
             </div>
-            <p className="text-ink mt-4 text-3xl font-semibold tracking-tight tabular">
+            <p className="text-ink mt-4 text-2xl font-semibold tracking-tight tabular">
               {s.value}
             </p>
-            <p className="text-muted mt-1 text-sm">{s.label}</p>
+            <p className="text-ink mt-0.5 text-sm font-medium">{s.label}</p>
+            <p className="text-muted text-xs">{s.sub}</p>
           </Card>
         ))}
       </div>
 
-      {/* Assistant highlight */}
-      <Card className="bg-ink relative mt-4 overflow-hidden p-6 sm:p-8">
+      {/* Graphique + activité */}
+      <div className="mt-4 grid gap-4 lg:grid-cols-5">
+        <Card className="reveal p-6 lg:col-span-3">
+          <div className="flex items-center justify-between">
+            <div>
+              <h2 className="text-ink font-semibold tracking-tight">
+                Chiffre d&apos;affaires
+              </h2>
+              <p className="text-muted text-sm">6 derniers mois</p>
+            </div>
+            <Badge variant="neutral">{formatEUR(ca)} €</Badge>
+          </div>
+          <div className="mt-6 flex h-44 items-end justify-between gap-2 sm:gap-4">
+            {months.map((m) => (
+              <div
+                key={m.key}
+                className="flex flex-1 flex-col items-center gap-2"
+              >
+                <div className="flex w-full flex-1 items-end">
+                  <div
+                    className="bg-brand/15 hover:bg-brand/25 w-full rounded-t-lg transition-all duration-300"
+                    style={{
+                      height: `${Math.max(4, (m.value / maxMonth) * 100)}%`,
+                    }}
+                    title={`${formatEUR(m.value)} €`}
+                  >
+                    <div className="bg-brand h-1 w-full rounded-t-lg" />
+                  </div>
+                </div>
+                <span className="text-muted text-xs capitalize">{m.label}</span>
+              </div>
+            ))}
+          </div>
+        </Card>
+
+        <Card className="reveal divide-line flex flex-col divide-y p-0 lg:col-span-2">
+          <div className="flex items-center justify-between p-5">
+            <h2 className="text-ink font-semibold tracking-tight">
+              Activité récente
+            </h2>
+            <Link
+              href="/devis-factures"
+              className="text-brand hover:text-brand-600 text-sm font-medium"
+            >
+              Tout voir
+            </Link>
+          </div>
+          {recent.length === 0 ? (
+            <p className="text-muted flex-1 px-5 py-10 text-center text-sm">
+              Aucun document pour l&apos;instant.
+              <br />
+              Créez votre premier devis avec l&apos;assistant.
+            </p>
+          ) : (
+            recent.map((q) => <RecentRow key={q.id} q={q} />)
+          )}
+        </Card>
+      </div>
+
+      {/* Assistant */}
+      <Card className="reveal bg-ink relative mt-4 overflow-hidden p-6 sm:p-8">
         <div
           aria-hidden
           className="pointer-events-none absolute inset-0"
@@ -77,58 +188,52 @@ export default function DashboardPage() {
             </div>
             <div>
               <h2 className="text-paper text-lg font-semibold">
-                Votre assistant IA est prêt
+                Créez un devis en quelques mots
               </h2>
               <p className="mt-1 max-w-md text-sm text-white/70">
-                Rédigez un devis, organisez vos documents ou posez une question.
-                Gagnez du temps dès maintenant.
+                Décrivez votre chantier, l&apos;IA construit le document. Trois
+                clics, c&apos;est prêt.
               </p>
             </div>
           </div>
-          <Button href="/assistant" variant="primary" className="shrink-0">
+          <Button href="/devis-factures" className="shrink-0">
             Ouvrir l&apos;assistant
             <ArrowUpRight size={17} />
           </Button>
         </div>
       </Card>
-
-      {/* Activité récente */}
-      <div className="mt-4">
-        <div className="mb-3 flex items-center justify-between">
-          <h2 className="text-ink text-lg font-semibold tracking-tight">
-            Activité récente
-          </h2>
-          <Link
-            href="/documents"
-            className="text-brand hover:text-brand-600 text-sm font-medium"
-          >
-            Tout voir
-          </Link>
-        </div>
-        <Card className="divide-line divide-y">
-          {RECENT.map((item) => (
-            <div
-              key={item.name}
-              className="hover:bg-mist/50 flex items-center justify-between gap-3 px-5 py-4 transition-colors first:rounded-t-2xl last:rounded-b-2xl"
-            >
-              <div className="flex min-w-0 items-center gap-3">
-                <div className="bg-mist text-muted inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-lg">
-                  <FileText size={16} />
-                </div>
-                <div className="min-w-0">
-                  <p className="text-ink truncate text-sm font-medium">
-                    {item.name}
-                  </p>
-                  <p className="text-muted text-xs">{item.date}</p>
-                </div>
-              </div>
-              <Badge variant="outline" className="shrink-0">
-                {item.tag}
-              </Badge>
-            </div>
-          ))}
-        </Card>
-      </div>
     </>
+  );
+}
+
+function RecentRow({ q }: { q: Quote }) {
+  const isInvoice = q.type === "facture";
+  return (
+    <Link
+      href="/devis-factures"
+      className="hover:bg-mist/50 flex items-center justify-between gap-3 px-5 py-3.5 transition-colors last:rounded-b-2xl"
+    >
+      <div className="flex min-w-0 items-center gap-3">
+        <span className="bg-mist text-muted inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-lg">
+          {isInvoice ? <Receipt size={16} /> : <FileText size={16} />}
+        </span>
+        <div className="min-w-0">
+          <p className="text-ink truncate text-sm font-medium">
+            {q.number || "Brouillon"}
+          </p>
+          <p className="text-muted truncate text-xs">
+            {q.clientName || q.title || "—"}
+          </p>
+        </div>
+      </div>
+      <div className="flex shrink-0 items-center gap-2">
+        <span className="text-ink text-sm font-semibold tabular">
+          {formatEUR(computeTotals(q).totalTTC)} €
+        </span>
+        <Badge variant={isInvoice ? "success" : "neutral"}>
+          {isInvoice ? "Fac." : "Devis"}
+        </Badge>
+      </div>
+    </Link>
   );
 }
