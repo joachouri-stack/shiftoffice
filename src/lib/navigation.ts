@@ -3,6 +3,7 @@ import {
   FolderClosed,
   Sparkles,
   FileText,
+  Package,
   ShieldCheck,
   CreditCard,
   Building2,
@@ -42,6 +43,12 @@ export const APP_NAV: NavItem[] = [
     href: "/devis-factures",
     icon: FileText,
     description: "Devis et factures",
+  },
+  {
+    label: "Produits",
+    href: "/produits",
+    icon: Package,
+    description: "Votre bibliothèque",
   },
   {
     label: "Coffre-fort",
