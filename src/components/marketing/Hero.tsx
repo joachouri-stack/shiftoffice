@@ -1,7 +1,17 @@
-import { ArrowRight, Sparkles, PlayCircle } from "lucide-react";
+import {
+  ArrowRight,
+  Sparkles,
+  PlayCircle,
+  LayoutDashboard,
+  FileText,
+  FolderClosed,
+  ShieldCheck,
+  Receipt,
+} from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { Container } from "@/components/ui/Container";
 import { Badge } from "@/components/ui/Badge";
+import { cn } from "@/lib/utils";
 
 export function Hero() {
   return (
@@ -62,10 +72,29 @@ export function Hero() {
   );
 }
 
-/** Aperçu stylisé de l'application (mockup léger, sans assets externes). */
+/** Aperçu de l'application (mockup peuplé, sans capture externe). */
+const NAV = [
+  { icon: LayoutDashboard, label: "Dashboard", active: true },
+  { icon: FileText, label: "Devis & Factures" },
+  { icon: Sparkles, label: "Assistant IA" },
+  { icon: FolderClosed, label: "Documents" },
+  { icon: ShieldCheck, label: "Coffre-fort" },
+];
+const STATS = [
+  { label: "Chiffre d'affaires", value: "7 928 €" },
+  { label: "Devis en cours", value: "5" },
+  { label: "TVA collectée", value: "939 €" },
+];
+const ACTIVITY = [
+  { icon: Receipt, ref: "FAC-2026-001", client: "M. Dupont", amount: "207,90 €" },
+  { icon: FileText, ref: "DEV-2026-005", client: "M. Bernard", amount: "990,00 €" },
+  { icon: Receipt, ref: "FAC-2026-002", client: "Mme Lefèvre", amount: "1 320 €" },
+];
+const BARS = [42, 64, 50, 82, 72, 100];
+
 function AppPreview() {
   return (
-    <div className="flex min-h-[280px] flex-col text-left sm:min-h-[420px]">
+    <div className="flex min-h-[300px] flex-col text-left sm:min-h-[440px]">
       {/* Barre fenêtre */}
       <div className="border-line flex items-center gap-2 border-b px-4 py-3">
         <span className="h-3 w-3 rounded-full bg-red-400/70" />
@@ -75,49 +104,99 @@ function AppPreview() {
       </div>
 
       <div className="grid flex-1 grid-cols-12">
-        {/* Mini sidebar */}
-        <div className="border-line col-span-3 hidden border-r p-4 sm:block">
-          <div className="bg-brand/15 h-6 w-24 rounded-md" />
-          <div className="mt-6 space-y-3">
-            {[0, 1, 2, 3, 4].map((i) => (
-              <div key={i} className="flex items-center gap-2">
-                <div className="bg-line h-4 w-4 rounded" />
-                <div
-                  className="bg-line h-3 rounded"
-                  style={{ width: `${70 - i * 6}%` }}
+        {/* Sidebar */}
+        <div className="border-line col-span-3 hidden flex-col border-r p-3 sm:flex">
+          <div className="flex items-baseline gap-[0.15em] px-2 py-1.5 text-[13px] leading-none whitespace-nowrap">
+            <span className="text-brand font-light">[&nbsp;]</span>
+            <span className="text-brand font-extrabold tracking-[-0.02em]">
+              Shift
+            </span>
+            <span className="text-ink font-serif font-medium">Office</span>
+          </div>
+          <div className="mt-4 space-y-0.5">
+            {NAV.map((n) => (
+              <div
+                key={n.label}
+                className={cn(
+                  "flex items-center gap-2 rounded-lg px-2 py-1.5 text-[11px] font-medium",
+                  n.active ? "bg-mist text-ink" : "text-muted"
+                )}
+              >
+                <n.icon
+                  size={13}
+                  className={n.active ? "text-brand" : "text-muted"}
                 />
+                <span className="truncate">{n.label}</span>
               </div>
             ))}
           </div>
         </div>
 
         {/* Contenu */}
-        <div className="col-span-12 p-5 sm:col-span-9 sm:p-6">
-          <div className="bg-ink/5 h-5 w-40 rounded-md" />
-          <div className="mt-5 grid grid-cols-3 gap-3">
-            {[0, 1, 2].map((i) => (
+        <div className="col-span-12 p-4 sm:col-span-9 sm:p-5">
+          <p className="text-ink text-sm font-semibold tracking-tight">
+            Bonjour, Plomberie Martin
+          </p>
+
+          {/* KPIs */}
+          <div className="mt-3 grid grid-cols-3 gap-2.5">
+            {STATS.map((s) => (
               <div
-                key={i}
-                className="border-line bg-paper rounded-xl border p-4 shadow-[var(--shadow-soft)]"
+                key={s.label}
+                className="border-line bg-paper rounded-xl border p-3 shadow-[var(--shadow-soft)]"
               >
-                <div className="bg-brand/20 h-3 w-10 rounded" />
-                <div className="bg-ink/10 mt-3 h-6 w-16 rounded" />
+                <p className="text-ink text-base font-semibold tracking-tight tabular">
+                  {s.value}
+                </p>
+                <p className="text-muted mt-0.5 text-[10px] leading-tight">
+                  {s.label}
+                </p>
               </div>
             ))}
           </div>
-          <div className="border-line bg-paper mt-3 rounded-xl border p-4 shadow-[var(--shadow-soft)]">
-            <div className="bg-ink/10 h-3 w-32 rounded" />
-            <div className="mt-4 space-y-3">
-              {[0, 1, 2].map((i) => (
-                <div key={i} className="flex items-center justify-between">
-                  <div
-                    className="bg-line h-3 rounded"
-                    style={{ width: `${50 - i * 8}%` }}
-                  />
-                  <div className="bg-brand/20 h-3 w-12 rounded" />
+
+          {/* Graphique */}
+          <div className="border-line bg-paper mt-2.5 rounded-xl border p-3 shadow-[var(--shadow-soft)]">
+            <div className="flex items-center justify-between">
+              <p className="text-ink text-[11px] font-medium">
+                Chiffre d&apos;affaires
+              </p>
+              <p className="text-muted text-[10px]">6 mois</p>
+            </div>
+            <div className="mt-3 flex h-16 items-end gap-1.5">
+              {BARS.map((h, i) => (
+                <div
+                  key={i}
+                  className="bg-brand/15 flex-1 overflow-hidden rounded-t"
+                  style={{ height: `${h}%` }}
+                >
+                  <div className="bg-brand h-1 w-full rounded-t" />
                 </div>
               ))}
             </div>
+          </div>
+
+          {/* Activité */}
+          <div className="mt-2.5 hidden space-y-1.5 sm:block">
+            {ACTIVITY.map((a) => (
+              <div
+                key={a.ref}
+                className="border-line bg-paper flex items-center justify-between gap-2 rounded-lg border px-3 py-2 shadow-[var(--shadow-soft)]"
+              >
+                <div className="flex min-w-0 items-center gap-2">
+                  <span className="bg-mist text-muted inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-md">
+                    <a.icon size={12} />
+                  </span>
+                  <span className="text-ink truncate text-[11px] font-medium">
+                    {a.ref}
+                    <span className="text-muted font-normal"> · {a.client}</span>
+                  </span>
+                </div>
+                <span className="text-ink shrink-0 text-[11px] font-semibold tabular">
+                  {a.amount}
+                </span>
+              </div>
+            ))}
           </div>
         </div>
       </div>
