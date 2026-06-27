@@ -63,6 +63,7 @@ export default function DevisFacturesPage() {
   const [loading, setLoading] = useState(false);
   const [tab, setTab] = useState<Tab>("chat");
   const [emailOpen, setEmailOpen] = useState(false);
+  const [chips, setChips] = useState<string[]>([]);
   const scrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -75,26 +76,33 @@ export default function DevisFacturesPage() {
     const next = [...messages, { role: "user" as const, content }];
     setMessages(next);
     setInput("");
+    setChips([]);
     setLoading(true);
     try {
-      const res = await fetch("/api/devis", {
+      const res = await fetch("/api/assistant/devis", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          messages: next,
-          quote: draft,
-          profile,
-          products,
-          clients,
-        }),
+        body: JSON.stringify({ messages: next, profile, products }),
       });
       const data = await res.json();
-      if (data.quote) setDraft(data.quote);
       setMessages((m) => [
         ...m,
-        { role: "assistant", content: data.reply || "C'est fait." },
+        { role: "assistant", content: data.message || "…" },
       ]);
-      if (data.quote) setTab("preview");
+      setChips(Array.isArray(data.chips) ? data.chips : []);
+      // Devis prêt : on applique les données générées au brouillon.
+      if (data.complete && data.devis) {
+        const d = data.devis;
+        setDraft({
+          ...draft,
+          type: "devis",
+          title: d.title || draft.title,
+          clientName: d.clientName || draft.clientName,
+          clientAddress: d.clientAddress || draft.clientAddress,
+          lines: Array.isArray(d.lines) && d.lines.length ? d.lines : draft.lines,
+        });
+        setTab("preview");
+      }
     } catch {
       setMessages((m) => [
         ...m,
@@ -108,6 +116,7 @@ export default function DevisFacturesPage() {
   function newDoc() {
     setDraft(emptyQuote());
     setMessages([]);
+    setChips([]);
     setTab("chat");
   }
 
@@ -339,6 +348,22 @@ export default function DevisFacturesPage() {
               </div>
             )}
           </div>
+
+          {/* Chips de réponse rapide */}
+          {chips.length > 0 && !loading && (
+            <div className="mt-3 flex flex-wrap gap-2">
+              {chips.map((c) => (
+                <button
+                  key={c}
+                  type="button"
+                  onClick={() => send(c)}
+                  className="border-line bg-paper text-ink hover:border-brand/40 hover:bg-brand-50/50 rounded-full border px-3.5 py-1.5 text-sm font-medium transition-all"
+                >
+                  {c}
+                </button>
+              ))}
+            </div>
+          )}
 
           <form
             onSubmit={(e) => {
