@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Check, Flame } from "lucide-react";
+import { Check, Flame, Star } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { cn } from "@/lib/utils";
 
@@ -183,7 +183,8 @@ function PlanCard({
             </span>
           )}
           {mid && !isCurrent && (
-            <span className="bg-brand-50 text-brand inline-flex items-center rounded-full px-2.5 py-1 text-xs font-semibold">
+            <span className="bg-brand text-paper inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-semibold shadow-[var(--shadow-brand)]">
+              <Star size={12} />
               Recommandé
             </span>
           )}
