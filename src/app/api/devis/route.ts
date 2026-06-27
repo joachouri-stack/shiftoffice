@@ -204,6 +204,7 @@ function applyTool(
 function buildSystem(
   profile: Record<string, unknown>,
   products: unknown[],
+  clients: unknown[],
   quote: Quote
 ): string {
   const t = computeTotals(quote);
@@ -223,11 +224,14 @@ RÈGLES :
 - TVA : 10% par défaut en rénovation de logement de +2 ans, 20% sinon (neuf, fournitures seules), 5,5% pour la rénovation énergétique. Dans le doute, 10% pour la main-d'œuvre de rénovation.
 - Pour la main-d'œuvre, kind="labor" ; déplacement kind="travel" ; matériaux kind="material".
 - Après tes actions, réponds en 1-3 phrases en français : ce que tu as fait, et propose la suite (ex. ajuster une quantité, un prix). Si une info essentielle manque (nom du client), demande-la simplement, sans bloquer la création des lignes.
+- CLIENTS : si l'artisan nomme un client présent dans le RÉPERTOIRE ci-dessous, renseigne automatiquement l'en-tête (nom, adresse, email) via set_header à partir de ses coordonnées. Ne réclame pas une info déjà connue du répertoire.
 - Sois concis, pratique et fiable. L'artisan vérifiera les montants importants.
 
 PROFIL ENTREPRISE : ${JSON.stringify(profile)}
 
 BIBLIOTHÈQUE PRODUITS (${products.length}) : ${JSON.stringify(products).slice(0, 6000)}
+
+RÉPERTOIRE CLIENTS (${clients.length}) : ${JSON.stringify(clients).slice(0, 3000)}
 
 DEVIS ACTUEL — n°${quote.number || "(nouveau)"}, titre "${quote.title || "—"}", client "${quote.clientName || "—"}", remise ${quote.discount}% :
 ${lines || "(aucune ligne)"}
@@ -244,6 +248,7 @@ export async function POST(req: Request) {
     quote?: Quote;
     profile?: Record<string, unknown>;
     products?: unknown[];
+    clients?: unknown[];
   };
   try {
     body = await req.json();
@@ -284,7 +289,12 @@ export async function POST(req: Request) {
       const res = await client.messages.create({
         model: MODEL,
         max_tokens: 4096,
-        system: buildSystem(body.profile ?? {}, body.products ?? [], working),
+        system: buildSystem(
+          body.profile ?? {},
+          body.products ?? [],
+          body.clients ?? [],
+          working
+        ),
         tools: TOOLS,
         messages: convo,
       });

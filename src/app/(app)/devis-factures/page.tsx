@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import Link from "next/link";
 import {
   Plus,
   ArrowUp,
@@ -13,6 +14,7 @@ import {
   MessageSquare,
   Eye,
   History,
+  Users,
 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
@@ -21,6 +23,7 @@ import { useToast } from "@/components/ui/Toast";
 import { QuotePreview } from "@/components/devis/QuotePreview";
 import { useCompanyProfile } from "@/lib/companyProfile";
 import { useProducts } from "@/lib/products";
+import { useClients } from "@/lib/clients";
 import {
   useDraftQuote,
   useQuotes,
@@ -46,6 +49,7 @@ type Tab = "chat" | "preview" | "history";
 export default function DevisFacturesPage() {
   const { profile } = useCompanyProfile();
   const { products } = useProducts();
+  const { clients } = useClients();
   const { draft, setDraft } = useDraftQuote();
   const { quotes, save, remove } = useQuotes();
   const toast = useToast();
@@ -76,6 +80,7 @@ export default function DevisFacturesPage() {
           quote: draft,
           profile,
           products,
+          clients,
         }),
       });
       const data = await res.json();
@@ -139,6 +144,29 @@ export default function DevisFacturesPage() {
     setMessages([]);
     setTab("preview");
   }
+
+  // Renseigne l'en-tête du devis à partir d'un client du répertoire.
+  function selectClient(id: string) {
+    if (!id) {
+      setDraft({ ...draft, clientName: "", clientAddress: "", clientEmail: "" });
+      return;
+    }
+    const c = clients.find((x) => x.id === id);
+    if (!c) return;
+    const address = [c.address, [c.postalCode, c.city].filter(Boolean).join(" ")]
+      .filter(Boolean)
+      .join("\n");
+    setDraft({
+      ...draft,
+      clientName: c.name,
+      clientAddress: address,
+      clientEmail: c.email,
+    });
+  }
+
+  // Client courant (rapproché par nom) pour la valeur du sélecteur.
+  const currentClientId =
+    clients.find((c) => c.name && c.name === draft.clientName)?.id ?? "";
 
   const totals = computeTotals(draft);
   const hasDraft = draft.lines.length > 0 || draft.clientName || draft.title;
@@ -354,6 +382,38 @@ export default function DevisFacturesPage() {
               )}
             </div>
           </div>
+          {/* Sélecteur de client */}
+          <div className="border-line bg-paper mb-2 flex items-center gap-2 rounded-xl border px-2.5 py-2">
+            <Users size={16} className="text-muted shrink-0" />
+            {clients.length === 0 ? (
+              <span className="text-muted text-sm">
+                Aucun client enregistré —{" "}
+                <Link href="/clients" className="text-brand font-medium">
+                  en ajouter un
+                </Link>
+              </span>
+            ) : (
+              <select
+                value={currentClientId}
+                onChange={(e) => selectClient(e.target.value)}
+                className="text-ink w-full bg-transparent text-sm outline-none"
+                aria-label="Client du document"
+              >
+                <option value="">
+                  {draft.clientName
+                    ? `${draft.clientName} (saisi manuellement)`
+                    : "— Sélectionner un client —"}
+                </option>
+                {clients.map((c) => (
+                  <option key={c.id} value={c.id}>
+                    {c.name}
+                    {c.city ? ` · ${c.city}` : ""}
+                  </option>
+                ))}
+              </select>
+            )}
+          </div>
+
           <div className="border-line bg-mist/40 flex-1 overflow-auto rounded-2xl border p-3">
             <div className="bg-paper rounded-xl shadow-[var(--shadow-card)]">
               <QuotePreview quote={draft} profile={profile} />
