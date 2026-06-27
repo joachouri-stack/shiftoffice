@@ -7,6 +7,7 @@ import {
   Package,
   ShieldCheck,
   Mail,
+  Plug,
   CreditCard,
   Building2,
   Settings,
@@ -84,8 +85,13 @@ export const APP_NAV: NavItem[] = [
   },
 ];
 
-/** Lien secondaire (bas de sidebar). */
+/** Liens secondaires (bas de sidebar). */
 export const APP_NAV_SECONDARY: NavItem[] = [
+  {
+    label: "Intégrations",
+    href: "/integrations",
+    icon: Plug,
+  },
   {
     label: "Paramètres",
     href: "/parametres",
