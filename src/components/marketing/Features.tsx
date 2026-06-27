@@ -1,4 +1,3 @@
-import Image from "next/image";
 import {
   Sparkles,
   FileText,
@@ -21,57 +20,53 @@ export function Features() {
         subtitle="Six outils pensés pour les artisans. Chacun vous fait gagner du temps, dès le premier jour."
       />
 
-      <div className="stagger mt-14 grid auto-rows-fr gap-4 sm:grid-cols-2 lg:grid-cols-6">
-        {/* Assistant IA — héros sombre, horizontal */}
+      <div className="stagger mt-14 grid gap-4 sm:grid-cols-2 lg:grid-cols-6">
+        {/* Assistant IA — héros sombre */}
         <FeatureCard
           variant="dark"
           horizontal
           badge="Le cœur de Shift Office"
           icon={Sparkles}
           title="Assistant IA bâtiment"
-          benefit="Créez un devis en parlant. L'IA rédige les lignes, choisit les prix et calcule la TVA — vous n'avez plus qu'à valider."
-          src="/shots/assistant.png"
-          alt="Conversation avec l'assistant IA"
+          benefit="Parlez-lui comme à un collaborateur. Il rédige, calcule la TVA et choisit les prix — vous validez."
+          chips={[
+            "Prépare un devis salle de bain",
+            "Réponds à ce client",
+            "Calcule ma TVA",
+            "Fais un contrat",
+          ]}
+          chipsAsPrompts
           className="sm:col-span-2 lg:col-span-4"
-          shotClassName="aspect-[4/3]"
         />
 
-        {/* Devis — carte ORANGE pleine */}
+        {/* Devis — carte ORANGE */}
         <FeatureCard
           variant="orange"
           icon={FileText}
           title="Devis, factures & documents"
-          benefit="Des documents pros en 30 secondes, prêts à envoyer."
-          src="/shots/devis.png"
-          alt="Un devis généré par Shift Office"
+          benefit="Des documents professionnels en 30 secondes, prêts à envoyer à vos clients."
+          chips={["Devis", "Factures", "Contrats", "Fiches de paie", "Quittances"]}
           className="sm:col-span-1 lg:col-span-2"
-          shotClassName="flex-1 min-h-[180px]"
         />
 
-        {/* Tableau de bord — clair */}
+        {/* Tableau de bord */}
         <FeatureCard
           variant="light"
           icon={BarChart3}
           title="Tableau de bord"
-          benefit="CA, marges et TVA en un coup d'œil. Fini le tableur."
-          src="/shots/dashboard.png"
-          alt="Tableau de bord"
+          benefit="Tout votre business en un coup d'œil. Fini le tableur."
+          chips={["Chiffre d'affaires", "Marges", "TVA", "Bénéfices"]}
           className="sm:col-span-1 lg:col-span-2"
-          shotClassName="h-40"
-          objectClassName="object-[50%_22%]"
         />
 
-        {/* Bibliothèque produits — clair */}
+        {/* Bibliothèque produits */}
         <FeatureCard
           variant="light"
           icon={Package}
           title="Bibliothèque produits"
           benefit="Vos prix enregistrés une fois, réutilisés à chaque devis."
-          src="/shots/produits.png"
-          alt="Bibliothèque produits"
+          chips={["Matériaux", "Main-d'œuvre", "Déplacements", "Locations"]}
           className="sm:col-span-1 lg:col-span-2"
-          shotClassName="h-40"
-          objectClassName="object-[50%_28%]"
         />
 
         {/* Coffre-fort — carte sombre */}
@@ -79,26 +74,20 @@ export function Features() {
           variant="dark"
           icon={ShieldCheck}
           title="Coffre-fort sécurisé"
-          benefit="Tous vos documents chiffrés, retrouvés en un instant."
-          src="/shots/coffre.png"
-          alt="Coffre-fort sécurisé"
+          benefit="Tous vos documents au même endroit, retrouvés en un instant."
+          chips={["Chiffré", "Sauvegardé", "Accessible partout"]}
           className="sm:col-span-1 lg:col-span-2"
-          shotClassName="h-40"
-          objectClassName="object-[50%_36%]"
         />
 
-        {/* Profil — bannière large claire, horizontal */}
+        {/* Profil — bannière large */}
         <FeatureCard
           variant="light"
           horizontal
           icon={Building2}
           title="Profil entreprise"
-          benefit="Logo, SIRET et TVA repris automatiquement sur tous vos documents. Renseignés une fois, c'est tout."
-          src="/shots/profil.png"
-          alt="Profil entreprise"
+          benefit="Renseignés une fois, repris automatiquement sur chacun de vos documents."
+          chips={["Logo", "Nom", "SIRET", "N° TVA", "Adresse", "Téléphone"]}
           className="sm:col-span-2 lg:col-span-6"
-          shotClassName="aspect-[16/7] sm:aspect-[5/2]"
-          objectClassName="object-[50%_30%]"
         />
       </div>
     </Section>
@@ -112,7 +101,8 @@ const STYLES: Record<
     title: string;
     benefit: string;
     iconChip: string;
-    frame: string;
+    chip: string;
+    dot: string;
     glow?: string;
   }
 > = {
@@ -121,23 +111,26 @@ const STYLES: Record<
     title: "text-ink",
     benefit: "text-muted",
     iconChip: "bg-brand-50 text-brand",
-    frame: "border-line",
+    chip: "bg-mist border-line text-ink/80",
+    dot: "bg-brand",
   },
   dark: {
     card: "bg-ink border-ink text-paper shadow-[var(--shadow-pop)]",
     title: "text-paper",
     benefit: "text-white/70",
     iconChip: "bg-brand/15 text-brand",
-    frame: "border-white/10",
-    glow: "radial-gradient(55% 70% at 85% 8%, rgba(255,107,43,0.30) 0%, transparent 65%)",
+    chip: "bg-white/[0.07] border-white/10 text-white/85",
+    dot: "bg-brand",
+    glow: "radial-gradient(55% 75% at 88% 6%, rgba(255,107,43,0.30) 0%, transparent 62%)",
   },
   orange: {
     card: "bg-brand border-brand-600 text-paper shadow-[var(--shadow-brand)]",
     title: "text-paper",
-    benefit: "text-white/85",
+    benefit: "text-white/90",
     iconChip: "bg-white/20 text-paper",
-    frame: "border-white/25",
-    glow: "radial-gradient(60% 60% at 80% 0%, rgba(255,255,255,0.22) 0%, transparent 60%)",
+    chip: "bg-white/20 border-white/25 text-paper",
+    dot: "bg-white",
+    glow: "radial-gradient(60% 60% at 85% 0%, rgba(255,255,255,0.20) 0%, transparent 60%)",
   },
 };
 
@@ -145,31 +138,27 @@ function FeatureCard({
   icon: Icon,
   title,
   benefit,
-  src,
-  alt,
+  chips,
+  chipsAsPrompts = false,
   variant = "light",
   horizontal = false,
   badge,
   className,
-  shotClassName,
-  objectClassName,
 }: {
   icon: React.ComponentType<{ size?: number; className?: string }>;
   title: string;
   benefit: string;
-  src: string;
-  alt: string;
+  chips: string[];
+  chipsAsPrompts?: boolean;
   variant?: Variant;
   horizontal?: boolean;
   badge?: string;
   className?: string;
-  shotClassName?: string;
-  objectClassName?: string;
 }) {
   const s = STYLES[variant];
 
-  const text = (
-    <div className={horizontal ? "" : ""}>
+  const head = (
+    <div>
       {badge ? (
         <span className="bg-brand/15 text-brand inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold">
           <Sparkles size={13} />
@@ -178,14 +167,20 @@ function FeatureCard({
       ) : (
         <div
           className={cn(
-            "inline-flex h-11 w-11 items-center justify-center rounded-2xl transition-transform duration-300 group-hover:scale-105",
+            "inline-flex h-12 w-12 items-center justify-center rounded-2xl transition-transform duration-300 group-hover:scale-105",
             s.iconChip
           )}
         >
-          <Icon size={20} />
+          <Icon size={22} />
         </div>
       )}
-      <h3 className={cn("mt-4 text-lg font-semibold tracking-tight", s.title, badge && "text-2xl")}>
+      <h3
+        className={cn(
+          "mt-4 font-semibold tracking-tight",
+          s.title,
+          badge ? "text-2xl" : "text-xl"
+        )}
+      >
         {title}
       </h3>
       <p className={cn("mt-2 text-[0.95rem] leading-relaxed", s.benefit)}>
@@ -194,22 +189,29 @@ function FeatureCard({
     </div>
   );
 
-  const shot = (
+  const chipList = (
     <div
       className={cn(
-        "bg-paper relative overflow-hidden rounded-xl border shadow-[var(--shadow-card)]",
-        s.frame,
-        shotClassName
+        "flex flex-wrap gap-2",
+        chipsAsPrompts && "sm:flex-col sm:items-start"
       )}
     >
-      <Image
-        src={src}
-        alt={alt}
-        fill
-        unoptimized
-        sizes="(max-width: 1024px) 100vw, 50vw"
-        className={cn("object-cover object-top", objectClassName)}
-      />
+      {chips.map((c) => (
+        <span
+          key={c}
+          className={cn(
+            "inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-sm font-medium",
+            s.chip
+          )}
+        >
+          {chipsAsPrompts ? (
+            <Sparkles size={12} className="text-brand shrink-0" />
+          ) : (
+            <span className={cn("h-1.5 w-1.5 rounded-full", s.dot)} />
+          )}
+          {c}
+        </span>
+      ))}
     </div>
   );
 
@@ -230,17 +232,13 @@ function FeatureCard({
       )}
       {horizontal ? (
         <div className="relative grid flex-1 items-center gap-6 lg:grid-cols-2">
-          {text}
-          <div className="transition-transform duration-500 ease-out group-hover:-translate-y-1">
-            {shot}
-          </div>
+          {head}
+          {chipList}
         </div>
       ) : (
         <div className="relative flex flex-1 flex-col">
-          {text}
-          <div className="mt-5 flex flex-1 flex-col justify-end transition-transform duration-500 ease-out group-hover:-translate-y-1">
-            {shot}
-          </div>
+          {head}
+          <div className="mt-6 flex flex-1 items-end">{chipList}</div>
         </div>
       )}
     </div>
