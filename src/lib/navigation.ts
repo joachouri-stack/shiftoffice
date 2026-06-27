@@ -6,6 +6,7 @@ import {
   Users,
   Package,
   ShieldCheck,
+  Mail,
   CreditCard,
   Building2,
   Settings,
@@ -62,6 +63,12 @@ export const APP_NAV: NavItem[] = [
     href: "/coffre-fort",
     icon: ShieldCheck,
     description: "Documents sécurisés",
+  },
+  {
+    label: "Emails",
+    href: "/emails",
+    icon: Mail,
+    description: "Historique des envois",
   },
   {
     label: "Abonnement",
