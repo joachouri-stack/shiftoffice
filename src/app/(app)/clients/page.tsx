@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import Link from "next/link";
 import {
   Plus,
   Search,
@@ -128,26 +129,29 @@ export default function ClientsPage() {
                 key={c.id}
                 className="hover:bg-mist/50 flex items-center gap-3 px-4 py-3.5 transition-colors first:rounded-t-2xl last:rounded-b-2xl sm:px-5"
               >
-                <span
-                  className={cn(
-                    "inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-xl",
-                    pro
-                      ? "bg-ink/5 text-ink"
-                      : "bg-brand-50 text-brand"
-                  )}
+                <Link
+                  href={`/clients/${c.id}`}
+                  className="flex min-w-0 flex-1 items-center gap-3"
                 >
-                  {pro ? <Building2 size={18} /> : <UserRound size={18} />}
-                </span>
-                <div className="min-w-0 flex-1">
-                  <p className="text-ink truncate text-sm font-medium">
-                    {c.name || "Sans nom"}
-                  </p>
-                  <p className="text-muted truncate text-xs">
-                    {[c.email, c.phone].filter(Boolean).join(" · ") ||
-                      [c.postalCode, c.city].filter(Boolean).join(" ") ||
-                      "—"}
-                  </p>
-                </div>
+                  <span
+                    className={cn(
+                      "inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-xl",
+                      pro ? "bg-ink/5 text-ink" : "bg-brand-50 text-brand"
+                    )}
+                  >
+                    {pro ? <Building2 size={18} /> : <UserRound size={18} />}
+                  </span>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-ink truncate text-sm font-medium">
+                      {c.name || "Sans nom"}
+                    </p>
+                    <p className="text-muted truncate text-xs">
+                      {[c.email, c.phone].filter(Boolean).join(" · ") ||
+                        [c.postalCode, c.city].filter(Boolean).join(" ") ||
+                        "—"}
+                    </p>
+                  </div>
+                </Link>
                 <Badge variant="neutral" className="hidden sm:inline-flex">
                   {pro ? "Pro" : "Particulier"}
                 </Badge>
