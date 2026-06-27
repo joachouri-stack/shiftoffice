@@ -124,26 +124,31 @@ export default function DashboardPage() {
             </div>
             <Badge variant="neutral">{formatEUR(ca)} €</Badge>
           </div>
-          <div className="mt-6 flex h-44 items-end justify-between gap-2 sm:gap-4">
-            {months.map((m) => (
-              <div
-                key={m.key}
-                className="flex flex-1 flex-col items-center gap-2"
-              >
-                <div className="flex w-full flex-1 items-end">
-                  <div
-                    className="bg-brand/15 hover:bg-brand/25 w-full rounded-t-lg transition-all duration-300"
-                    style={{
-                      height: `${Math.max(4, (m.value / maxMonth) * 100)}%`,
-                    }}
-                    title={`${formatEUR(m.value)} €`}
-                  >
-                    <div className="bg-brand h-1 w-full rounded-t-lg" />
-                  </div>
+          <div className="mt-6">
+            <div className="flex h-40 items-end justify-between gap-2 sm:gap-4">
+              {months.map((m) => (
+                <div
+                  key={m.key}
+                  className="bg-brand/15 hover:bg-brand/25 flex-1 overflow-hidden rounded-t-lg transition-all duration-300"
+                  style={{
+                    height: `${Math.max(3, (m.value / maxMonth) * 100)}%`,
+                  }}
+                  title={`${formatEUR(m.value)} €`}
+                >
+                  <div className="bg-brand h-1.5 w-full rounded-t-lg" />
                 </div>
-                <span className="text-muted text-xs capitalize">{m.label}</span>
-              </div>
-            ))}
+              ))}
+            </div>
+            <div className="mt-2 flex justify-between gap-2 sm:gap-4">
+              {months.map((m) => (
+                <span
+                  key={m.key}
+                  className="text-muted flex-1 text-center text-xs capitalize"
+                >
+                  {m.label}
+                </span>
+              ))}
+            </div>
           </div>
         </Card>
 
