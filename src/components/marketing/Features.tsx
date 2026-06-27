@@ -54,12 +54,12 @@ export function Features() {
   return (
     <Section id="fonctionnalites">
       <SectionHeading
-        eyebrow="Pourquoi Shift Office"
+        eyebrow="Fonctionnalités"
         title="Tout ce qu'il faut pour gagner des heures"
         subtitle="Six outils pensés pour les artisans. Chacun vous fait gagner du temps, dès le premier jour."
       />
 
-      <div className="stagger mt-16 grid gap-px overflow-hidden rounded-3xl border border-line bg-line sm:grid-cols-2 lg:grid-cols-3">
+      <div className="stagger mt-12 grid gap-px overflow-hidden rounded-3xl border border-line bg-line sm:grid-cols-2 lg:grid-cols-3">
         {FEATURES.map((f) => (
           <article
             key={f.title}

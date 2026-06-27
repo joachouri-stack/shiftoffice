@@ -12,7 +12,7 @@ const FAQ = [
   },
   {
     q: "Faut-il être à l'aise avec l'informatique ?",
-    a: "Absolument pas. L'interface est pensée pour le terrain : claire, simple et rapide. Si vous savez envoyer un message, vous saurez utiliser Shift Office.",
+    a: "Absolument pas. L'interface est pensée pour le terrain : claire, simple et rapide. Tout se fait en langage naturel, comme une conversation.",
   },
   {
     q: "Mes données sont-elles en sécurité ?",

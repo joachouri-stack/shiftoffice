@@ -24,7 +24,7 @@ export function HowItWorks() {
       <SectionHeading
         eyebrow="Comment ça marche"
         title="Simple, du premier au dernier clic"
-        subtitle="Aucune formation nécessaire. Si vous savez envoyer un SMS, vous savez utiliser Shift Office."
+        subtitle="Aucune formation, aucun manuel. Trois étapes, et votre journée s'allège."
       />
 
       <div className="mt-14 grid gap-6 md:grid-cols-3">

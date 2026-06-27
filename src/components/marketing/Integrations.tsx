@@ -22,7 +22,7 @@ const INTEGRATIONS = [
 
 export function Integrations() {
   return (
-    <Section id="integrations" className="bg-mist/60">
+    <Section id="integrations">
       <SectionHeading
         eyebrow="Intégrations"
         title="Connecté à vos outils"

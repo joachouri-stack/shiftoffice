@@ -60,7 +60,7 @@ export function Hero() {
         </p>
 
         {/* Aperçu produit */}
-        <div className="animate-in mx-auto mt-16 max-w-5xl">
+        <div id="demo" className="animate-in mx-auto mt-16 max-w-5xl scroll-mt-24">
           <div className="border-line bg-paper rounded-[1.75rem] border p-2 shadow-[var(--shadow-pop)]">
             <div className="bg-mist border-line overflow-hidden rounded-[1.4rem] border">
               <AppPreview />
@@ -100,7 +100,7 @@ function AppPreview() {
         <span className="h-3 w-3 rounded-full bg-red-400/70" />
         <span className="h-3 w-3 rounded-full bg-yellow-400/70" />
         <span className="h-3 w-3 rounded-full bg-green-400/70" />
-        <span className="text-muted ml-3 text-xs">app.shiftoffice.app</span>
+        <span className="text-muted ml-3 text-xs">app.shiftoffice.fr</span>
       </div>
 
       <div className="grid flex-1 grid-cols-12">
