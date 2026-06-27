@@ -143,16 +143,21 @@ function PlanCard({
   current?: PlanId;
 }) {
   const dark = !!plan.featured;
+  const mid = !dark && plan.id === "essentiel";
   const isCurrent = current === plan.id;
   const monthly = annual ? Math.round((plan.price * 10) / 12) : plan.price;
 
   return (
     <div
       className={cn(
-        "relative flex flex-col rounded-[1.75rem] border p-7 transition-all duration-300 sm:p-8",
-        dark
-          ? "border-ink bg-ink text-paper shadow-[var(--shadow-pop)] lg:-translate-y-3"
-          : "border-line bg-paper text-ink shadow-[var(--shadow-card)] hover:-translate-y-1 hover:shadow-[var(--shadow-pop)]"
+        "relative flex flex-col rounded-[1.75rem] border p-7 transition-all duration-300 hover:-translate-y-1 sm:p-8",
+        dark &&
+          "border-ink bg-ink text-paper shadow-[var(--shadow-pop)] lg:-translate-y-3",
+        mid &&
+          "border-brand/30 text-ink bg-gradient-to-b from-brand-50/60 to-paper shadow-[var(--shadow-pop)] ring-1 ring-brand/15",
+        !dark &&
+          !mid &&
+          "border-line bg-paper text-ink shadow-[var(--shadow-card)] hover:shadow-[var(--shadow-pop)]"
       )}
     >
       {dark && (
@@ -171,10 +176,15 @@ function PlanCard({
           <h3 className={cn("text-lg font-semibold", dark && "text-paper")}>
             {plan.name}
           </h3>
-          {plan.featured && (
+          {plan.featured && !isCurrent && (
             <span className="bg-brand text-paper inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-semibold">
               <Flame size={12} />
               Populaire
+            </span>
+          )}
+          {mid && !isCurrent && (
+            <span className="bg-brand-50 text-brand inline-flex items-center rounded-full px-2.5 py-1 text-xs font-semibold">
+              Recommandé
             </span>
           )}
           {isCurrent && (
@@ -233,7 +243,7 @@ function PlanCard({
                 <span
                   className={cn(
                     "mt-0.5 inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-full",
-                    dark ? "bg-brand text-paper" : "bg-brand-50 text-brand"
+                    dark || mid ? "bg-brand text-paper" : "bg-brand-50 text-brand"
                   )}
                 >
                   <Check size={13} strokeWidth={3} />
@@ -249,7 +259,7 @@ function PlanCard({
         <div className="mt-8">
           {variant === "app" ? (
             <Button
-              variant={isCurrent ? "outline" : dark ? "primary" : "outline"}
+              variant={isCurrent ? "outline" : dark || mid ? "primary" : "outline"}
               size="lg"
               className="w-full"
               disabled={isCurrent}
@@ -260,18 +270,16 @@ function PlanCard({
                   ? "Revenir au gratuit"
                   : `Passer à ${plan.name}`}
             </Button>
-          ) : dark ? (
-            <Button href="/inscription" size="lg" className="w-full">
-              Choisir {plan.name}
-            </Button>
           ) : (
             <Button
               href="/inscription"
-              variant="outline"
+              variant={dark || mid ? "primary" : "outline"}
               size="lg"
               className="w-full"
             >
-              {plan.price === 0 ? "Commencer gratuitement" : `Choisir ${plan.name}`}
+              {plan.price === 0
+                ? "Commencer gratuitement"
+                : `Choisir ${plan.name}`}
             </Button>
           )}
         </div>
