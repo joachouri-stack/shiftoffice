@@ -38,7 +38,7 @@ export type Quote = {
   validityDays: number;
   paymentTerms: string;
   notes: string;
-  status: "draft" | "sent" | "accepted" | "paid";
+  status: "draft" | "sent" | "accepted" | "refused" | "paid";
   createdAt: string; // ISO
 };
 

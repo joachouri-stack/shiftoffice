@@ -3,7 +3,7 @@ import { cn } from "@/lib/utils";
 type BadgeProps = {
   children: React.ReactNode;
   className?: string;
-  variant?: "brand" | "neutral" | "outline" | "success";
+  variant?: "brand" | "neutral" | "outline" | "success" | "warning" | "danger";
 };
 
 const variants = {
@@ -11,6 +11,8 @@ const variants = {
   neutral: "bg-mist text-muted",
   outline: "border border-line text-muted bg-paper",
   success: "bg-emerald-50 text-emerald-700",
+  warning: "bg-amber-50 text-amber-700",
+  danger: "bg-red-50 text-red-600",
 };
 
 /** Petite étiquette / pill. */

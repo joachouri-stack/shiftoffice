@@ -98,12 +98,14 @@ const DEVIS_STATUT: Record<Quote["status"], string> = {
   draft: "brouillon",
   sent: "envoye",
   accepted: "accepte",
+  refused: "refuse",
   paid: "accepte",
 };
 const FACTURE_STATUT: Record<Quote["status"], string> = {
   draft: "emise",
   sent: "emise",
   accepted: "emise",
+  refused: "annulee",
   paid: "payee",
 };
 

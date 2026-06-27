@@ -14,6 +14,9 @@ export function QuotePreview({
   const t = computeTotals(quote);
   const isInvoice = quote.type === "facture";
   const docLabel = isInvoice ? "FACTURE" : "DEVIS";
+  // Franchise en base de TVA (art. 293 B) : pas de colonne ni de ligne TVA.
+  const franchise = !profile.vatLiable;
+  const vatRows = t.vatByRate.filter((v) => v.rate > 0);
   const dateStr = quote.createdAt
     ? new Date(quote.createdAt).toLocaleDateString("fr-FR")
     : new Date().toLocaleDateString("fr-FR");
@@ -70,14 +73,16 @@ export function QuotePreview({
             <th className="py-2 pr-2 font-medium">Désignation</th>
             <th className="py-2 px-2 text-right font-medium">Qté</th>
             <th className="py-2 px-2 text-right font-medium">P.U. HT</th>
-            <th className="py-2 px-2 text-right font-medium">TVA</th>
+            {!franchise && (
+              <th className="py-2 px-2 text-right font-medium">TVA</th>
+            )}
             <th className="py-2 pl-2 text-right font-medium">Total HT</th>
           </tr>
         </thead>
         <tbody>
           {quote.lines.length === 0 ? (
             <tr>
-              <td colSpan={5} className="text-muted py-8 text-center">
+              <td colSpan={franchise ? 4 : 5} className="text-muted py-8 text-center">
                 Décrivez votre chantier à l&apos;assistant pour générer les
                 lignes automatiquement.
               </td>
@@ -97,7 +102,9 @@ export function QuotePreview({
                 <td className="py-2.5 px-2 text-right tabular whitespace-nowrap">
                   {formatEUR(l.unitPrice)} €
                 </td>
-                <td className="py-2.5 px-2 text-right tabular">{l.vat}%</td>
+                {!franchise && (
+                  <td className="py-2.5 px-2 text-right tabular">{l.vat}%</td>
+                )}
                 <td className="py-2.5 pl-2 text-right tabular whitespace-nowrap font-medium">
                   {formatEUR(l.qty * l.unitPrice)} €
                 </td>
@@ -120,7 +127,7 @@ export function QuotePreview({
           {quote.discount > 0 && (
             <Row label="Net HT" value={`${formatEUR(t.netHT)} €`} />
           )}
-          {t.vatByRate.map((v) => (
+          {vatRows.map((v) => (
             <Row
               key={v.rate}
               label={`TVA ${v.rate}%`}
@@ -130,7 +137,7 @@ export function QuotePreview({
           ))}
           <div className="border-line mt-1 border-t pt-2">
             <Row
-              label="Total TTC"
+              label={franchise ? "Total" : "Total TTC"}
               value={`${formatEUR(t.totalTTC)} €`}
               strong
             />
@@ -140,6 +147,7 @@ export function QuotePreview({
 
       {/* Pied */}
       <div className="border-line text-muted mt-8 space-y-1 border-t pt-5 text-xs">
+        {franchise && <p>TVA non applicable — art. 293 B du CGI.</p>}
         {!isInvoice && quote.validityDays > 0 && (
           <p>Devis valable {quote.validityDays} jours.</p>
         )}

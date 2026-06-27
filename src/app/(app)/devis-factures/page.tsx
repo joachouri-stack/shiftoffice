@@ -37,6 +37,7 @@ import {
   formatEUR,
   type Quote,
 } from "@/lib/quotes";
+import { STATUS_OPTIONS, statusMeta, type DocStatus } from "@/lib/doc-status";
 import { cn } from "@/lib/utils";
 
 type Msg = { role: "user" | "assistant"; content: string };
@@ -181,6 +182,13 @@ export default function DevisFacturesPage() {
   // Client courant (rapproché par nom) pour la valeur du sélecteur.
   const currentClientId =
     clients.find((c) => c.name && c.name === draft.clientName)?.id ?? "";
+
+  // Changement de statut du document courant (persiste s'il est enregistré).
+  function setStatus(status: DocStatus) {
+    const q = { ...draft, status };
+    setDraft(q);
+    if (q.id) save(q);
+  }
 
   // Envoi email : enregistre le document, le marque « envoyé », historise.
   function sendEmail(payload: EmailPayload) {
@@ -409,15 +417,22 @@ export default function DevisFacturesPage() {
             "lg:flex"
           )}
         >
-          <div className="mb-2 flex items-center justify-between gap-2">
-            <span className="text-ink text-sm font-semibold tabular">
-              {formatEUR(totals.totalTTC)} € TTC
-              {totals.margin > 0 && (
-                <span className="text-muted ml-2 font-normal">
-                  · marge {formatEUR(totals.margin)} €
-                </span>
-              )}
-            </span>
+          <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
+            <div className="flex items-center gap-2">
+              <span className="text-ink text-sm font-semibold tabular">
+                {formatEUR(totals.totalTTC)} € TTC
+                {totals.margin > 0 && (
+                  <span className="text-muted ml-2 font-normal">
+                    · marge {formatEUR(totals.margin)} €
+                  </span>
+                )}
+              </span>
+              <StatusSelect
+                value={draft.status}
+                type={draft.type}
+                onChange={setStatus}
+              />
+            </div>
             <div className="flex gap-1.5">
               <IconBtn label="Enregistrer" onClick={saveDoc} disabled={!hasDraft}>
                 <Save size={16} />
@@ -512,6 +527,48 @@ function Bubble({ msg, pending }: { msg: Msg; pending?: boolean }) {
       >
         {pending ? <span className="text-muted">L&apos;IA réfléchit…</span> : msg.content}
       </div>
+    </div>
+  );
+}
+
+const TONE_CLASS: Record<string, string> = {
+  neutral: "bg-mist text-muted",
+  brand: "bg-brand-50 text-brand-700",
+  success: "bg-emerald-50 text-emerald-700",
+  warning: "bg-amber-50 text-amber-700",
+  danger: "bg-red-50 text-red-600",
+};
+
+function StatusSelect({
+  value,
+  type,
+  onChange,
+}: {
+  value: DocStatus;
+  type: Quote["type"];
+  onChange: (s: DocStatus) => void;
+}) {
+  const meta = statusMeta(value, type);
+  return (
+    <div className="relative inline-flex">
+      <select
+        value={value}
+        onChange={(e) => onChange(e.target.value as DocStatus)}
+        aria-label="Statut du document"
+        className={cn(
+          "cursor-pointer appearance-none rounded-full py-1 pr-6 pl-3 text-xs font-medium outline-none",
+          TONE_CLASS[meta.variant]
+        )}
+      >
+        {STATUS_OPTIONS[type].map((s) => (
+          <option key={s} value={s}>
+            {statusMeta(s, type).label}
+          </option>
+        ))}
+      </select>
+      <span className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 text-[0.6rem] opacity-60">
+        ▾
+      </span>
     </div>
   );
 }

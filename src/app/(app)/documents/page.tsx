@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
 import { PageHeader } from "@/components/app/PageHeader";
 import { useQuotes, computeTotals, formatEUR, type DocType } from "@/lib/quotes";
+import { statusMeta } from "@/lib/doc-status";
 import { cn } from "@/lib/utils";
 
 const FILTERS: { key: "all" | DocType; label: string }[] = [
@@ -126,8 +127,8 @@ export default function DocumentsPage() {
                   <span className="text-ink text-sm font-semibold tabular whitespace-nowrap">
                     {formatEUR(computeTotals(d).totalTTC)} €
                   </span>
-                  <Badge variant={isInvoice ? "success" : "neutral"}>
-                    {isInvoice ? "Facture" : "Devis"}
+                  <Badge variant={statusMeta(d.status, d.type).variant}>
+                    {statusMeta(d.status, d.type).label}
                   </Badge>
                 </div>
               </Link>
