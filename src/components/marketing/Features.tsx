@@ -23,7 +23,7 @@ export function Features() {
 
       <div className="stagger mt-14 grid gap-4 sm:grid-cols-2 lg:grid-cols-6">
         {/* Assistant IA — vedette (carte sombre) */}
-        <Card className="bg-ink relative overflow-hidden p-7 sm:p-8 sm:col-span-2 lg:col-span-4">
+        <Card className="bg-ink group relative overflow-hidden p-7 sm:p-8 sm:col-span-2 lg:col-span-4">
           <div
             aria-hidden
             className="pointer-events-none absolute inset-0"
@@ -47,38 +47,20 @@ export function Features() {
                 valider.
               </p>
             </div>
-            <ChatVisual />
+            <div className="transition-transform duration-300 ease-out group-hover:-translate-y-1">
+              <ChatVisual />
+            </div>
           </div>
         </Card>
 
-        {/* Coffre-fort */}
+        {/* Devis, factures & documents — grand format */}
         <FeatureCard
           className="sm:col-span-2 lg:col-span-2"
-          icon={ShieldCheck}
-          title="Coffre-fort sécurisé"
-          benefit="Tous vos documents chiffrés, retrouvés en un instant."
-        >
-          <VaultVisual />
-        </FeatureCard>
-
-        {/* Devis & factures */}
-        <FeatureCard
-          className="sm:col-span-1 lg:col-span-3"
           icon={FileText}
           title="Devis, factures & documents"
           benefit="Des documents professionnels en 30 secondes, prêts à envoyer."
         >
           <DocVisual />
-        </FeatureCard>
-
-        {/* Tableau de bord */}
-        <FeatureCard
-          className="sm:col-span-1 lg:col-span-3"
-          icon={BarChart3}
-          title="Tableau de bord"
-          benefit="Chiffre d'affaires, marges et TVA en un coup d'œil. Fini le tableur."
-        >
-          <ChartVisual />
         </FeatureCard>
 
         {/* Bibliothèque produits */}
@@ -91,6 +73,16 @@ export function Features() {
           <ProductsVisual />
         </FeatureCard>
 
+        {/* Tableau de bord */}
+        <FeatureCard
+          className="sm:col-span-1 lg:col-span-3"
+          icon={BarChart3}
+          title="Tableau de bord"
+          benefit="Chiffre d'affaires, marges et TVA en un coup d'œil. Fini le tableur."
+        >
+          <ChartVisual />
+        </FeatureCard>
+
         {/* Profil entreprise */}
         <FeatureCard
           className="sm:col-span-1 lg:col-span-3"
@@ -99,6 +91,16 @@ export function Features() {
           benefit="Logo, SIRET et TVA repris automatiquement sur tous vos documents."
         >
           <ProfileVisual />
+        </FeatureCard>
+
+        {/* Coffre-fort */}
+        <FeatureCard
+          className="sm:col-span-1 lg:col-span-3"
+          icon={ShieldCheck}
+          title="Coffre-fort sécurisé"
+          benefit="Tous vos documents chiffrés, retrouvés en un instant."
+        >
+          <VaultVisual />
         </FeatureCard>
       </div>
     </Section>
@@ -121,9 +123,9 @@ function FeatureCard({
   return (
     <Card
       interactive
-      className={cn("flex flex-col overflow-hidden p-6 sm:p-7", className)}
+      className={cn("group flex flex-col overflow-hidden p-6 sm:p-7", className)}
     >
-      <div className="bg-brand-50 text-brand inline-flex h-11 w-11 items-center justify-center rounded-2xl">
+      <div className="bg-brand-50 text-brand inline-flex h-11 w-11 items-center justify-center rounded-2xl transition-transform duration-300 group-hover:scale-105">
         <Icon size={20} />
       </div>
       <h3 className="text-ink mt-4 text-lg font-semibold tracking-tight">
@@ -132,7 +134,11 @@ function FeatureCard({
       <p className="text-muted mt-1.5 text-[0.95rem] leading-relaxed">
         {benefit}
       </p>
-      {children && <div className="mt-5 flex-1">{children}</div>}
+      {children && (
+        <div className="mt-5 flex flex-1 flex-col justify-end transition-transform duration-300 ease-out group-hover:-translate-y-0.5">
+          {children}
+        </div>
+      )}
     </Card>
   );
 }
@@ -166,6 +172,40 @@ function ChatVisual() {
   );
 }
 
+/** Mini-document (devis) — pleine hauteur, à côté du héros. */
+function DocVisual() {
+  return (
+    <div className="border-line bg-paper flex h-full flex-col rounded-2xl border p-4 shadow-[var(--shadow-soft)]">
+      <div className="flex items-start justify-between">
+        <div className="bg-brand/15 h-8 w-8 rounded-lg" />
+        <div className="text-right">
+          <p className="text-brand text-xs font-bold tracking-wide">DEVIS</p>
+          <p className="text-muted text-[0.65rem]">DEV-2026-014</p>
+        </div>
+      </div>
+      <div className="bg-ink/10 mt-3 h-2 w-24 rounded-full" />
+      <div className="border-line mt-3 space-y-2 border-t pt-3">
+        {[
+          ["Receveur", "189"],
+          ["Paroi verre", "320"],
+          ["Main-d'œuvre", "540"],
+        ].map(([n, p]) => (
+          <div key={n} className="flex items-center justify-between gap-2">
+            <span className="text-ink/80 text-[0.7rem]">{n}</span>
+            <span className="text-ink text-[0.7rem] font-medium tabular">
+              {p} €
+            </span>
+          </div>
+        ))}
+      </div>
+      <div className="bg-ink mt-auto flex items-center justify-between rounded-xl px-3 py-2.5">
+        <span className="text-xs text-white/70">Total TTC</span>
+        <span className="text-paper text-sm font-semibold tabular">1 480 €</span>
+      </div>
+    </div>
+  );
+}
+
 function VaultVisual() {
   return (
     <div className="space-y-2">
@@ -180,32 +220,6 @@ function VaultVisual() {
           <span className="text-ink truncate text-xs font-medium">{d}</span>
         </div>
       ))}
-    </div>
-  );
-}
-
-function DocVisual() {
-  return (
-    <div className="border-line bg-mist/40 rounded-2xl border p-4">
-      <div className="flex items-center justify-between">
-        <div className="bg-ink/15 h-2.5 w-16 rounded-full" />
-        <div className="bg-brand/40 h-2.5 w-10 rounded-full" />
-      </div>
-      <div className="mt-3 space-y-2">
-        {[80, 65, 72].map((w, i) => (
-          <div key={i} className="flex items-center justify-between gap-3">
-            <div
-              className="bg-ink/10 h-2 rounded-full"
-              style={{ width: `${w}%` }}
-            />
-            <div className="bg-ink/10 h-2 w-8 shrink-0 rounded-full" />
-          </div>
-        ))}
-      </div>
-      <div className="border-line mt-3 flex items-center justify-between border-t pt-2.5">
-        <span className="text-muted text-xs">Total TTC</span>
-        <span className="text-ink text-sm font-semibold">2 310 €</span>
-      </div>
     </div>
   );
 }
