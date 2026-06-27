@@ -15,15 +15,18 @@ import {
   Eye,
   History,
   Users,
+  Send,
 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
 import { PageHeader } from "@/components/app/PageHeader";
 import { useToast } from "@/components/ui/Toast";
 import { QuotePreview } from "@/components/devis/QuotePreview";
+import { EmailModal, type EmailPayload } from "@/components/devis/EmailModal";
 import { useCompanyProfile } from "@/lib/companyProfile";
 import { useProducts } from "@/lib/products";
 import { useClients } from "@/lib/clients";
+import { useEmails } from "@/lib/emails";
 import {
   useDraftQuote,
   useQuotes,
@@ -52,12 +55,14 @@ export default function DevisFacturesPage() {
   const { clients } = useClients();
   const { draft, setDraft } = useDraftQuote();
   const { quotes, save, remove } = useQuotes();
+  const { record } = useEmails();
   const toast = useToast();
 
   const [messages, setMessages] = useState<Msg[]>([]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const [tab, setTab] = useState<Tab>("chat");
+  const [emailOpen, setEmailOpen] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -167,6 +172,34 @@ export default function DevisFacturesPage() {
   // Client courant (rapproché par nom) pour la valeur du sélecteur.
   const currentClientId =
     clients.find((c) => c.name && c.name === draft.clientName)?.id ?? "";
+
+  // Envoi email : enregistre le document, le marque « envoyé », historise.
+  function sendEmail(payload: EmailPayload) {
+    let q = draft;
+    if (!q.id) {
+      const year = new Date().getFullYear();
+      q = {
+        ...q,
+        id: newId(),
+        number: nextNumber(quotes, q.type, year),
+        createdAt: new Date().toISOString(),
+      };
+    }
+    q = { ...q, status: "sent" };
+    save(q);
+    setDraft(q);
+    record({
+      to: payload.to,
+      toName: q.clientName,
+      subject: payload.subject,
+      body: payload.body,
+      kind: q.type === "facture" ? "facture" : "devis",
+      documentId: q.id,
+      documentRef: q.number,
+    });
+    setEmailOpen(false);
+    toast(`${q.type === "facture" ? "Facture" : "Devis"} marqué envoyé`);
+  }
 
   const totals = computeTotals(draft);
   const hasDraft = draft.lines.length > 0 || draft.clientName || draft.title;
@@ -365,6 +398,13 @@ export default function DevisFacturesPage() {
                 <Save size={16} />
               </IconBtn>
               <IconBtn
+                label="Envoyer par email"
+                onClick={() => setEmailOpen(true)}
+                disabled={draft.lines.length === 0}
+              >
+                <Send size={16} />
+              </IconBtn>
+              <IconBtn
                 label="Imprimer / PDF"
                 onClick={() => window.print()}
                 disabled={!hasDraft}
@@ -421,6 +461,14 @@ export default function DevisFacturesPage() {
           </div>
         </section>
       </div>
+
+      <EmailModal
+        open={emailOpen}
+        onClose={() => setEmailOpen(false)}
+        quote={draft}
+        profile={profile}
+        onSend={sendEmail}
+      />
     </div>
   );
 }
