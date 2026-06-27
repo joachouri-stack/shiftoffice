@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useSyncExternalStore } from "react";
+import type { PlanId } from "./plans";
 
 export type FiscalRegime = "micro" | "societe";
 
@@ -20,6 +21,7 @@ export type CompanyProfile = {
   fiscalRegime: FiscalRegime;
   vatLiable: boolean; // assujetti à la TVA
   vatRate: number; // taux principal (0 si non assujetti, sinon 10 ou 20)
+  plan: PlanId; // formule d'abonnement courante
   onboardingComplete: boolean;
 };
 
@@ -37,6 +39,7 @@ export const EMPTY_PROFILE: CompanyProfile = {
   fiscalRegime: "micro",
   vatLiable: false,
   vatRate: 0,
+  plan: "gratuit",
   onboardingComplete: false,
 };
 

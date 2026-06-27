@@ -37,6 +37,7 @@ export function profileFromRow(r: ProfileRow): CompanyProfile {
     fiscalRegime: (r.regime_fiscal as FiscalRegime) ?? "micro",
     vatLiable: r.assujetti_tva ?? false,
     vatRate: r.taux_tva_principal ?? 0,
+    plan: (r.plan as CompanyProfile["plan"]) ?? "gratuit",
     onboardingComplete: r.onboarding_complete ?? false,
   };
 }
@@ -55,6 +56,7 @@ export function profileToRow(p: CompanyProfile): Partial<ProfileRow> {
     regime_fiscal: p.fiscalRegime,
     assujetti_tva: p.vatLiable,
     taux_tva_principal: p.vatRate,
+    plan: p.plan,
     onboarding_complete: p.onboardingComplete,
   };
 }

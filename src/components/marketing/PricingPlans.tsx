@@ -66,9 +66,11 @@ const PLANS: Plan[] = [
 export function PricingPlans({
   variant = "marketing",
   current,
+  onSelect,
 }: {
   variant?: "marketing" | "app";
   current?: PlanId;
+  onSelect?: (id: PlanId) => void;
 }) {
   const [annual, setAnnual] = useState(false);
 
@@ -120,6 +122,7 @@ export function PricingPlans({
             annual={annual}
             variant={variant}
             current={current}
+            onSelect={onSelect}
           />
         ))}
       </div>
@@ -136,11 +139,13 @@ function PlanCard({
   annual,
   variant,
   current,
+  onSelect,
 }: {
   plan: Plan;
   annual: boolean;
   variant: "marketing" | "app";
   current?: PlanId;
+  onSelect?: (id: PlanId) => void;
 }) {
   const dark = !!plan.featured;
   const mid = !dark && plan.id === "essentiel";
@@ -264,6 +269,7 @@ function PlanCard({
               size="lg"
               className="w-full"
               disabled={isCurrent}
+              onClick={() => onSelect?.(plan.id)}
             >
               {isCurrent
                 ? "Votre formule"
