@@ -4,10 +4,10 @@ import { Container } from "@/components/ui/Container";
 import { LEGAL_NAV, MARKETING_NAV } from "@/lib/navigation";
 
 const PRODUCT_LINKS = [
-  { label: "Dashboard", href: "/dashboard" },
-  { label: "Assistant IA", href: "/assistant" },
-  { label: "Devis & Factures", href: "/devis-factures" },
-  { label: "Coffre-fort", href: "/coffre-fort" },
+  { label: "Fonctionnalités", href: "/#fonctionnalites" },
+  { label: "Démonstration", href: "/#demo" },
+  { label: "Comment ça marche", href: "/#etapes" },
+  { label: "Tarifs", href: "/#abonnements" },
 ];
 
 export function Footer() {

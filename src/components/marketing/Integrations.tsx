@@ -1,22 +1,22 @@
-import { CreditCard, Mail, Globe } from "lucide-react";
+import { CreditCard, MessageCircle, HardDrive } from "lucide-react";
 import { Section, SectionHeading } from "@/components/ui/Section";
 import { Card } from "@/components/ui/Card";
 
 const INTEGRATIONS = [
   {
+    icon: MessageCircle,
+    name: "WhatsApp",
+    text: "Envoyez vos devis et factures à vos clients, directement sur WhatsApp.",
+  },
+  {
+    icon: HardDrive,
+    name: "Google Drive",
+    text: "Sauvegarde automatique de tous vos PDF, bien rangés par dossier.",
+  },
+  {
     icon: CreditCard,
     name: "Stripe",
     text: "Encaissez vos clients et gérez votre abonnement en toute sécurité.",
-  },
-  {
-    icon: Globe,
-    name: "Google",
-    text: "Connexion en un clic avec votre compte Google. Simple et rapide.",
-  },
-  {
-    icon: Mail,
-    name: "Gmail",
-    text: "Envoyez vos devis et factures directement, sans quitter Shift Office.",
   },
 ];
 
@@ -26,7 +26,7 @@ export function Integrations() {
       <SectionHeading
         eyebrow="Intégrations"
         title="Connecté à vos outils"
-        subtitle="Shift Office s'intègre aux services que vous utilisez déjà. D'autres intégrations arrivent."
+        subtitle="Shift Office se connecte à vos outils du quotidien. De nouvelles intégrations arrivent régulièrement."
       />
 
       <div className="mx-auto mt-12 grid max-w-4xl gap-5 sm:grid-cols-3">

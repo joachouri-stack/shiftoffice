@@ -20,7 +20,7 @@ const STEPS = [
 
 export function HowItWorks() {
   return (
-    <Section>
+    <Section id="etapes">
       <SectionHeading
         eyebrow="Comment ça marche"
         title="Simple, du premier au dernier clic"
