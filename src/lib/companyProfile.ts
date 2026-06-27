@@ -2,6 +2,8 @@
 
 import { useCallback, useSyncExternalStore } from "react";
 
+export type FiscalRegime = "micro" | "societe";
+
 /** Profil entreprise de l'artisan, repris automatiquement dans les documents. */
 export type CompanyProfile = {
   name: string;
@@ -11,7 +13,14 @@ export type CompanyProfile = {
   siret: string;
   vat: string; // n° TVA intracommunautaire
   address: string;
+  postalCode: string;
+  city: string;
   logo: string; // data URL (ou vide)
+  // Régime & TVA (collectés à l'onboarding, mappés sur la table `profiles`)
+  fiscalRegime: FiscalRegime;
+  vatLiable: boolean; // assujetti à la TVA
+  vatRate: number; // taux principal (0 si non assujetti, sinon 10 ou 20)
+  onboardingComplete: boolean;
 };
 
 export const EMPTY_PROFILE: CompanyProfile = {
@@ -22,7 +31,13 @@ export const EMPTY_PROFILE: CompanyProfile = {
   siret: "",
   vat: "",
   address: "",
+  postalCode: "",
+  city: "",
   logo: "",
+  fiscalRegime: "micro",
+  vatLiable: false,
+  vatRate: 0,
+  onboardingComplete: false,
 };
 
 const STORAGE_KEY = "shiftoffice.company";

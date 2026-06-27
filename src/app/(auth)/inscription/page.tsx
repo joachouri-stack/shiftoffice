@@ -7,6 +7,7 @@ import { Check } from "lucide-react";
 import { Card } from "@/components/ui/Card";
 import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
+import { useCompanyProfile } from "@/lib/companyProfile";
 
 const PERKS = [
   "Essai gratuit, sans carte bancaire",
@@ -16,12 +17,20 @@ const PERKS = [
 
 export default function InscriptionPage() {
   const router = useRouter();
+  const { profile, save } = useCompanyProfile();
   const [loading, setLoading] = useState(false);
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setLoading(true);
-    setTimeout(() => router.push("/dashboard"), 600);
+    // V1 — pré-remplit le profil avec les infos saisies, puis lance l'onboarding.
+    const data = new FormData(e.currentTarget as HTMLFormElement);
+    save({
+      ...profile,
+      name: String(data.get("company") || profile.name),
+      email: String(data.get("email") || profile.email),
+    });
+    setTimeout(() => router.push("/onboarding"), 600);
   }
 
   return (

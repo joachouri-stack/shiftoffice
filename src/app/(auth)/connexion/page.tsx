@@ -6,16 +6,20 @@ import { useRouter } from "next/navigation";
 import { Card } from "@/components/ui/Card";
 import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
+import { useCompanyProfile } from "@/lib/companyProfile";
 
 export default function ConnexionPage() {
   const router = useRouter();
+  const { profile } = useCompanyProfile();
   const [loading, setLoading] = useState(false);
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setLoading(true);
-    // V1 — branchement backend à venir. On simule la redirection.
-    setTimeout(() => router.push("/dashboard"), 600);
+    // V1 — branchement backend à venir. On simule la redirection :
+    // onboarding tant qu'il n'est pas terminé, sinon tableau de bord.
+    const dest = profile.onboardingComplete ? "/dashboard" : "/onboarding";
+    setTimeout(() => router.push(dest), 600);
   }
 
   return (
