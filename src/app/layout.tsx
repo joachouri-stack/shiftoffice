@@ -37,10 +37,29 @@ const playfair = Playfair_Display({
   display: "swap",
 });
 
+const SITE_URL = "https://shiftoffice.fr";
+const TITLE = "Shift Office — Vos documents légaux en 2 minutes";
+const DESCRIPTION =
+  "Fiches de paie, contrats, quittances, statuts… Générez vos documents RH et administratifs conformes 2026 en 2 minutes. Sans comptable, sans erreur, sans prise de tête.";
+
 export const metadata: Metadata = {
-  title: "Shift Office — Vos documents légaux en 2 minutes",
-  description:
-    "Générez fiches de paie, contrats, quittances et statuts conformes à la législation française 2026. Sans comptable, sans erreur, sans prise de tête.",
+  metadataBase: new URL(SITE_URL),
+  title: TITLE,
+  description: DESCRIPTION,
+  applicationName: "Shift Office",
+  openGraph: {
+    type: "website",
+    locale: "fr_FR",
+    url: SITE_URL,
+    siteName: "Shift Office",
+    title: TITLE,
+    description: DESCRIPTION,
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: TITLE,
+    description: DESCRIPTION,
+  },
 };
 
 export const viewport: Viewport = {
