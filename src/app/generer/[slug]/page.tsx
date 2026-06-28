@@ -1,17 +1,42 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import {
+  createContext,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
+  type Dispatch,
+  type SetStateAction,
+} from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { ArrowLeft, Download, FileText, Lock, Loader2 } from "lucide-react";
 import { Logo } from "@/components/brand/Logo";
 import { EmailCopy } from "@/components/documents/EmailCopy";
+import { ModeRapide } from "@/components/documents/ModeRapide";
 import { DOCUMENTS, formatPrice } from "@/lib/documents";
 import { calculerFichePaie } from "@/lib/paie/calcul";
+
+/**
+ * Pré-remplissage « Mode rapide » : la valeur extraite par l'IA est partagée
+ * via ce contexte ; chaque formulaire la fusionne dans son état local.
+ */
+const PrefillContext = createContext<Record<string, string> | null>(null);
+
+function usePrefill<T>(setF: Dispatch<SetStateAction<T>>) {
+  const prefill = useContext(PrefillContext);
+  useEffect(() => {
+    if (prefill && Object.keys(prefill).length) {
+      setF((p) => ({ ...p, ...prefill }) as T);
+    }
+  }, [prefill, setF]);
+}
 
 export default function GenererPage() {
   const params = useParams<{ slug: string }>();
   const doc = DOCUMENTS.find((d) => d.slug === params.slug);
+  const [prefill, setPrefill] = useState<Record<string, string> | null>(null);
 
   return (
     <div className="bg-creme min-h-dvh">
@@ -60,25 +85,27 @@ export default function GenererPage() {
               </span>
             </div>
 
-            {doc.slug === "quittance-loyer" ? (
-              <QuittanceForm />
-            ) : doc.slug === "attestation-employeur" ? (
-              <AttestationForm />
-            ) : doc.slug === "fiche-paie" ? (
-              <FichePaieForm />
-            ) : doc.slug === "contrat-travail" ? (
-              <ContratForm />
-            ) : doc.slug === "certificat-travail" ? (
-              <CertificatForm />
-            ) : doc.slug === "solde-tout-compte" ? (
-              <SoldeForm />
-            ) : doc.slug === "rupture-conventionnelle" ? (
-              <RuptureForm />
-            ) : doc.slug === "bail-commercial" ? (
-              <BailCommercialForm />
-            ) : doc.slug === "statuts-societe" ? (
-              <StatutsForm />
-            ) : doc.free ? (
+            <PrefillContext.Provider value={prefill}>
+              <ModeRapide type={doc.slug} onFill={setPrefill} />
+              {doc.slug === "quittance-loyer" ? (
+                <QuittanceForm />
+              ) : doc.slug === "attestation-employeur" ? (
+                <AttestationForm />
+              ) : doc.slug === "fiche-paie" ? (
+                <FichePaieForm />
+              ) : doc.slug === "contrat-travail" ? (
+                <ContratForm />
+              ) : doc.slug === "certificat-travail" ? (
+                <CertificatForm />
+              ) : doc.slug === "solde-tout-compte" ? (
+                <SoldeForm />
+              ) : doc.slug === "rupture-conventionnelle" ? (
+                <RuptureForm />
+              ) : doc.slug === "bail-commercial" ? (
+                <BailCommercialForm />
+              ) : doc.slug === "statuts-societe" ? (
+                <StatutsForm />
+              ) : doc.free ? (
               <Card>
                 <p className="text-noir font-semibold">
                   Formulaire en préparation
@@ -91,6 +118,7 @@ export default function GenererPage() {
             ) : (
               <PayantNotice price={doc.price} />
             )}
+            </PrefillContext.Provider>
           </>
         )}
       </main>
@@ -162,6 +190,7 @@ function QuittanceForm() {
   function set<K extends keyof typeof f>(k: K, v: string) {
     setF((p) => ({ ...p, [k]: v }));
   }
+  usePrefill(setF);
 
   const total = useMemo(() => {
     const n = (s: string) => parseFloat(s.replace(",", ".")) || 0;
@@ -351,6 +380,7 @@ function AttestationForm() {
   function set<K extends keyof typeof f>(k: K, v: string) {
     setF((p) => ({ ...p, [k]: v }));
   }
+  usePrefill(setF);
 
   const valid =
     f.entrepriseNom.trim() &&
@@ -487,6 +517,7 @@ function FichePaieForm() {
   function set<K extends keyof typeof f>(k: K, v: string) {
     setF((p) => ({ ...p, [k]: v }));
   }
+  usePrefill(setF);
 
   const n = (s: string) => parseFloat(s.replace(",", ".")) || 0;
   const res = useMemo(
@@ -654,6 +685,7 @@ function CertificatForm() {
   function set<K extends keyof typeof f>(k: K, v: string) {
     setF((p) => ({ ...p, [k]: v }));
   }
+  usePrefill(setF);
 
   const valid =
     f.entrepriseNom.trim() &&
@@ -775,6 +807,7 @@ function ContratForm() {
   function set<K extends keyof typeof f>(k: K, v: string) {
     setF((p) => ({ ...p, [k]: v }));
   }
+  usePrefill(setF);
 
   const cdd = f.typeContrat === "cdd";
   const valid =
@@ -941,6 +974,7 @@ function SoldeForm() {
   function set<K extends keyof typeof f>(k: K, v: string) {
     setF((p) => ({ ...p, [k]: v }));
   }
+  usePrefill(setF);
 
   const n = (s: string) => parseFloat(s.replace(",", ".")) || 0;
   const total = useMemo(
@@ -1102,6 +1136,7 @@ function RuptureForm() {
   function set<K extends keyof typeof f>(k: K, v: string) {
     setF((p) => ({ ...p, [k]: v }));
   }
+  usePrefill(setF);
 
   const valid =
     f.entrepriseNom.trim() &&
@@ -1240,6 +1275,7 @@ function BailCommercialForm() {
   function set<K extends keyof typeof f>(k: K, v: string) {
     setF((p) => ({ ...p, [k]: v }));
   }
+  usePrefill(setF);
 
   const loyerMensuel = useMemo(() => {
     const a = parseFloat(f.loyerAnnuel.replace(",", ".")) || 0;
@@ -1399,6 +1435,7 @@ function StatutsForm() {
   function set<K extends keyof typeof f>(k: K, v: string) {
     setF((p) => ({ ...p, [k]: v }));
   }
+  usePrefill(setF);
 
   const unipersonnelle = f.forme === "EURL" || f.forme === "SASU";
   const parts = f.forme === "SARL" || f.forme === "EURL";
