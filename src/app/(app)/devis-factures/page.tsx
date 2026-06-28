@@ -16,6 +16,7 @@ import {
   History,
   Users,
   Send,
+  Pencil,
 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
@@ -23,6 +24,7 @@ import { PageHeader } from "@/components/app/PageHeader";
 import { useToast } from "@/components/ui/Toast";
 import { QuotePreview } from "@/components/devis/QuotePreview";
 import { EmailModal, type EmailPayload } from "@/components/devis/EmailModal";
+import { QuoteEditor } from "@/components/devis/QuoteEditor";
 import { useCompanyProfile } from "@/lib/companyProfile";
 import { useProducts } from "@/lib/products";
 import { useClients } from "@/lib/clients";
@@ -64,6 +66,7 @@ export default function DevisFacturesPage() {
   const [loading, setLoading] = useState(false);
   const [tab, setTab] = useState<Tab>("chat");
   const [emailOpen, setEmailOpen] = useState(false);
+  const [editOpen, setEditOpen] = useState(false);
   const [chips, setChips] = useState<string[]>([]);
   const scrollRef = useRef<HTMLDivElement>(null);
 
@@ -188,6 +191,14 @@ export default function DevisFacturesPage() {
     const q = { ...draft, status };
     setDraft(q);
     if (q.id) save(q);
+  }
+
+  // Enregistrement des modifications manuelles du devis.
+  function saveEdits(edited: Quote) {
+    setDraft(edited);
+    if (edited.id) save(edited);
+    setEditOpen(false);
+    toast("Devis modifié");
   }
 
   // Envoi email : enregistre le document, le marque « envoyé », historise.
@@ -434,6 +445,13 @@ export default function DevisFacturesPage() {
               />
             </div>
             <div className="flex gap-1.5">
+              <IconBtn
+                label="Modifier"
+                onClick={() => setEditOpen(true)}
+                disabled={!hasDraft}
+              >
+                <Pencil size={16} />
+              </IconBtn>
               <IconBtn label="Enregistrer" onClick={saveDoc} disabled={!hasDraft}>
                 <Save size={16} />
               </IconBtn>
@@ -508,6 +526,14 @@ export default function DevisFacturesPage() {
         quote={draft}
         profile={profile}
         onSend={sendEmail}
+      />
+
+      <QuoteEditor
+        open={editOpen}
+        onClose={() => setEditOpen(false)}
+        quote={draft}
+        profile={profile}
+        onSave={saveEdits}
       />
     </div>
   );

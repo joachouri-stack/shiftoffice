@@ -120,7 +120,8 @@ RÈGLES STRICTES :
     { "description": "...", "quantite": N, "unite": "m²|h|u|forfait", "prix_unitaire_ht": N, "prix_achat_ht": N, "taux_tva": N, "kind": "material|labor|travel|rental|service|other" }
   ]
 }
-Dans ce cas, "message" = un court récapitulatif (1-2 phrases) annonçant que le devis est prêt.`;
+Dans ce cas, "message" = un court récapitulatif (1-2 phrases) du devis, PUIS une invitation professionnelle à compléter avant finalisation. Exemple : « Votre devis est prêt. Souhaitez-vous ajouter une prestation, ajuster une quantité ou un prix avant de le finaliser ? »
+9. Le devis peut être MODIFIÉ après génération : si l'artisan demande un ajout ou un ajustement, renvoie à nouveau "complete": true avec le "devis_data" mis à jour (lignes complètes), et reformule l'invitation à compléter.`;
 }
 
 /* -------------------------- Extraction du JSON --------------------------- */
