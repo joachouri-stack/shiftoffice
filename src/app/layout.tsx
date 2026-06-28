@@ -1,5 +1,10 @@
 import type { Metadata, Viewport } from "next";
-import { Plus_Jakarta_Sans, DM_Sans, Inter, Fraunces } from "next/font/google";
+import {
+  Plus_Jakarta_Sans,
+  DM_Sans,
+  Inter,
+  Playfair_Display,
+} from "next/font/google";
 import "./globals.css";
 
 const jakarta = Plus_Jakarta_Sans({
@@ -16,7 +21,7 @@ const dmSans = DM_Sans({
   display: "swap",
 });
 
-// Marque « [Shift] Office » — Inter (wordmark "[Shift]") + Fraunces ("Office")
+// Marque « [Shift] Office » — Inter (wordmark "[Shift]") + Playfair Display ("Office")
 const inter = Inter({
   variable: "--font-inter",
   subsets: ["latin"],
@@ -24,12 +29,11 @@ const inter = Inter({
   display: "swap",
 });
 
-// Fraunces en variable avec l'axe « opsz » : on force la coupe display
-// (opsz élevé) pour un rendu serif haute-couture, contrasté et élégant.
-const fraunces = Fraunces({
-  variable: "--font-fraunces",
+// Playfair Display : serif élégant haute-couture pour le mot « Office ».
+const playfair = Playfair_Display({
+  variable: "--font-playfair",
   subsets: ["latin"],
-  axes: ["opsz"],
+  weight: ["500", "600"],
   display: "swap",
 });
 
@@ -53,7 +57,7 @@ export default function RootLayout({
   return (
     <html
       lang="fr"
-      className={`${jakarta.variable} ${dmSans.variable} ${inter.variable} ${fraunces.variable} antialiased`}
+      className={`${jakarta.variable} ${dmSans.variable} ${inter.variable} ${playfair.variable} antialiased`}
     >
       <body className="bg-noir font-sans">{children}</body>
     </html>

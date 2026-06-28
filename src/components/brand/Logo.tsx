@@ -38,10 +38,9 @@ export function Logo({
       </span>
       <span
         style={{
-          fontFamily: "var(--font-fraunces), serif",
-          fontSize: `${1.34 * size}rem`,
-          fontWeight: 500,
-          fontVariationSettings: '"opsz" 144',
+          fontFamily: "var(--font-playfair), serif",
+          fontSize: `${1.38 * size}rem`,
+          fontWeight: 600,
           letterSpacing: "-0.005em",
           color: qualifierColor,
         }}
