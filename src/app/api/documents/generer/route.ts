@@ -2,6 +2,7 @@ import { calculerFichePaie } from "@/lib/paie/calcul";
 import { buildFichePaiePDF } from "@/lib/pdf/fiche-paie";
 import { buildContratPDF } from "@/lib/pdf/contrat";
 import { buildCertificatPDF } from "@/lib/pdf/certificat";
+import { buildSoldeToutComptePDF } from "@/lib/pdf/solde-tout-compte";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -87,6 +88,30 @@ export async function POST(req: Request) {
       date: String(d.date ?? ""),
     });
     return pdfResponse(pdf, "certificat-de-travail.pdf");
+  }
+
+  if (type === "solde-tout-compte") {
+    const pdf = await buildSoldeToutComptePDF({
+      entrepriseNom: String(d.entrepriseNom ?? ""),
+      entrepriseAdresse: String(d.entrepriseAdresse ?? ""),
+      siret: String(d.siret ?? ""),
+      representantNom: String(d.representantNom ?? ""),
+      representantQualite: String(d.representantQualite ?? ""),
+      salarieNom: String(d.salarieNom ?? ""),
+      salarieAdresse: String(d.salarieAdresse ?? ""),
+      poste: String(d.poste ?? ""),
+      dateEntree: String(d.dateEntree ?? ""),
+      dateSortie: String(d.dateSortie ?? ""),
+      motifRupture: String(d.motifRupture ?? ""),
+      salaireDu: num(d.salaireDu),
+      indemniteConges: num(d.indemniteConges),
+      indemnitePreavis: num(d.indemnitePreavis),
+      indemniteRupture: num(d.indemniteRupture),
+      autresSommes: num(d.autresSommes),
+      ville: String(d.ville ?? ""),
+      date: String(d.date ?? ""),
+    });
+    return pdfResponse(pdf, "solde-de-tout-compte.pdf");
   }
 
   return Response.json(
