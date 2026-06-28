@@ -3,7 +3,7 @@ import {
   Plus_Jakarta_Sans,
   DM_Sans,
   Inter,
-  Playfair_Display,
+  Instrument_Sans,
 } from "next/font/google";
 import "./globals.css";
 
@@ -29,9 +29,9 @@ const inter = Inter({
   display: "swap",
 });
 
-// Playfair Display : serif élégant haute-couture pour le mot « Office ».
-const playfair = Playfair_Display({
-  variable: "--font-playfair",
+// Instrument Sans pour le mot « Office » du wordmark.
+const officeFont = Instrument_Sans({
+  variable: "--font-office",
   subsets: ["latin"],
   weight: ["500", "600"],
   display: "swap",
@@ -76,7 +76,7 @@ export default function RootLayout({
   return (
     <html
       lang="fr"
-      className={`${jakarta.variable} ${dmSans.variable} ${inter.variable} ${playfair.variable} antialiased`}
+      className={`${jakarta.variable} ${dmSans.variable} ${inter.variable} ${officeFont.variable} antialiased`}
     >
       <body className="bg-noir font-sans">{children}</body>
     </html>
