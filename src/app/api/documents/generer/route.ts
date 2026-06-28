@@ -5,6 +5,11 @@ import { buildCertificatPDF } from "@/lib/pdf/certificat";
 import { buildSoldeToutComptePDF } from "@/lib/pdf/solde-tout-compte";
 import { buildRupturePDF } from "@/lib/pdf/rupture";
 import { buildBailCommercialPDF } from "@/lib/pdf/bail-commercial";
+import {
+  buildStatutsPDF,
+  type Associe,
+  type StatutsData,
+} from "@/lib/pdf/statuts";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -159,6 +164,35 @@ export async function POST(req: Request) {
       date: String(d.date ?? ""),
     });
     return pdfResponse(pdf, "bail-commercial.pdf");
+  }
+
+  if (type === "statuts-societe") {
+    const formes = ["SARL", "SAS", "EURL", "SASU"] as const;
+    const forme = formes.includes(d.forme as (typeof formes)[number])
+      ? (d.forme as StatutsData["forme"])
+      : "SARL";
+    const associes: Associe[] = Array.isArray(d.associes)
+      ? (d.associes as Array<Record<string, unknown>>).map((a) => ({
+          nom: String(a.nom ?? ""),
+          adresse: String(a.adresse ?? ""),
+          apport: num(a.apport),
+        }))
+      : [];
+    const pdf = await buildStatutsPDF({
+      forme,
+      denomination: String(d.denomination ?? ""),
+      objet: String(d.objet ?? ""),
+      siege: String(d.siege ?? ""),
+      duree: String(d.duree ?? ""),
+      capital: num(d.capital),
+      valeurTitre: num(d.valeurTitre),
+      associes,
+      dirigeantNom: String(d.dirigeantNom ?? ""),
+      dirigeantAdresse: String(d.dirigeantAdresse ?? ""),
+      ville: String(d.ville ?? ""),
+      date: String(d.date ?? ""),
+    });
+    return pdfResponse(pdf, "statuts-societe.pdf");
   }
 
   return Response.json(

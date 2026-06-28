@@ -75,6 +75,8 @@ export default function GenererPage() {
               <RuptureForm />
             ) : doc.slug === "bail-commercial" ? (
               <BailCommercialForm />
+            ) : doc.slug === "statuts-societe" ? (
+              <StatutsForm />
             ) : doc.free ? (
               <Card>
                 <p className="text-noir font-semibold">
@@ -1343,6 +1345,278 @@ function BailCommercialForm() {
         <p className="text-gris text-xs">
           Le paiement sécurisé (9&nbsp;€) sera requis avant téléchargement dès
           l&apos;activation de Stripe.
+        </p>
+      </form>
+    </Card>
+  );
+}
+
+type AssocieRow = { nom: string; adresse: string; apport: string };
+
+function StatutsForm() {
+  const [f, setF] = useState({
+    forme: "SARL",
+    denomination: "",
+    objet: "",
+    siege: "",
+    duree: "99 ans",
+    valeurTitre: "10",
+    dirigeantNom: "",
+    dirigeantAdresse: "",
+    ville: "",
+    date: aujourdhui(),
+  });
+  const [associes, setAssocies] = useState<AssocieRow[]>([
+    { nom: "", adresse: "", apport: "" },
+  ]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+
+  function set<K extends keyof typeof f>(k: K, v: string) {
+    setF((p) => ({ ...p, [k]: v }));
+  }
+
+  const unipersonnelle = f.forme === "EURL" || f.forme === "SASU";
+  const parts = f.forme === "SARL" || f.forme === "EURL";
+
+  // Les formes unipersonnelles n'ont qu'un seul associé
+  function setForme(v: string) {
+    setF((p) => ({ ...p, forme: v }));
+    if ((v === "EURL" || v === "SASU") && associes.length > 1) {
+      setAssocies((p) => [p[0]]);
+    }
+  }
+
+  function setAssocie(i: number, k: keyof AssocieRow, v: string) {
+    setAssocies((p) => p.map((a, j) => (j === i ? { ...a, [k]: v } : a)));
+  }
+  function addAssocie() {
+    setAssocies((p) => [...p, { nom: "", adresse: "", apport: "" }]);
+  }
+  function removeAssocie(i: number) {
+    setAssocies((p) => (p.length > 1 ? p.filter((_, j) => j !== i) : p));
+  }
+
+  const n = (s: string) => parseFloat(s.replace(",", ".")) || 0;
+  const capital = useMemo(
+    () => associes.reduce((s, a) => s + n(a.apport), 0),
+    [associes]
+  );
+  const nbTitres = useMemo(() => {
+    const v = n(f.valeurTitre);
+    return v > 0 ? Math.round(capital / v) : 0;
+  }, [capital, f.valeurTitre]);
+
+  const valid =
+    f.denomination.trim() &&
+    f.objet.trim() &&
+    f.siege.trim() &&
+    f.dirigeantNom.trim() &&
+    associes.some((a) => a.nom.trim()) &&
+    capital > 0;
+
+  async function generate() {
+    if (!valid || loading) return;
+    setLoading(true);
+    setError("");
+    try {
+      const res = await fetch("/api/documents/generer", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          type_document: "statuts-societe",
+          donnees: { ...f, capital: String(capital), associes },
+        }),
+      });
+      if (!res.ok) throw new Error("génération");
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "statuts-societe.pdf";
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+    } catch {
+      setError("La génération a échoué. Réessayez.");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  return (
+    <Card>
+      <form
+        onSubmit={(e) => {
+          e.preventDefault();
+          generate();
+        }}
+        className="space-y-5"
+      >
+        {/* Forme */}
+        <div>
+          <span className="text-noir mb-1.5 block text-sm font-medium">
+            Forme juridique
+          </span>
+          <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+            {["SARL", "SAS", "EURL", "SASU"].map((val) => (
+              <button
+                key={val}
+                type="button"
+                onClick={() => setForme(val)}
+                className={`h-11 rounded-lg border text-sm font-semibold transition-colors ${
+                  f.forme === val
+                    ? "border-or bg-or text-white"
+                    : "border-or/30 text-noir bg-white"
+                }`}
+              >
+                {val}
+              </button>
+            ))}
+          </div>
+          <p className="text-gris mt-2 text-xs">
+            {unipersonnelle
+              ? "Forme unipersonnelle : un seul associé."
+              : `Capital divisé en ${parts ? "parts sociales" : "actions"}.`}
+          </p>
+        </div>
+
+        <div>
+          <p className="text-noir mb-3 text-sm font-bold">La société</p>
+          <div className="grid gap-3 sm:grid-cols-2">
+            <Input label="Dénomination sociale" value={f.denomination} onChange={(v) => set("denomination", v)} placeholder="Ex. Le Bistrot Lyonnais" />
+            <Input label="Durée" value={f.duree} onChange={(v) => set("duree", v)} placeholder="99 ans" />
+          </div>
+          <div className="mt-3">
+            <label className="block">
+              <span className="text-noir mb-1.5 block text-sm font-medium">
+                Objet social
+              </span>
+              <textarea
+                value={f.objet}
+                onChange={(e) => set("objet", e.target.value)}
+                placeholder="Ex. l'exploitation d'un restaurant, la vente de plats à emporter…"
+                rows={2}
+                className="border-or/30 bg-white text-noir placeholder:text-gris/50 focus:border-or focus:ring-or/15 w-full rounded-lg border px-3.5 py-2.5 text-sm outline-none transition-all focus:ring-4"
+              />
+            </label>
+          </div>
+          <div className="mt-3">
+            <Input label="Siège social" value={f.siege} onChange={(v) => set("siege", v)} placeholder="5 place du Marché, 69003 Lyon" />
+          </div>
+        </div>
+
+        {/* Associés */}
+        <div>
+          <div className="mb-3 flex items-center justify-between">
+            <p className="text-noir text-sm font-bold">
+              {unipersonnelle ? "L'associé unique" : "Les associés"}
+            </p>
+            {!unipersonnelle && (
+              <button
+                type="button"
+                onClick={addAssocie}
+                className="text-orange text-sm font-semibold hover:underline"
+              >
+                + Ajouter un associé
+              </button>
+            )}
+          </div>
+          <div className="space-y-4">
+            {associes.map((a, i) => (
+              <div
+                key={i}
+                className="border-or/20 bg-creme/40 rounded-xl border p-3"
+              >
+                {!unipersonnelle && associes.length > 1 && (
+                  <div className="mb-2 flex items-center justify-between">
+                    <span className="text-gris text-xs font-bold">
+                      Associé {i + 1}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => removeAssocie(i)}
+                      className="text-xs font-semibold text-red-500 hover:underline"
+                    >
+                      Retirer
+                    </button>
+                  </div>
+                )}
+                <div className="grid gap-3 sm:grid-cols-2">
+                  <Input label="Nom / prénom" value={a.nom} onChange={(v) => setAssocie(i, "nom", v)} placeholder="Ex. Sophie Martin" />
+                  <Input label="Apport (€)" value={a.apport} onChange={(v) => setAssocie(i, "apport", v)} placeholder="5000" inputMode="decimal" />
+                </div>
+                <div className="mt-3">
+                  <Input label="Adresse" value={a.adresse} onChange={(v) => setAssocie(i, "adresse", v)} placeholder="3 rue des Fleurs, 69003 Lyon" />
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div>
+          <p className="text-noir mb-3 text-sm font-bold">Capital</p>
+          <div className="grid gap-3 sm:grid-cols-2">
+            <Input
+              label={`Valeur d'${parts ? "une part" : "une action"} (€)`}
+              value={f.valeurTitre}
+              onChange={(v) => set("valeurTitre", v)}
+              placeholder="10"
+              inputMode="decimal"
+            />
+            <div className="bg-noir flex flex-col justify-center rounded-lg px-4 py-2 text-white">
+              <span className="text-or text-[0.7rem] font-bold uppercase tracking-wider">
+                Capital social
+              </span>
+              <span className="font-display text-lg font-bold">
+                {capital.toLocaleString("fr-FR", { minimumFractionDigits: 2 })} €
+              </span>
+              <span className="text-[0.7rem] text-white/50">
+                {nbTitres} {parts ? "parts" : "actions"}
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <div>
+          <p className="text-noir mb-3 text-sm font-bold">
+            {parts ? "Le gérant" : "Le président"}
+          </p>
+          <div className="grid gap-3 sm:grid-cols-2">
+            <Input label="Nom et prénom" value={f.dirigeantNom} onChange={(v) => set("dirigeantNom", v)} placeholder="Ex. Sophie Martin" />
+            <Input label="Adresse" value={f.dirigeantAdresse} onChange={(v) => set("dirigeantAdresse", v)} placeholder="3 rue des Fleurs, 69003 Lyon" />
+          </div>
+        </div>
+
+        <div className="grid gap-3 sm:grid-cols-2">
+          <Input label="Ville (signature)" value={f.ville} onChange={(v) => set("ville", v)} placeholder="Lyon" />
+          <Input label="Date de signature" value={f.date} onChange={(v) => set("date", v)} placeholder="28/06/2026" />
+        </div>
+
+        {error && <p className="text-sm font-medium text-red-600">{error}</p>}
+
+        <button
+          type="submit"
+          disabled={!valid || loading}
+          className="bg-orange hover:bg-orange-d inline-flex w-full items-center justify-center gap-2 rounded-[10px] px-6 py-3.5 text-base font-bold text-white transition-colors disabled:opacity-50 sm:w-auto"
+        >
+          {loading ? (
+            <>
+              <Loader2 size={18} className="animate-spin" />
+              Génération…
+            </>
+          ) : (
+            <>
+              <Download size={18} />
+              Générer les statuts (PDF)
+            </>
+          )}
+        </button>
+        <p className="text-gris text-xs">
+          Le paiement sécurisé (19&nbsp;€) sera requis avant téléchargement dès
+          l&apos;activation de Stripe. Modèle à adapter à votre situation ; une
+          relecture par un professionnel est recommandée.
         </p>
       </form>
     </Card>
