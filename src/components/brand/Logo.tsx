@@ -41,6 +41,7 @@ export function Logo({
           fontFamily: "var(--font-fraunces), serif",
           fontSize: `${1.34 * size}rem`,
           fontWeight: 500,
+          fontVariationSettings: '"opsz" 144',
           letterSpacing: "-0.005em",
           color: qualifierColor,
         }}

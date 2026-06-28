@@ -24,10 +24,12 @@ const inter = Inter({
   display: "swap",
 });
 
+// Fraunces en variable avec l'axe « opsz » : on force la coupe display
+// (opsz élevé) pour un rendu serif haute-couture, contrasté et élégant.
 const fraunces = Fraunces({
   variable: "--font-fraunces",
   subsets: ["latin"],
-  weight: ["500"],
+  axes: ["opsz"],
   display: "swap",
 });
 
