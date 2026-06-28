@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { LegalPage, LegalSection, Todo } from "@/components/legal/LegalPage";
+import { LegalPage, LegalSection } from "@/components/legal/LegalPage";
 
 export const metadata: Metadata = {
   title: "Politique de confidentialité — Shift Office",
@@ -14,7 +14,7 @@ export default function ConfidentialitePage() {
           Le responsable du traitement des données personnelles collectées sur{" "}
           <strong>shiftoffice.fr</strong> est{" "}
           <strong>Shift Office</strong>, joignable à
-          l&apos;adresse <Todo>[À COMPLÉTER — adresse e-mail]</Todo>.
+          l&apos;adresse <strong>info@shiftoffice.fr</strong>.
         </p>
       </LegalSection>
 
@@ -72,10 +72,8 @@ export default function ConfidentialitePage() {
             <strong>Stripe</strong> — traitement des paiements.
           </li>
           <li>
-            <strong>
-              <Todo>[À COMPLÉTER — hébergeur]</Todo>
-            </strong>{" "}
-            — hébergement du site.
+            <strong>Hostinger International Ltd</strong> — hébergement du site
+            (Larnaca, Chypre).
           </li>
         </ul>
         <p>
@@ -90,7 +88,7 @@ export default function ConfidentialitePage() {
           disposez d&apos;un droit d&apos;accès, de rectification,
           d&apos;effacement, de limitation, d&apos;opposition et de portabilité
           de vos données. Vous pouvez exercer ces droits en nous écrivant à{" "}
-          <Todo>[À COMPLÉTER — adresse e-mail]</Todo>. Vous avez également le
+          <strong>info@shiftoffice.fr</strong>. Vous avez également le
           droit d&apos;introduire une réclamation auprès de la CNIL
           (www.cnil.fr).
         </p>

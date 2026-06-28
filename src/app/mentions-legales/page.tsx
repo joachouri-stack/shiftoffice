@@ -15,33 +15,36 @@ export default function MentionsLegalesPage() {
         </p>
         <ul>
           <li>
-            Dénomination sociale : <strong>Shift Office</strong>
+            Éditeur : <strong>Johane Achouri</strong>, entrepreneur individuel
           </li>
           <li>
-            Forme juridique : <Todo>[À COMPLÉTER — SAS, SASU, EURL…]</Todo>
+            Nom commercial : <strong>Shift Office</strong>
           </li>
           <li>
-            Capital social : <Todo>[À COMPLÉTER]</Todo>
+            Forme juridique : <strong>Entreprise individuelle — régime
+            micro-entrepreneur (auto-entrepreneur)</strong>
           </li>
           <li>
-            Siège social : <Todo>[À COMPLÉTER — adresse]</Todo>
+            Adresse : <Todo>[À COMPLÉTER — n° et rue]</Todo>, Avignon
           </li>
           <li>
             SIRET : <strong>490 415 031 00122</strong>
           </li>
           <li>
-            RCS : <Todo>[À COMPLÉTER — ville d&apos;immatriculation]</Todo> 490 415
-            031
+            RCS : <strong>Avignon 490 415 031</strong>
           </li>
           <li>
             Code APE / NAF : <strong>8559A</strong>
           </li>
           <li>
-            Numéro de TVA intracommunautaire :{" "}
-            <strong>FR 30 490 415 031</strong>
+            TVA : <strong>TVA non applicable, art. 293 B du CGI</strong>{" "}
+            (franchise en base de TVA)
           </li>
           <li>
-            Adresse e-mail : <Todo>[À COMPLÉTER — ex. contact@shiftoffice.fr]</Todo>
+            E-mail : <strong>info@shiftoffice.fr</strong>
+          </li>
+          <li>
+            Téléphone : <strong>07 69 01 02 02</strong>
           </li>
         </ul>
       </LegalSection>
@@ -49,8 +52,8 @@ export default function MentionsLegalesPage() {
       <LegalSection n={2} title="Directeur de la publication">
         <p>
           Le directeur de la publication est{" "}
-          <Todo>[À COMPLÉTER — nom du représentant légal]</Todo>, en qualité de{" "}
-          <Todo>[À COMPLÉTER — Président, Gérant…]</Todo>.
+          <strong>Johane Achouri</strong>, en qualité d&apos;entrepreneur
+          individuel.
         </p>
       </LegalSection>
 
@@ -58,13 +61,13 @@ export default function MentionsLegalesPage() {
         <p>Le site est hébergé par :</p>
         <ul>
           <li>
-            Hébergeur : <Todo>[À COMPLÉTER — ex. Hetzner, OVH, Scaleway…]</Todo>
+            Hébergeur : <strong>Hostinger International Ltd</strong>
           </li>
           <li>
-            Adresse : <Todo>[À COMPLÉTER]</Todo>
+            Adresse : 61 Lordou Vironos Street, 6023 Larnaca, Chypre
           </li>
           <li>
-            Téléphone : <Todo>[À COMPLÉTER]</Todo>
+            Site : <a href="https://www.hostinger.fr">www.hostinger.fr</a>
           </li>
         </ul>
       </LegalSection>
@@ -94,7 +97,7 @@ export default function MentionsLegalesPage() {
       <LegalSection n={6} title="Contact">
         <p>
           Pour toute question, vous pouvez nous écrire à{" "}
-          <Todo>[À COMPLÉTER — adresse e-mail]</Todo>.
+          <strong>info@shiftoffice.fr</strong>.
         </p>
       </LegalSection>
     </LegalPage>

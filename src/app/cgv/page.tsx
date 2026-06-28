@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { LegalPage, LegalSection, Todo } from "@/components/legal/LegalPage";
+import { LegalPage, LegalSection } from "@/components/legal/LegalPage";
 import { DOCUMENTS, formatPrice } from "@/lib/documents";
 
 export const metadata: Metadata = {
@@ -78,7 +78,7 @@ export default function CgvPage() {
           immédiatement après la confirmation du paiement. Aucun envoi postal
           n&apos;est effectué. En cas de difficulté de téléchargement, le client
           peut nous contacter à{" "}
-          <Todo>[À COMPLÉTER — adresse e-mail]</Todo>.
+          <strong>info@shiftoffice.fr</strong>.
         </p>
       </LegalSection>
 
@@ -111,7 +111,7 @@ export default function CgvPage() {
           être accordé en cas de problème technique ayant empêché la génération
           ou le téléchargement du document commandé et payé, après prise de
           contact avec notre support. La demande doit être adressée à{" "}
-          <Todo>[À COMPLÉTER — adresse e-mail]</Todo> dans un délai de 14 jours.
+          <strong>info@shiftoffice.fr</strong> dans un délai de 14 jours.
         </p>
       </LegalSection>
 
