@@ -73,7 +73,13 @@ export async function buildSoldeToutComptePDF(d: SoldeData): Promise<Uint8Array>
   // Titre
   y -= 24;
   line("REÇU POUR SOLDE DE TOUT COMPTE", 17, bold);
-  page.drawRectangle({ x: M, y: y - 9, width: 64, height: 3, color: OR });
+  page.drawRectangle({
+    x: M,
+    y: y - 9,
+    width: bold.widthOfTextAtSize("REÇU POUR SOLDE DE TOUT COMPTE", 17),
+    height: 3,
+    color: OR,
+  });
   y -= 38;
 
   // Identité salarié

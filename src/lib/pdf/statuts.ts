@@ -78,7 +78,13 @@ export async function buildStatutsPDF(d: StatutsData): Promise<Uint8Array> {
 
   // Titre
   line("STATUTS", 20, bold);
-  page.drawRectangle({ x: M, y: y - 9, width: 64, height: 3, color: OR });
+  page.drawRectangle({
+    x: M,
+    y: y - 9,
+    width: bold.widthOfTextAtSize("STATUTS", 20),
+    height: 3,
+    color: OR,
+  });
   y -= 22;
   line(`${formeLongue[d.forme]} (${d.forme})`, 11, font, GRIS);
   y -= 14;

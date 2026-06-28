@@ -63,14 +63,17 @@ export async function buildContratPDF(d: ContratData): Promise<Uint8Array> {
   const cdi = d.typeContrat !== "cdd";
 
   // Titre
-  line(
-    cdi
-      ? "CONTRAT DE TRAVAIL À DURÉE INDÉTERMINÉE"
-      : "CONTRAT DE TRAVAIL À DURÉE DÉTERMINÉE",
-    15,
-    bold
-  );
-  page.drawRectangle({ x: M, y: y - 9, width: 64, height: 3, color: OR });
+  const titre = cdi
+    ? "CONTRAT DE TRAVAIL À DURÉE INDÉTERMINÉE"
+    : "CONTRAT DE TRAVAIL À DURÉE DÉTERMINÉE";
+  line(titre, 15, bold);
+  page.drawRectangle({
+    x: M,
+    y: y - 9,
+    width: bold.widthOfTextAtSize(titre, 15),
+    height: 3,
+    color: OR,
+  });
   y -= 34;
 
   // Parties

@@ -58,7 +58,13 @@ export async function buildRupturePDF(d: RuptureData): Promise<Uint8Array> {
 
   // Titre
   line("CONVENTION DE RUPTURE CONVENTIONNELLE", 14, bold);
-  page.drawRectangle({ x: M, y: y - 9, width: 64, height: 3, color: OR });
+  page.drawRectangle({
+    x: M,
+    y: y - 9,
+    width: bold.widthOfTextAtSize("CONVENTION DE RUPTURE CONVENTIONNELLE", 14),
+    height: 3,
+    color: OR,
+  });
   y -= 22;
   line("Rupture d'un commun accord d'un contrat à durée indéterminée", 9.5, font, GRIS);
   y -= 26;

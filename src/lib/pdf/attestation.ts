@@ -51,7 +51,13 @@ export async function buildAttestationPDF(
   // — Titre —
   y -= 26;
   text("ATTESTATION D'EMPLOI", M, y, 20, bold);
-  page.drawRectangle({ x: M, y: y - 8, width: 64, height: 3, color: OR });
+  page.drawRectangle({
+    x: M,
+    y: y - 8,
+    width: bold.widthOfTextAtSize("ATTESTATION D'EMPLOI", 20),
+    height: 3,
+    color: OR,
+  });
 
   // — Corps —
   y -= 52;

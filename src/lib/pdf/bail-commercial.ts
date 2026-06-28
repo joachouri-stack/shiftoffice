@@ -70,7 +70,13 @@ export async function buildBailCommercialPDF(
 
   // Titre
   line("BAIL COMMERCIAL", 17, bold);
-  page.drawRectangle({ x: M, y: y - 9, width: 64, height: 3, color: OR });
+  page.drawRectangle({
+    x: M,
+    y: y - 9,
+    width: bold.widthOfTextAtSize("BAIL COMMERCIAL", 17),
+    height: 3,
+    color: OR,
+  });
   y -= 22;
   line(
     "Soumis aux articles L. 145-1 et suivants du Code de commerce",

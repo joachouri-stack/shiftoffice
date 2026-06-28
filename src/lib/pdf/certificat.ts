@@ -50,7 +50,13 @@ export async function buildCertificatPDF(
   // Titre
   y -= 26;
   text("CERTIFICAT DE TRAVAIL", M, y, 20, bold);
-  page.drawRectangle({ x: M, y: y - 8, width: 64, height: 3, color: OR });
+  page.drawRectangle({
+    x: M,
+    y: y - 8,
+    width: bold.widthOfTextAtSize("CERTIFICAT DE TRAVAIL", 20),
+    height: 3,
+    color: OR,
+  });
 
   // Corps
   y -= 52;
