@@ -3,6 +3,7 @@ import {
   buildAttestationPDF,
   type AttestationData,
 } from "@/lib/pdf/attestation";
+import { enregistrerHistorique } from "@/lib/supabase/historique";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -73,6 +74,8 @@ export async function POST(req: Request) {
       { status: 400 }
     );
   }
+
+  await enregistrerHistorique(type);
 
   return new Response(Buffer.from(pdf), {
     status: 200,

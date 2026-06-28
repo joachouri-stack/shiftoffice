@@ -11,6 +11,7 @@ import {
   type StatutsData,
 } from "@/lib/pdf/statuts";
 import { getStripe, isStripeEnabled } from "@/lib/stripe";
+import { enregistrerHistorique } from "@/lib/supabase/historique";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -90,7 +91,7 @@ export async function POST(req: Request) {
       periode: String(d.periode ?? ""),
       result,
     });
-    return pdfResponse(pdf, "fiche-de-paie.pdf");
+    return respond(type, pdf,"fiche-de-paie.pdf");
   }
 
   if (type === "contrat-travail") {
@@ -115,7 +116,7 @@ export async function POST(req: Request) {
       ville: String(d.ville ?? ""),
       date: String(d.date ?? ""),
     });
-    return pdfResponse(pdf, "contrat-de-travail.pdf");
+    return respond(type, pdf,"contrat-de-travail.pdf");
   }
 
   if (type === "certificat-travail") {
@@ -132,7 +133,7 @@ export async function POST(req: Request) {
       ville: String(d.ville ?? ""),
       date: String(d.date ?? ""),
     });
-    return pdfResponse(pdf, "certificat-de-travail.pdf");
+    return respond(type, pdf,"certificat-de-travail.pdf");
   }
 
   if (type === "solde-tout-compte") {
@@ -156,7 +157,7 @@ export async function POST(req: Request) {
       ville: String(d.ville ?? ""),
       date: String(d.date ?? ""),
     });
-    return pdfResponse(pdf, "solde-de-tout-compte.pdf");
+    return respond(type, pdf,"solde-de-tout-compte.pdf");
   }
 
   if (type === "rupture-conventionnelle") {
@@ -177,7 +178,7 @@ export async function POST(req: Request) {
       ville: String(d.ville ?? ""),
       date: String(d.date ?? ""),
     });
-    return pdfResponse(pdf, "rupture-conventionnelle.pdf");
+    return respond(type, pdf,"rupture-conventionnelle.pdf");
   }
 
   if (type === "bail-commercial") {
@@ -201,7 +202,7 @@ export async function POST(req: Request) {
       ville: String(d.ville ?? ""),
       date: String(d.date ?? ""),
     });
-    return pdfResponse(pdf, "bail-commercial.pdf");
+    return respond(type, pdf,"bail-commercial.pdf");
   }
 
   if (type === "statuts-societe") {
@@ -230,13 +231,22 @@ export async function POST(req: Request) {
       ville: String(d.ville ?? ""),
       date: String(d.date ?? ""),
     });
-    return pdfResponse(pdf, "statuts-societe.pdf");
+    return respond(type, pdf,"statuts-societe.pdf");
   }
 
   return Response.json(
     { error: "Type de document non pris en charge." },
     { status: 400 }
   );
+}
+
+async function respond(
+  type: string,
+  pdf: Uint8Array,
+  filename: string
+): Promise<Response> {
+  await enregistrerHistorique(type);
+  return pdfResponse(pdf, filename);
 }
 
 function pdfResponse(pdf: Uint8Array, filename: string): Response {
