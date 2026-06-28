@@ -39,10 +39,10 @@ const REVIEWS: Review[] = [
   },
   {
     text: "Simple, rapide et conforme. Exactement ce dont j'avais besoin.",
-    name: "Nadia R.",
+    name: "Cherryne T.",
     role: "Auto-entrepreneuse",
     doc: "Attestation employeur",
-    initials: "NR",
+    initials: "CT",
   },
   {
     text: "Statuts SASU générés en 10 minutes pour 19€. Incroyable.",
