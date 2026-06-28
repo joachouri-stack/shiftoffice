@@ -6,6 +6,7 @@ import { useParams } from "next/navigation";
 import { ArrowLeft, Download, FileText, Lock, Loader2 } from "lucide-react";
 import { Logo } from "@/components/brand/Logo";
 import { DOCUMENTS, formatPrice } from "@/lib/documents";
+import { calculerFichePaie } from "@/lib/paie/calcul";
 
 export default function GenererPage() {
   const params = useParams<{ slug: string }>();
@@ -62,6 +63,8 @@ export default function GenererPage() {
               <QuittanceForm />
             ) : doc.slug === "attestation-employeur" ? (
               <AttestationForm />
+            ) : doc.slug === "fiche-paie" ? (
+              <FichePaieForm />
             ) : doc.free ? (
               <Card>
                 <p className="text-noir font-semibold">
@@ -263,9 +266,10 @@ function QuittanceForm() {
 async function downloadPdf(
   type: string,
   donnees: Record<string, string>,
-  filename: string
+  filename: string,
+  endpoint = "/api/documents/generer-gratuit"
 ): Promise<boolean> {
-  const res = await fetch("/api/documents/generer-gratuit", {
+  const res = await fetch(endpoint, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ type_document: type, donnees }),
@@ -416,6 +420,177 @@ function AttestationForm() {
         </button>
       </form>
     </Card>
+  );
+}
+
+function FichePaieForm() {
+  const [f, setF] = useState({
+    entrepriseNom: "",
+    entrepriseAdresse: "",
+    siret: "",
+    salarieNom: "",
+    poste: "",
+    numeroSecu: "",
+    periode: moisCourant(),
+    salaireBrut: "",
+    heuresSup: "0",
+    primes: "0",
+  });
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+
+  function set<K extends keyof typeof f>(k: K, v: string) {
+    setF((p) => ({ ...p, [k]: v }));
+  }
+
+  const n = (s: string) => parseFloat(s.replace(",", ".")) || 0;
+  const res = useMemo(
+    () =>
+      calculerFichePaie({
+        salaireBrut: n(f.salaireBrut),
+        heuresSup: n(f.heuresSup),
+        primes: n(f.primes),
+      }),
+    [f.salaireBrut, f.heuresSup, f.primes]
+  );
+
+  const valid =
+    f.entrepriseNom.trim() && f.salarieNom.trim() && n(f.salaireBrut) > 0;
+
+  async function generate() {
+    if (!valid || loading) return;
+    setLoading(true);
+    setError("");
+    try {
+      const ok = await downloadPdf(
+        "fiche-paie",
+        f,
+        "fiche-de-paie.pdf",
+        "/api/documents/generer"
+      );
+      if (!ok) throw new Error("génération");
+    } catch {
+      setError("La génération a échoué. Réessayez.");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  const eur2 = (v: number) =>
+    v.toLocaleString("fr-FR", { minimumFractionDigits: 2 });
+
+  return (
+    <div className="grid gap-5 lg:grid-cols-[1fr_300px]">
+      <Card>
+        <form
+          onSubmit={(e) => {
+            e.preventDefault();
+            generate();
+          }}
+          className="space-y-5"
+        >
+          <div>
+            <p className="text-noir mb-3 text-sm font-bold">L&apos;employeur</p>
+            <div className="grid gap-3 sm:grid-cols-2">
+              <Input label="Nom de l'entreprise" value={f.entrepriseNom} onChange={(v) => set("entrepriseNom", v)} placeholder="Ex. Dupont Bâtiment" />
+              <Input label="SIRET (optionnel)" value={f.siret} onChange={(v) => set("siret", v)} placeholder="123 456 789 00012" />
+            </div>
+            <div className="mt-3">
+              <Input label="Adresse de l'entreprise" value={f.entrepriseAdresse} onChange={(v) => set("entrepriseAdresse", v)} placeholder="12 rue des Artisans, 69003 Lyon" />
+            </div>
+          </div>
+
+          <div>
+            <p className="text-noir mb-3 text-sm font-bold">Le salarié</p>
+            <div className="grid gap-3 sm:grid-cols-2">
+              <Input label="Nom et prénom" value={f.salarieNom} onChange={(v) => set("salarieNom", v)} placeholder="Ex. Ahmed Karim" />
+              <Input label="Poste" value={f.poste} onChange={(v) => set("poste", v)} placeholder="Ex. Ouvrier BTP" />
+            </div>
+            <div className="mt-3 grid gap-3 sm:grid-cols-2">
+              <Input label="N° de sécurité sociale (optionnel)" value={f.numeroSecu} onChange={(v) => set("numeroSecu", v)} placeholder="1 85 03 69…" />
+              <Input label="Période" value={f.periode} onChange={(v) => set("periode", v)} placeholder="Ex. Juin 2025" />
+            </div>
+          </div>
+
+          <div>
+            <p className="text-noir mb-3 text-sm font-bold">Rémunération</p>
+            <div className="grid gap-3 sm:grid-cols-3">
+              <Input label="Salaire brut (€)" value={f.salaireBrut} onChange={(v) => set("salaireBrut", v)} placeholder="2200" inputMode="decimal" />
+              <Input label="Heures sup." value={f.heuresSup} onChange={(v) => set("heuresSup", v)} placeholder="0" inputMode="decimal" />
+              <Input label="Primes (€)" value={f.primes} onChange={(v) => set("primes", v)} placeholder="0" inputMode="decimal" />
+            </div>
+          </div>
+
+          {error && <p className="text-sm font-medium text-red-600">{error}</p>}
+
+          <button
+            type="submit"
+            disabled={!valid || loading}
+            className="bg-orange hover:bg-orange-d inline-flex w-full items-center justify-center gap-2 rounded-[10px] px-6 py-3.5 text-base font-bold text-white transition-colors disabled:opacity-50 sm:w-auto"
+          >
+            {loading ? (
+              <>
+                <Loader2 size={18} className="animate-spin" />
+                Génération…
+              </>
+            ) : (
+              <>
+                <Download size={18} />
+                Générer le bulletin (PDF)
+              </>
+            )}
+          </button>
+          <p className="text-gris text-xs">
+            Le paiement sécurisé (8&nbsp;€) sera requis avant téléchargement dès
+            l&apos;activation de Stripe.
+          </p>
+        </form>
+      </Card>
+
+      {/* Aperçu en direct */}
+      <div className="border-or/30 bg-noir h-fit rounded-2xl border p-5 text-white lg:sticky lg:top-6">
+        <p className="text-or text-xs font-bold uppercase tracking-[0.16em]">
+          Aperçu du calcul
+        </p>
+        <Row label="Salaire brut" value={`${eur2(res.brut)} €`} />
+        <Row label="Cotisations salariales" value={`− ${eur2(res.totalSal)} €`} />
+        <div className="my-2 h-px bg-white/10" />
+        <Row label="Net à payer" value={`${eur2(res.netAvantImpot)} €`} strong />
+        <Row label="Net imposable" value={`${eur2(res.netImposable)} €`} muted />
+        <div className="my-2 h-px bg-white/10" />
+        <Row label="Coût employeur" value={`${eur2(res.coutEmployeur)} €`} muted />
+        <p className="mt-3 text-[0.65rem] leading-relaxed text-white/40">
+          Calcul indicatif (taux simplifiés). Le PDF détaille chaque cotisation.
+        </p>
+      </div>
+    </div>
+  );
+}
+
+function Row({
+  label,
+  value,
+  strong,
+  muted,
+}: {
+  label: string;
+  value: string;
+  strong?: boolean;
+  muted?: boolean;
+}) {
+  return (
+    <div className="mt-2 flex items-center justify-between gap-2">
+      <span className={`text-sm ${muted ? "text-white/45" : "text-white/70"}`}>
+        {label}
+      </span>
+      <span
+        className={`tabular text-sm ${
+          strong ? "text-or font-bold" : muted ? "text-white/60" : "font-semibold"
+        }`}
+      >
+        {value}
+      </span>
+    </div>
   );
 }
 
