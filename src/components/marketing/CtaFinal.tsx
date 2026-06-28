@@ -1,3 +1,5 @@
+import { ScrollLink } from "./ScrollLink";
+
 export function CtaFinal() {
   return (
     <section className="bg-noir relative overflow-hidden px-6 py-24 sm:py-28">
@@ -19,7 +21,7 @@ export function CtaFinal() {
           besoin.
         </p>
         <div className="mt-9 flex justify-center">
-          <a
+          <ScrollLink
             href="#produits"
             className="bg-or hover:bg-or-d inline-flex items-center gap-2.5 rounded-[10px] px-9 py-4 text-base font-bold text-white shadow-[0_4px_16px_rgba(201,162,75,0.35)] transition-all hover:-translate-y-0.5"
           >
@@ -27,7 +29,7 @@ export function CtaFinal() {
             <span aria-hidden className="text-lg">
               →
             </span>
-          </a>
+          </ScrollLink>
         </div>
         <p className="mt-5 text-sm text-white/30">
           Paiement sécurisé Stripe · PDF conforme · Disponible 24h/24

@@ -1,3 +1,5 @@
+import { ScrollLink } from "./ScrollLink";
+
 const POINTS = [
   "Conforme URSSAF 2026",
   "PDF immédiat",
@@ -74,7 +76,7 @@ export function Hero() {
 
         {/* Boutons */}
         <div className="mt-9 flex flex-col items-center justify-center gap-3 sm:flex-row">
-          <a
+          <ScrollLink
             href="#produits"
             className="bg-or hover:bg-or-d inline-flex w-full items-center justify-center gap-2.5 rounded-[10px] px-9 py-4 text-base font-bold text-white shadow-[0_4px_16px_rgba(201,162,75,0.35)] transition-all hover:-translate-y-0.5 sm:w-auto"
           >
@@ -82,13 +84,13 @@ export function Hero() {
             <span aria-hidden className="text-lg">
               →
             </span>
-          </a>
-          <a
+          </ScrollLink>
+          <ScrollLink
             href="#produits"
             className="border-or/50 hover:border-or hover:bg-or/10 inline-flex w-full items-center justify-center rounded-[10px] border-2 px-7 py-4 text-base font-semibold text-white transition-all hover:-translate-y-0.5 sm:w-auto"
           >
             Voir tous les documents
-          </a>
+          </ScrollLink>
         </div>
 
         {/* Note de confiance */}

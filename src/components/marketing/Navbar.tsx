@@ -15,6 +15,15 @@ export function Navbar() {
   const [open, setOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
 
+  // Scroll fluide vers la section, sans ajouter de #ancre dans l'URL.
+  function goTo(e: React.MouseEvent, href: string) {
+    if (!href.startsWith("#")) return;
+    e.preventDefault();
+    const el = document.getElementById(href.slice(1));
+    if (el) el.scrollIntoView({ behavior: "smooth" });
+    setOpen(false);
+  }
+
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 8);
     onScroll();
@@ -43,13 +52,14 @@ export function Navbar() {
         {/* Desktop */}
         <nav className="hidden items-center gap-7 md:flex">
           {LINKS.map((l) => (
-            <Link
+            <a
               key={l.href}
               href={l.href}
+              onClick={(e) => goTo(e, l.href)}
               className="text-sm font-semibold text-white/70 transition-colors hover:text-white"
             >
               {l.label}
-            </Link>
+            </a>
           ))}
           <Link
             href="/connexion"
@@ -76,14 +86,14 @@ export function Navbar() {
         <div className="bg-noir/95 border-t border-white/10 backdrop-blur-xl md:hidden">
           <nav className="mx-auto flex max-w-7xl flex-col gap-1 px-4 py-4">
             {LINKS.map((l) => (
-              <Link
+              <a
                 key={l.href}
                 href={l.href}
-                onClick={() => setOpen(false)}
+                onClick={(e) => goTo(e, l.href)}
                 className="rounded-lg px-3 py-3 text-base font-semibold text-white/80 transition-colors hover:bg-white/5 hover:text-white"
               >
                 {l.label}
-              </Link>
+              </a>
             ))}
             <Link
               href="/connexion"
