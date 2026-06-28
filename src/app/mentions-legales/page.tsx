@@ -15,7 +15,7 @@ export default function MentionsLegalesPage() {
         </p>
         <ul>
           <li>
-            Dénomination sociale : <Todo>[À COMPLÉTER — nom de la société]</Todo>
+            Dénomination sociale : <strong>Shift Office</strong>
           </li>
           <li>
             Forme juridique : <Todo>[À COMPLÉTER — SAS, SASU, EURL…]</Todo>
@@ -27,11 +27,18 @@ export default function MentionsLegalesPage() {
             Siège social : <Todo>[À COMPLÉTER — adresse]</Todo>
           </li>
           <li>
-            SIRET : <Todo>[À COMPLÉTER]</Todo> — RCS :{" "}
-            <Todo>[À COMPLÉTER — ville + n°]</Todo>
+            SIRET : <strong>490 415 031 00122</strong>
           </li>
           <li>
-            Numéro de TVA intracommunautaire : <Todo>[À COMPLÉTER]</Todo>
+            RCS : <Todo>[À COMPLÉTER — ville d&apos;immatriculation]</Todo> 490 415
+            031
+          </li>
+          <li>
+            Code APE / NAF : <strong>8559A</strong>
+          </li>
+          <li>
+            Numéro de TVA intracommunautaire :{" "}
+            <strong>FR 30 490 415 031</strong>
           </li>
           <li>
             Adresse e-mail : <Todo>[À COMPLÉTER — ex. contact@shiftoffice.fr]</Todo>

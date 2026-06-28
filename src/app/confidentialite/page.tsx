@@ -13,7 +13,7 @@ export default function ConfidentialitePage() {
         <p>
           Le responsable du traitement des données personnelles collectées sur{" "}
           <strong>shiftoffice.fr</strong> est{" "}
-          <Todo>[À COMPLÉTER — nom de la société]</Todo>, joignable à
+          <strong>Shift Office</strong>, joignable à
           l&apos;adresse <Todo>[À COMPLÉTER — adresse e-mail]</Todo>.
         </p>
       </LegalSection>

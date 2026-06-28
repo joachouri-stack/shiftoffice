@@ -18,7 +18,7 @@ export default function CgvPage() {
           Les présentes conditions générales de vente (CGV) régissent les ventes
           de documents au format PDF proposés sur le site{" "}
           <strong>shiftoffice.fr</strong> par{" "}
-          <Todo>[À COMPLÉTER — nom de la société]</Todo> (ci-après « Shift
+          <strong>Shift Office</strong> (ci-après « Shift
           Office »). Toute commande implique l&apos;acceptation sans réserve des
           présentes CGV.
         </p>
