@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Plus_Jakarta_Sans, DM_Sans } from "next/font/google";
+import { Plus_Jakarta_Sans, DM_Sans, Inter, Fraunces } from "next/font/google";
 import "./globals.css";
 
 const jakarta = Plus_Jakarta_Sans({
@@ -13,6 +13,21 @@ const dmSans = DM_Sans({
   variable: "--font-dm",
   subsets: ["latin"],
   weight: ["400", "500", "600", "700"],
+  display: "swap",
+});
+
+// Marque « [Shift] Office » — Inter (wordmark "[Shift]") + Fraunces ("Office")
+const inter = Inter({
+  variable: "--font-inter",
+  subsets: ["latin"],
+  weight: ["300", "800"],
+  display: "swap",
+});
+
+const fraunces = Fraunces({
+  variable: "--font-fraunces",
+  subsets: ["latin"],
+  weight: ["500"],
   display: "swap",
 });
 
@@ -36,7 +51,7 @@ export default function RootLayout({
   return (
     <html
       lang="fr"
-      className={`${jakarta.variable} ${dmSans.variable} antialiased`}
+      className={`${jakarta.variable} ${dmSans.variable} ${inter.variable} ${fraunces.variable} antialiased`}
     >
       <body className="bg-noir font-sans">{children}</body>
     </html>
