@@ -65,20 +65,30 @@ const PLANS: Plan[] = [
 
 export function PricingPlans({
   variant = "marketing",
+  surface = "light",
   current,
   onSelect,
 }: {
   variant?: "marketing" | "app";
+  surface?: "light" | "dark";
   current?: PlanId;
   onSelect?: (id: PlanId) => void;
 }) {
   const [annual, setAnnual] = useState(false);
+  const onDark = surface === "dark";
 
   return (
     <div>
       {/* Toggle facturation */}
       <div className="flex justify-center">
-        <div className="border-line bg-paper inline-flex items-center gap-1 rounded-full border p-1 shadow-[var(--shadow-soft)]">
+        <div
+          className={cn(
+            "inline-flex items-center gap-1 rounded-full border p-1",
+            onDark
+              ? "border-white/10 bg-white/5 backdrop-blur"
+              : "border-line bg-paper shadow-[var(--shadow-soft)]"
+          )}
+        >
           {(
             [
               ["monthly", "Mensuel"],
@@ -93,7 +103,13 @@ export function PricingPlans({
                 onClick={() => setAnnual(key === "annual")}
                 className={cn(
                   "relative rounded-full px-4 py-1.5 text-sm font-medium transition-colors",
-                  active ? "bg-ink text-paper" : "text-muted hover:text-ink"
+                  active
+                    ? onDark
+                      ? "bg-paper text-ink"
+                      : "bg-ink text-paper"
+                    : onDark
+                      ? "text-white/60 hover:text-paper"
+                      : "text-muted hover:text-ink"
                 )}
               >
                 {label}
@@ -121,12 +137,18 @@ export function PricingPlans({
             plan={plan}
             annual={annual}
             variant={variant}
+            surface={surface}
             current={current}
             onSelect={onSelect}
           />
         ))}
       </div>
-      <p className="text-muted mt-6 text-center text-sm">
+      <p
+        className={cn(
+          "mt-6 text-center text-sm",
+          onDark ? "text-white/50" : "text-muted"
+        )}
+      >
         Sans engagement · Résiliable à tout moment · TVA non applicable, art.
         293 B du CGI
       </p>
@@ -138,51 +160,69 @@ function PlanCard({
   plan,
   annual,
   variant,
+  surface,
   current,
   onSelect,
 }: {
   plan: Plan;
   annual: boolean;
   variant: "marketing" | "app";
+  surface: "light" | "dark";
   current?: PlanId;
   onSelect?: (id: PlanId) => void;
 }) {
-  const dark = !!plan.featured;
-  const mid = !dark && plan.id === "essentiel";
+  const onDark = surface === "dark";
+  const featured = !!plan.featured; // Pro
+  const mid = !featured && plan.id === "essentiel"; // Essentiel
+  const base = !featured && !mid; // Gratuit
+  const highlight = featured || mid;
   const isCurrent = current === plan.id;
   const monthly = annual ? Math.round((plan.price * 10) / 12) : plan.price;
+
+  // Texte clair quand la carte a un fond sombre/translucide.
+  const invert = onDark || featured;
+  const showGlow = featured || (onDark && mid);
 
   return (
     <div
       className={cn(
         "relative flex flex-col rounded-[1.75rem] border p-7 transition-all duration-300 hover:-translate-y-1 sm:p-8",
-        dark &&
-          "border-ink bg-ink text-paper shadow-[var(--shadow-pop)] lg:-translate-y-3",
-        mid &&
-          "border-brand/30 text-ink bg-gradient-to-b from-brand-50/60 to-paper shadow-[var(--shadow-pop)] ring-1 ring-brand/15",
-        !dark &&
-          !mid &&
-          "border-line bg-paper text-ink shadow-[var(--shadow-card)] hover:shadow-[var(--shadow-pop)]"
+        onDark
+          ? cn(
+              featured &&
+                "border-brand/50 bg-gradient-to-b from-brand/20 to-white/[0.03] text-paper shadow-[var(--shadow-pop)] ring-1 ring-brand/25 lg:-translate-y-3",
+              mid && "border-white/15 bg-white/[0.06] text-paper ring-1 ring-brand/15",
+              base && "border-white/10 bg-white/[0.035] text-paper"
+            )
+          : cn(
+              featured &&
+                "border-ink bg-ink text-paper shadow-[var(--shadow-pop)] lg:-translate-y-3",
+              mid &&
+                "border-brand/30 text-ink bg-gradient-to-b from-brand-50/60 to-paper shadow-[var(--shadow-pop)] ring-1 ring-brand/15",
+              base &&
+                "border-line bg-paper text-ink shadow-[var(--shadow-card)] hover:shadow-[var(--shadow-pop)]"
+            )
       )}
     >
-      {dark && (
+      {showGlow && (
         <div
           aria-hidden
           className="pointer-events-none absolute inset-0 rounded-[1.75rem]"
           style={{
-            background:
-              "radial-gradient(60% 40% at 50% 0%, rgba(255,107,43,0.25) 0%, transparent 70%)",
+            background: featured
+              ? "radial-gradient(65% 45% at 50% 0%, rgba(255,107,43,0.35) 0%, transparent 70%)"
+              : "radial-gradient(60% 40% at 50% 0%, rgba(255,107,43,0.18) 0%, transparent 70%)",
           }}
         />
       )}
 
       <div className="relative flex flex-1 flex-col">
         <div className="flex items-center justify-between">
-          <h3 className={cn("text-lg font-semibold", dark && "text-paper")}>
+          <h3 className={cn("text-lg font-semibold", invert && "text-paper")}>
             {plan.name}
           </h3>
-          {plan.featured && !isCurrent && (
-            <span className="bg-brand text-paper inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-semibold">
+          {featured && !isCurrent && (
+            <span className="bg-brand text-paper inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-semibold shadow-[var(--shadow-brand)]">
               <Flame size={12} />
               Populaire
             </span>
@@ -200,7 +240,7 @@ function PlanCard({
           )}
         </div>
 
-        <p className={cn("mt-1 text-sm", dark ? "text-white/60" : "text-muted")}>
+        <p className={cn("mt-1 text-sm", invert ? "text-white/60" : "text-muted")}>
           {plan.desc}
         </p>
 
@@ -208,19 +248,19 @@ function PlanCard({
           <span
             className={cn(
               "text-4xl font-semibold tracking-tight tabular",
-              dark && "text-paper"
+              invert && "text-paper"
             )}
           >
             {monthly}€
           </span>
-          <span className={cn("text-sm", dark ? "text-white/60" : "text-muted")}>
+          <span className={cn("text-sm", invert ? "text-white/60" : "text-muted")}>
             /mois
           </span>
         </div>
         <p
           className={cn(
             "mt-1 h-4 text-xs",
-            dark ? "text-white/50" : "text-muted"
+            invert ? "text-white/50" : "text-muted"
           )}
         >
           {annual && plan.price > 0
@@ -237,7 +277,7 @@ function PlanCard({
                   key={feat}
                   className={cn(
                     "text-sm font-medium",
-                    dark ? "text-white/80" : "text-muted"
+                    invert ? "text-white/80" : "text-muted"
                   )}
                 >
                   {feat}
@@ -249,12 +289,14 @@ function PlanCard({
                 <span
                   className={cn(
                     "mt-0.5 inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-full",
-                    dark || mid ? "bg-brand text-paper" : "bg-brand-50 text-brand"
+                    highlight || onDark
+                      ? "bg-brand text-paper"
+                      : "bg-brand-50 text-brand"
                   )}
                 >
                   <Check size={13} strokeWidth={3} />
                 </span>
-                <span className={dark ? "text-white/90" : "text-ink/90"}>
+                <span className={invert ? "text-white/90" : "text-ink/90"}>
                   {feat}
                 </span>
               </li>
@@ -265,7 +307,7 @@ function PlanCard({
         <div className="mt-8">
           {variant === "app" ? (
             <Button
-              variant={isCurrent ? "outline" : dark || mid ? "primary" : "outline"}
+              variant={isCurrent ? "outline" : highlight ? "primary" : "outline"}
               size="lg"
               className="w-full"
               disabled={isCurrent}
@@ -280,9 +322,12 @@ function PlanCard({
           ) : (
             <Button
               href="/inscription"
-              variant={dark || mid ? "primary" : "outline"}
+              variant={highlight ? "primary" : onDark ? "secondary" : "outline"}
               size="lg"
-              className="w-full"
+              className={cn(
+                "w-full",
+                base && onDark && "bg-white/10 text-paper hover:bg-white/20"
+              )}
             >
               {plan.price === 0
                 ? "Commencer gratuitement"
