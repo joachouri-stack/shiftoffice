@@ -1,4 +1,9 @@
-export default function Page() {
-  // Page blanche — nouveau projet à venir.
-  return null;
+import { Hero } from "@/components/marketing/Hero";
+
+export default function HomePage() {
+  return (
+    <main>
+      <Hero />
+    </main>
+  );
 }

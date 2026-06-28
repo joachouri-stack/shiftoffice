@@ -1,1 +1,57 @@
 @import "tailwindcss";
+
+/* ============================================================
+   SHIFT OFFICE — DESIGN SYSTEM (Documents RH)
+   Doré #C9A24B · Orange #FF6B2B · Noir #1C1810 · Crème #F5F1E8
+   Titres : Plus Jakarta Sans · Corps : DM Sans
+   ============================================================ */
+@theme {
+  --color-or: #c9a24b; /* doré principal */
+  --color-or-d: #a8832d; /* doré foncé / hover */
+  --color-or-l: #f8f0dc; /* doré très clair */
+  --color-or-border: #8b6820; /* bordure cartes */
+  --color-orange: #ff6b2b; /* orange principal */
+  --color-orange-d: #e55a1f; /* orange foncé / hover */
+  --color-noir: #1c1810; /* fond sombre + texte */
+  --color-gris: #6b6050; /* texte secondaire */
+  --color-creme: #f5f1e8; /* fond sections claires */
+  --color-vert: #15803d; /* badges */
+  --color-vert-l: #f0fdf4; /* fond badges */
+
+  --font-display: var(--font-jakarta);
+  --font-sans: var(--font-dm);
+}
+
+@keyframes pulse-dot {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.3;
+  }
+}
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+  }
+  body {
+    background: var(--color-noir);
+    color: var(--color-noir);
+    -webkit-font-smoothing: antialiased;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  .animate-pulse-dot {
+    animation: none;
+  }
+}
+
+.animate-pulse-dot {
+  animation: pulse-dot 2s infinite;
+}
