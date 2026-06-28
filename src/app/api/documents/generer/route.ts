@@ -1,16 +1,6 @@
-import { calculerFichePaie } from "@/lib/paie/calcul";
-import { buildFichePaiePDF } from "@/lib/pdf/fiche-paie";
-import { buildContratPDF } from "@/lib/pdf/contrat";
-import { buildCertificatPDF } from "@/lib/pdf/certificat";
-import { buildSoldeToutComptePDF } from "@/lib/pdf/solde-tout-compte";
-import { buildRupturePDF } from "@/lib/pdf/rupture";
-import { buildBailCommercialPDF } from "@/lib/pdf/bail-commercial";
-import {
-  buildStatutsPDF,
-  type Associe,
-  type StatutsData,
-} from "@/lib/pdf/statuts";
-import { getStripe, isStripeEnabled } from "@/lib/stripe";
+import { buildDocument } from "@/lib/pdf/build";
+import { priceForSlug } from "@/lib/stripe";
+import { paiementAutorise } from "@/lib/payment";
 import { enregistrerHistorique } from "@/lib/supabase/historique";
 
 export const runtime = "nodejs";
@@ -24,34 +14,6 @@ export const dynamic = "force-dynamic";
  * Checkout est payée et correspond bien au type de document demandé.
  * Sans Stripe, la génération reste directe (dev / transition).
  */
-
-function num(v: unknown): number {
-  const n = typeof v === "string" ? parseFloat(v.replace(",", ".")) : Number(v);
-  return Number.isFinite(n) ? n : 0;
-}
-
-/**
- * Vérifie qu'un paiement valide autorise la génération du document `type`.
- * Retourne true si Stripe est désactivé (mode direct), ou si la session
- * Checkout est payée et porte le bon type.
- */
-async function paiementAutorise(
-  type: string,
-  sessionId: string | undefined
-): Promise<boolean> {
-  if (!isStripeEnabled()) return true;
-  const stripe = getStripe();
-  if (!stripe) return true;
-  if (!sessionId) return false;
-  try {
-    const session = await stripe.checkout.sessions.retrieve(sessionId);
-    return (
-      session.payment_status === "paid" && session.metadata?.type === type
-    );
-  } catch {
-    return false;
-  }
-}
 
 export async function POST(req: Request) {
   let body: {
@@ -68,6 +30,14 @@ export async function POST(req: Request) {
   const type = body.type_document ?? "";
   const d = body.donnees ?? {};
 
+  // Cette route est réservée aux documents payants.
+  if (priceForSlug(type) === null) {
+    return Response.json(
+      { error: "Type de document non pris en charge." },
+      { status: 400 }
+    );
+  }
+
   if (!(await paiementAutorise(type, body.session_id))) {
     return Response.json(
       { error: "Paiement requis ou non confirmé." },
@@ -75,178 +45,16 @@ export async function POST(req: Request) {
     );
   }
 
-  if (type === "fiche-paie") {
-    const result = calculerFichePaie({
-      salaireBrut: num(d.salaireBrut),
-      heuresSup: num(d.heuresSup),
-      primes: num(d.primes),
-    });
-    const pdf = await buildFichePaiePDF({
-      entrepriseNom: String(d.entrepriseNom ?? ""),
-      entrepriseAdresse: String(d.entrepriseAdresse ?? ""),
-      siret: String(d.siret ?? ""),
-      salarieNom: String(d.salarieNom ?? ""),
-      poste: String(d.poste ?? ""),
-      numeroSecu: String(d.numeroSecu ?? ""),
-      periode: String(d.periode ?? ""),
-      result,
-    });
-    return respond(type, pdf,"fiche-de-paie.pdf");
+  const built = await buildDocument(type, d);
+  if (!built) {
+    return Response.json(
+      { error: "Type de document non pris en charge." },
+      { status: 400 }
+    );
   }
 
-  if (type === "contrat-travail") {
-    const pdf = await buildContratPDF({
-      entrepriseNom: String(d.entrepriseNom ?? ""),
-      entrepriseAdresse: String(d.entrepriseAdresse ?? ""),
-      siret: String(d.siret ?? ""),
-      representantNom: String(d.representantNom ?? ""),
-      representantQualite: String(d.representantQualite ?? ""),
-      salarieNom: String(d.salarieNom ?? ""),
-      salarieAdresse: String(d.salarieAdresse ?? ""),
-      typeContrat: d.typeContrat === "cdd" ? "cdd" : "cdi",
-      dateDebut: String(d.dateDebut ?? ""),
-      dateFin: String(d.dateFin ?? ""),
-      motifCdd: String(d.motifCdd ?? ""),
-      poste: String(d.poste ?? ""),
-      salaireBrut: num(d.salaireBrut),
-      heuresSemaine: num(d.heuresSemaine) || 35,
-      lieuTravail: String(d.lieuTravail ?? ""),
-      periodeEssai: String(d.periodeEssai ?? ""),
-      conventionCollective: String(d.conventionCollective ?? ""),
-      ville: String(d.ville ?? ""),
-      date: String(d.date ?? ""),
-    });
-    return respond(type, pdf,"contrat-de-travail.pdf");
-  }
-
-  if (type === "certificat-travail") {
-    const pdf = await buildCertificatPDF({
-      entrepriseNom: String(d.entrepriseNom ?? ""),
-      entrepriseAdresse: String(d.entrepriseAdresse ?? ""),
-      siret: String(d.siret ?? ""),
-      representantNom: String(d.representantNom ?? ""),
-      representantQualite: String(d.representantQualite ?? ""),
-      salarieNom: String(d.salarieNom ?? ""),
-      poste: String(d.poste ?? ""),
-      dateDebut: String(d.dateDebut ?? ""),
-      dateFin: String(d.dateFin ?? ""),
-      ville: String(d.ville ?? ""),
-      date: String(d.date ?? ""),
-    });
-    return respond(type, pdf,"certificat-de-travail.pdf");
-  }
-
-  if (type === "solde-tout-compte") {
-    const pdf = await buildSoldeToutComptePDF({
-      entrepriseNom: String(d.entrepriseNom ?? ""),
-      entrepriseAdresse: String(d.entrepriseAdresse ?? ""),
-      siret: String(d.siret ?? ""),
-      representantNom: String(d.representantNom ?? ""),
-      representantQualite: String(d.representantQualite ?? ""),
-      salarieNom: String(d.salarieNom ?? ""),
-      salarieAdresse: String(d.salarieAdresse ?? ""),
-      poste: String(d.poste ?? ""),
-      dateEntree: String(d.dateEntree ?? ""),
-      dateSortie: String(d.dateSortie ?? ""),
-      motifRupture: String(d.motifRupture ?? ""),
-      salaireDu: num(d.salaireDu),
-      indemniteConges: num(d.indemniteConges),
-      indemnitePreavis: num(d.indemnitePreavis),
-      indemniteRupture: num(d.indemniteRupture),
-      autresSommes: num(d.autresSommes),
-      ville: String(d.ville ?? ""),
-      date: String(d.date ?? ""),
-    });
-    return respond(type, pdf,"solde-de-tout-compte.pdf");
-  }
-
-  if (type === "rupture-conventionnelle") {
-    const pdf = await buildRupturePDF({
-      entrepriseNom: String(d.entrepriseNom ?? ""),
-      entrepriseAdresse: String(d.entrepriseAdresse ?? ""),
-      siret: String(d.siret ?? ""),
-      representantNom: String(d.representantNom ?? ""),
-      representantQualite: String(d.representantQualite ?? ""),
-      salarieNom: String(d.salarieNom ?? ""),
-      salarieAdresse: String(d.salarieAdresse ?? ""),
-      poste: String(d.poste ?? ""),
-      dateEmbauche: String(d.dateEmbauche ?? ""),
-      salaireBrut: num(d.salaireBrut),
-      indemniteRupture: num(d.indemniteRupture),
-      dateEntretien: String(d.dateEntretien ?? ""),
-      dateRupture: String(d.dateRupture ?? ""),
-      ville: String(d.ville ?? ""),
-      date: String(d.date ?? ""),
-    });
-    return respond(type, pdf,"rupture-conventionnelle.pdf");
-  }
-
-  if (type === "bail-commercial") {
-    const pdf = await buildBailCommercialPDF({
-      bailleurNom: String(d.bailleurNom ?? ""),
-      bailleurAdresse: String(d.bailleurAdresse ?? ""),
-      bailleurQualite: String(d.bailleurQualite ?? ""),
-      preneurNom: String(d.preneurNom ?? ""),
-      preneurAdresse: String(d.preneurAdresse ?? ""),
-      preneurRcs: String(d.preneurRcs ?? ""),
-      adresseLocal: String(d.adresseLocal ?? ""),
-      descriptionLocal: String(d.descriptionLocal ?? ""),
-      surface: String(d.surface ?? ""),
-      destination: String(d.destination ?? ""),
-      loyerAnnuel: num(d.loyerAnnuel),
-      depotGarantie: num(d.depotGarantie),
-      charges: String(d.charges ?? ""),
-      indiceRevision: String(d.indiceRevision ?? ""),
-      dateDebut: String(d.dateDebut ?? ""),
-      duree: String(d.duree ?? ""),
-      ville: String(d.ville ?? ""),
-      date: String(d.date ?? ""),
-    });
-    return respond(type, pdf,"bail-commercial.pdf");
-  }
-
-  if (type === "statuts-societe") {
-    const formes = ["SARL", "SAS", "EURL", "SASU"] as const;
-    const forme = formes.includes(d.forme as (typeof formes)[number])
-      ? (d.forme as StatutsData["forme"])
-      : "SARL";
-    const associes: Associe[] = Array.isArray(d.associes)
-      ? (d.associes as Array<Record<string, unknown>>).map((a) => ({
-          nom: String(a.nom ?? ""),
-          adresse: String(a.adresse ?? ""),
-          apport: num(a.apport),
-        }))
-      : [];
-    const pdf = await buildStatutsPDF({
-      forme,
-      denomination: String(d.denomination ?? ""),
-      objet: String(d.objet ?? ""),
-      siege: String(d.siege ?? ""),
-      duree: String(d.duree ?? ""),
-      capital: num(d.capital),
-      valeurTitre: num(d.valeurTitre),
-      associes,
-      dirigeantNom: String(d.dirigeantNom ?? ""),
-      dirigeantAdresse: String(d.dirigeantAdresse ?? ""),
-      ville: String(d.ville ?? ""),
-      date: String(d.date ?? ""),
-    });
-    return respond(type, pdf,"statuts-societe.pdf");
-  }
-
-  return Response.json(
-    { error: "Type de document non pris en charge." },
-    { status: 400 }
-  );
-}
-
-async function respond(
-  type: string,
-  pdf: Uint8Array,
-  filename: string
-): Promise<Response> {
   await enregistrerHistorique(type);
-  return pdfResponse(pdf, filename);
+  return pdfResponse(built.pdf, built.filename);
 }
 
 function pdfResponse(pdf: Uint8Array, filename: string): Response {

@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useParams, useSearchParams } from "next/navigation";
 import { ArrowLeft, CheckCircle2, Download, Loader2, XCircle } from "lucide-react";
 import { Logo } from "@/components/brand/Logo";
+import { EmailCopy } from "@/components/documents/EmailCopy";
 import { DOCUMENTS } from "@/lib/documents";
 
 type Pending = {
@@ -134,6 +135,15 @@ function SuccessInner() {
                 <Download size={16} />
                 Télécharger à nouveau
               </button>
+              {pendingRef.current && (
+                <div className="mx-auto mt-2 max-w-sm text-left">
+                  <EmailCopy
+                    type={pendingRef.current.type}
+                    donnees={pendingRef.current.donnees}
+                    sessionId={sessionId}
+                  />
+                </div>
+              )}
             </>
           )}
 

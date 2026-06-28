@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useParams } from "next/navigation";
 import { ArrowLeft, Download, FileText, Lock, Loader2 } from "lucide-react";
 import { Logo } from "@/components/brand/Logo";
+import { EmailCopy } from "@/components/documents/EmailCopy";
 import { DOCUMENTS, formatPrice } from "@/lib/documents";
 import { calculerFichePaie } from "@/lib/paie/calcul";
 
@@ -271,6 +272,7 @@ function QuittanceForm() {
           )}
         </button>
       </form>
+      <EmailCopy type="quittance-loyer" donnees={f} />
     </Card>
   );
 }
@@ -461,6 +463,7 @@ function AttestationForm() {
           )}
         </button>
       </form>
+      <EmailCopy type="attestation-employeur" donnees={f} />
     </Card>
   );
 }
