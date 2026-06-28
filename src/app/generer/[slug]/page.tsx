@@ -277,7 +277,7 @@ function QuittanceForm() {
 
 async function downloadPdf(
   type: string,
-  donnees: Record<string, string>,
+  donnees: Record<string, unknown>,
   filename: string,
   endpoint = "/api/documents/generer-gratuit"
 ): Promise<boolean> {
@@ -297,6 +297,36 @@ async function downloadPdf(
   a.remove();
   URL.revokeObjectURL(url);
   return true;
+}
+
+/**
+ * Document payant : ouvre Stripe Checkout si le paiement est activé, sinon
+ * génère directement (transition). Les données du formulaire sont conservées
+ * en sessionStorage pour être régénérées au retour de paiement.
+ * Pour ces documents, le type de document est identique au slug.
+ */
+async function submitPaidDoc(
+  slug: string,
+  donnees: Record<string, unknown>,
+  filename: string
+): Promise<boolean> {
+  const res = await fetch("/api/checkout", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ type: slug, slug }),
+  });
+  if (!res.ok) return false;
+  const data = (await res.json()) as { url?: string; paymentDisabled?: boolean };
+  if (data.url) {
+    sessionStorage.setItem(
+      `shiftoffice:pending:${slug}`,
+      JSON.stringify({ type: slug, donnees, filename })
+    );
+    window.location.assign(data.url);
+    return true; // navigation vers Stripe en cours
+  }
+  // Paiement non configuré → génération directe (comportement actuel)
+  return downloadPdf(slug, donnees, filename, "/api/documents/generer");
 }
 
 function AttestationForm() {
@@ -474,12 +504,7 @@ function FichePaieForm() {
     setLoading(true);
     setError("");
     try {
-      const ok = await downloadPdf(
-        "fiche-paie",
-        f,
-        "fiche-de-paie.pdf",
-        "/api/documents/generer"
-      );
+      const ok = await submitPaidDoc("fiche-paie", f, "fiche-de-paie.pdf");
       if (!ok) throw new Error("génération");
     } catch {
       setError("La génération a échoué. Réessayez.");
@@ -638,11 +663,10 @@ function CertificatForm() {
     setLoading(true);
     setError("");
     try {
-      const ok = await downloadPdf(
+      const ok = await submitPaidDoc(
         "certificat-travail",
         f,
-        "certificat-de-travail.pdf",
-        "/api/documents/generer"
+        "certificat-de-travail.pdf"
       );
       if (!ok) throw new Error("génération");
     } catch {
@@ -762,11 +786,10 @@ function ContratForm() {
     setLoading(true);
     setError("");
     try {
-      const ok = await downloadPdf(
+      const ok = await submitPaidDoc(
         "contrat-travail",
         f,
-        "contrat-de-travail.pdf",
-        "/api/documents/generer"
+        "contrat-de-travail.pdf"
       );
       if (!ok) throw new Error("génération");
     } catch {
@@ -944,11 +967,10 @@ function SoldeForm() {
     setLoading(true);
     setError("");
     try {
-      const ok = await downloadPdf(
+      const ok = await submitPaidDoc(
         "solde-tout-compte",
         f,
-        "solde-de-tout-compte.pdf",
-        "/api/documents/generer"
+        "solde-de-tout-compte.pdf"
       );
       if (!ok) throw new Error("génération");
     } catch {
@@ -1090,11 +1112,10 @@ function RuptureForm() {
     setLoading(true);
     setError("");
     try {
-      const ok = await downloadPdf(
+      const ok = await submitPaidDoc(
         "rupture-conventionnelle",
         f,
-        "rupture-conventionnelle.pdf",
-        "/api/documents/generer"
+        "rupture-conventionnelle.pdf"
       );
       if (!ok) throw new Error("génération");
     } catch {
@@ -1420,24 +1441,12 @@ function StatutsForm() {
     setLoading(true);
     setError("");
     try {
-      const res = await fetch("/api/documents/generer", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          type_document: "statuts-societe",
-          donnees: { ...f, capital: String(capital), associes },
-        }),
-      });
-      if (!res.ok) throw new Error("génération");
-      const blob = await res.blob();
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = "statuts-societe.pdf";
-      document.body.appendChild(a);
-      a.click();
-      a.remove();
-      URL.revokeObjectURL(url);
+      const ok = await submitPaidDoc(
+        "statuts-societe",
+        { ...f, capital: String(capital), associes },
+        "statuts-societe.pdf"
+      );
+      if (!ok) throw new Error("génération");
     } catch {
       setError("La génération a échoué. Réessayez.");
     } finally {

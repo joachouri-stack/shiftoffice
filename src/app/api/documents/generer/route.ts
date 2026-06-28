@@ -10,14 +10,18 @@ import {
   type Associe,
   type StatutsData,
 } from "@/lib/pdf/statuts";
+import { getStripe, isStripeEnabled } from "@/lib/stripe";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 /**
- * Génération des documents (formulaire + PDF).
- * NOTE : le paiement (Stripe) n'est pas encore branché. À l'activation, cette
- * route devra exiger un paiement confirmé pour les documents payants.
+ * Génération des documents payants (formulaire + PDF).
+ *
+ * Si Stripe est configuré, un `session_id` de paiement vérifié est exigé :
+ * le PDF n'est produit qu'après confirmation, côté serveur, que la session
+ * Checkout est payée et correspond bien au type de document demandé.
+ * Sans Stripe, la génération reste directe (dev / transition).
  */
 
 function num(v: unknown): number {
@@ -25,8 +29,35 @@ function num(v: unknown): number {
   return Number.isFinite(n) ? n : 0;
 }
 
+/**
+ * Vérifie qu'un paiement valide autorise la génération du document `type`.
+ * Retourne true si Stripe est désactivé (mode direct), ou si la session
+ * Checkout est payée et porte le bon type.
+ */
+async function paiementAutorise(
+  type: string,
+  sessionId: string | undefined
+): Promise<boolean> {
+  if (!isStripeEnabled()) return true;
+  const stripe = getStripe();
+  if (!stripe) return true;
+  if (!sessionId) return false;
+  try {
+    const session = await stripe.checkout.sessions.retrieve(sessionId);
+    return (
+      session.payment_status === "paid" && session.metadata?.type === type
+    );
+  } catch {
+    return false;
+  }
+}
+
 export async function POST(req: Request) {
-  let body: { type_document?: string; donnees?: Record<string, unknown> };
+  let body: {
+    type_document?: string;
+    donnees?: Record<string, unknown>;
+    session_id?: string;
+  };
   try {
     body = await req.json();
   } catch {
@@ -35,6 +66,13 @@ export async function POST(req: Request) {
 
   const type = body.type_document ?? "";
   const d = body.donnees ?? {};
+
+  if (!(await paiementAutorise(type, body.session_id))) {
+    return Response.json(
+      { error: "Paiement requis ou non confirmé." },
+      { status: 402 }
+    );
+  }
 
   if (type === "fiche-paie") {
     const result = calculerFichePaie({
