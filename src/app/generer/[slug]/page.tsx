@@ -73,6 +73,8 @@ export default function GenererPage() {
               <SoldeForm />
             ) : doc.slug === "rupture-conventionnelle" ? (
               <RuptureForm />
+            ) : doc.slug === "bail-commercial" ? (
+              <BailCommercialForm />
             ) : doc.free ? (
               <Card>
                 <p className="text-noir font-semibold">
@@ -1178,6 +1180,168 @@ function RuptureForm() {
         </button>
         <p className="text-gris text-xs">
           Le paiement sécurisé (5&nbsp;€) sera requis avant téléchargement dès
+          l&apos;activation de Stripe.
+        </p>
+      </form>
+    </Card>
+  );
+}
+
+function BailCommercialForm() {
+  const [f, setF] = useState({
+    bailleurNom: "",
+    bailleurAdresse: "",
+    bailleurQualite: "",
+    preneurNom: "",
+    preneurAdresse: "",
+    preneurRcs: "",
+    adresseLocal: "",
+    descriptionLocal: "",
+    surface: "",
+    destination: "",
+    loyerAnnuel: "",
+    depotGarantie: "",
+    charges: "",
+    indiceRevision: "ILC",
+    dateDebut: "",
+    duree: "9 ans",
+    ville: "",
+    date: aujourdhui(),
+  });
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+
+  function set<K extends keyof typeof f>(k: K, v: string) {
+    setF((p) => ({ ...p, [k]: v }));
+  }
+
+  const loyerMensuel = useMemo(() => {
+    const a = parseFloat(f.loyerAnnuel.replace(",", ".")) || 0;
+    return a / 12;
+  }, [f.loyerAnnuel]);
+
+  const valid =
+    f.bailleurNom.trim() &&
+    f.preneurNom.trim() &&
+    f.adresseLocal.trim() &&
+    f.destination.trim() &&
+    (parseFloat(f.loyerAnnuel.replace(",", ".")) || 0) > 0;
+
+  async function generate() {
+    if (!valid || loading) return;
+    setLoading(true);
+    setError("");
+    try {
+      const ok = await downloadPdf(
+        "bail-commercial",
+        f,
+        "bail-commercial.pdf",
+        "/api/documents/generer"
+      );
+      if (!ok) throw new Error("génération");
+    } catch {
+      setError("La génération a échoué. Réessayez.");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  return (
+    <Card>
+      <form
+        onSubmit={(e) => {
+          e.preventDefault();
+          generate();
+        }}
+        className="space-y-5"
+      >
+        <div>
+          <p className="text-noir mb-3 text-sm font-bold">Le bailleur</p>
+          <div className="grid gap-3 sm:grid-cols-2">
+            <Input label="Nom / dénomination" value={f.bailleurNom} onChange={(v) => set("bailleurNom", v)} placeholder="Ex. SCI des Lilas" />
+            <Input label="Qualité (optionnel)" value={f.bailleurQualite} onChange={(v) => set("bailleurQualite", v)} placeholder="SCI, particulier…" />
+          </div>
+          <div className="mt-3">
+            <Input label="Adresse du bailleur" value={f.bailleurAdresse} onChange={(v) => set("bailleurAdresse", v)} placeholder="12 rue des Lilas, 69003 Lyon" />
+          </div>
+        </div>
+
+        <div>
+          <p className="text-noir mb-3 text-sm font-bold">Le preneur</p>
+          <div className="grid gap-3 sm:grid-cols-2">
+            <Input label="Nom / dénomination" value={f.preneurNom} onChange={(v) => set("preneurNom", v)} placeholder="Ex. SARL Le Bistrot" />
+            <Input label="N° RCS (optionnel)" value={f.preneurRcs} onChange={(v) => set("preneurRcs", v)} placeholder="Lyon 123 456 789" />
+          </div>
+          <div className="mt-3">
+            <Input label="Adresse du preneur" value={f.preneurAdresse} onChange={(v) => set("preneurAdresse", v)} placeholder="Siège social" />
+          </div>
+        </div>
+
+        <div>
+          <p className="text-noir mb-3 text-sm font-bold">Le local</p>
+          <div className="mt-0">
+            <Input label="Adresse du local loué" value={f.adresseLocal} onChange={(v) => set("adresseLocal", v)} placeholder="5 place du Marché, 69003 Lyon" />
+          </div>
+          <div className="mt-3 grid gap-3 sm:grid-cols-2">
+            <Input label="Description (optionnel)" value={f.descriptionLocal} onChange={(v) => set("descriptionLocal", v)} placeholder="Rez-de-chaussée, vitrine, réserve" />
+            <Input label="Surface (m²)" value={f.surface} onChange={(v) => set("surface", v)} placeholder="85" inputMode="decimal" />
+          </div>
+          <div className="mt-3">
+            <Input label="Destination / activité autorisée" value={f.destination} onChange={(v) => set("destination", v)} placeholder="Ex. Restauration, vente à emporter" />
+          </div>
+        </div>
+
+        <div>
+          <p className="text-noir mb-3 text-sm font-bold">Conditions financières</p>
+          <div className="grid gap-3 sm:grid-cols-2">
+            <Input label="Loyer annuel HT/HC (€)" value={f.loyerAnnuel} onChange={(v) => set("loyerAnnuel", v)} placeholder="18000" inputMode="decimal" />
+            <Input label="Dépôt de garantie (€)" value={f.depotGarantie} onChange={(v) => set("depotGarantie", v)} placeholder="3000" inputMode="decimal" />
+          </div>
+          <div className="mt-3 grid gap-3 sm:grid-cols-2">
+            <Input label="Indice de révision" value={f.indiceRevision} onChange={(v) => set("indiceRevision", v)} placeholder="ILC, ILAT…" />
+            <Input label="Charges (optionnel)" value={f.charges} onChange={(v) => set("charges", v)} placeholder="Provision mensuelle de 80 €." />
+          </div>
+          <p className="text-gris mt-3 text-sm">
+            Loyer mensuel :{" "}
+            <span className="text-noir font-bold">
+              {loyerMensuel.toLocaleString("fr-FR", { minimumFractionDigits: 2 })} €
+            </span>
+          </p>
+        </div>
+
+        <div>
+          <p className="text-noir mb-3 text-sm font-bold">Durée & signature</p>
+          <div className="grid gap-3 sm:grid-cols-2">
+            <Input label="Durée" value={f.duree} onChange={(v) => set("duree", v)} placeholder="9 ans" />
+            <Input label="Date de prise d'effet" value={f.dateDebut} onChange={(v) => set("dateDebut", v)} placeholder="01/09/2026" />
+          </div>
+          <div className="mt-3 grid gap-3 sm:grid-cols-2">
+            <Input label="Ville (signature)" value={f.ville} onChange={(v) => set("ville", v)} placeholder="Lyon" />
+            <Input label="Date de signature" value={f.date} onChange={(v) => set("date", v)} placeholder="28/06/2026" />
+          </div>
+        </div>
+
+        {error && <p className="text-sm font-medium text-red-600">{error}</p>}
+
+        <button
+          type="submit"
+          disabled={!valid || loading}
+          className="bg-orange hover:bg-orange-d inline-flex w-full items-center justify-center gap-2 rounded-[10px] px-6 py-3.5 text-base font-bold text-white transition-colors disabled:opacity-50 sm:w-auto"
+        >
+          {loading ? (
+            <>
+              <Loader2 size={18} className="animate-spin" />
+              Génération…
+            </>
+          ) : (
+            <>
+              <Download size={18} />
+              Générer le bail (PDF)
+            </>
+          )}
+        </button>
+        <p className="text-gris text-xs">
+          Le paiement sécurisé (9&nbsp;€) sera requis avant téléchargement dès
           l&apos;activation de Stripe.
         </p>
       </form>

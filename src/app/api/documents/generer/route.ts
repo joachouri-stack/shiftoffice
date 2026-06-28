@@ -4,6 +4,7 @@ import { buildContratPDF } from "@/lib/pdf/contrat";
 import { buildCertificatPDF } from "@/lib/pdf/certificat";
 import { buildSoldeToutComptePDF } from "@/lib/pdf/solde-tout-compte";
 import { buildRupturePDF } from "@/lib/pdf/rupture";
+import { buildBailCommercialPDF } from "@/lib/pdf/bail-commercial";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -134,6 +135,30 @@ export async function POST(req: Request) {
       date: String(d.date ?? ""),
     });
     return pdfResponse(pdf, "rupture-conventionnelle.pdf");
+  }
+
+  if (type === "bail-commercial") {
+    const pdf = await buildBailCommercialPDF({
+      bailleurNom: String(d.bailleurNom ?? ""),
+      bailleurAdresse: String(d.bailleurAdresse ?? ""),
+      bailleurQualite: String(d.bailleurQualite ?? ""),
+      preneurNom: String(d.preneurNom ?? ""),
+      preneurAdresse: String(d.preneurAdresse ?? ""),
+      preneurRcs: String(d.preneurRcs ?? ""),
+      adresseLocal: String(d.adresseLocal ?? ""),
+      descriptionLocal: String(d.descriptionLocal ?? ""),
+      surface: String(d.surface ?? ""),
+      destination: String(d.destination ?? ""),
+      loyerAnnuel: num(d.loyerAnnuel),
+      depotGarantie: num(d.depotGarantie),
+      charges: String(d.charges ?? ""),
+      indiceRevision: String(d.indiceRevision ?? ""),
+      dateDebut: String(d.dateDebut ?? ""),
+      duree: String(d.duree ?? ""),
+      ville: String(d.ville ?? ""),
+      date: String(d.date ?? ""),
+    });
+    return pdfResponse(pdf, "bail-commercial.pdf");
   }
 
   return Response.json(
