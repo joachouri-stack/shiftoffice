@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { LegalPage, LegalSection, Todo } from "@/components/legal/LegalPage";
+import { LegalPage, LegalSection } from "@/components/legal/LegalPage";
 
 export const metadata: Metadata = {
   title: "Mentions légales — Shift Office",
@@ -25,7 +25,7 @@ export default function MentionsLegalesPage() {
             micro-entrepreneur (auto-entrepreneur)</strong>
           </li>
           <li>
-            Adresse : <Todo>[À COMPLÉTER — n° et rue]</Todo>, Avignon
+            Adresse : <strong>151 rue Albert Camus, 84100 Orange</strong>
           </li>
           <li>
             SIRET : <strong>490 415 031 00122</strong>
