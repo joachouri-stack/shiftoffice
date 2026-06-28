@@ -67,6 +67,8 @@ export default function GenererPage() {
               <FichePaieForm />
             ) : doc.slug === "contrat-travail" ? (
               <ContratForm />
+            ) : doc.slug === "certificat-travail" ? (
+              <CertificatForm />
             ) : doc.free ? (
               <Card>
                 <p className="text-noir font-semibold">
@@ -593,6 +595,120 @@ function Row({
         {value}
       </span>
     </div>
+  );
+}
+
+function CertificatForm() {
+  const [f, setF] = useState({
+    entrepriseNom: "",
+    entrepriseAdresse: "",
+    siret: "",
+    representantNom: "",
+    representantQualite: "Gérant",
+    salarieNom: "",
+    poste: "",
+    dateDebut: "",
+    dateFin: "",
+    ville: "",
+    date: aujourdhui(),
+  });
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+
+  function set<K extends keyof typeof f>(k: K, v: string) {
+    setF((p) => ({ ...p, [k]: v }));
+  }
+
+  const valid =
+    f.entrepriseNom.trim() &&
+    f.representantNom.trim() &&
+    f.salarieNom.trim() &&
+    f.poste.trim();
+
+  async function generate() {
+    if (!valid || loading) return;
+    setLoading(true);
+    setError("");
+    try {
+      const ok = await downloadPdf(
+        "certificat-travail",
+        f,
+        "certificat-de-travail.pdf",
+        "/api/documents/generer"
+      );
+      if (!ok) throw new Error("génération");
+    } catch {
+      setError("La génération a échoué. Réessayez.");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  return (
+    <Card>
+      <form
+        onSubmit={(e) => {
+          e.preventDefault();
+          generate();
+        }}
+        className="space-y-5"
+      >
+        <div>
+          <p className="text-noir mb-3 text-sm font-bold">L&apos;employeur</p>
+          <div className="grid gap-3 sm:grid-cols-2">
+            <Input label="Nom de l'entreprise" value={f.entrepriseNom} onChange={(v) => set("entrepriseNom", v)} placeholder="Ex. Dupont Bâtiment" />
+            <Input label="SIRET (optionnel)" value={f.siret} onChange={(v) => set("siret", v)} placeholder="123 456 789 00012" />
+          </div>
+          <div className="mt-3 grid gap-3 sm:grid-cols-2">
+            <Input label="Représentant" value={f.representantNom} onChange={(v) => set("representantNom", v)} placeholder="Ex. M. Dupont" />
+            <Input label="Qualité" value={f.representantQualite} onChange={(v) => set("representantQualite", v)} placeholder="Ex. Gérant" />
+          </div>
+          <div className="mt-3">
+            <Input label="Adresse de l'entreprise" value={f.entrepriseAdresse} onChange={(v) => set("entrepriseAdresse", v)} placeholder="12 rue des Artisans, 69003 Lyon" />
+          </div>
+        </div>
+
+        <div>
+          <p className="text-noir mb-3 text-sm font-bold">Le salarié</p>
+          <div className="grid gap-3 sm:grid-cols-2">
+            <Input label="Nom et prénom" value={f.salarieNom} onChange={(v) => set("salarieNom", v)} placeholder="Ex. Sophie Martin" />
+            <Input label="Poste occupé" value={f.poste} onChange={(v) => set("poste", v)} placeholder="Ex. Assistante administrative" />
+          </div>
+          <div className="mt-3 grid gap-3 sm:grid-cols-2">
+            <Input label="Date d'entrée" value={f.dateDebut} onChange={(v) => set("dateDebut", v)} placeholder="01/03/2023" />
+            <Input label="Date de sortie" value={f.dateFin} onChange={(v) => set("dateFin", v)} placeholder="30/06/2026" />
+          </div>
+          <div className="mt-3 grid gap-3 sm:grid-cols-2">
+            <Input label="Ville (signature)" value={f.ville} onChange={(v) => set("ville", v)} placeholder="Lyon" />
+            <Input label="Date de délivrance" value={f.date} onChange={(v) => set("date", v)} placeholder="28/06/2026" />
+          </div>
+        </div>
+
+        {error && <p className="text-sm font-medium text-red-600">{error}</p>}
+
+        <button
+          type="submit"
+          disabled={!valid || loading}
+          className="bg-orange hover:bg-orange-d inline-flex w-full items-center justify-center gap-2 rounded-[10px] px-6 py-3.5 text-base font-bold text-white transition-colors disabled:opacity-50 sm:w-auto"
+        >
+          {loading ? (
+            <>
+              <Loader2 size={18} className="animate-spin" />
+              Génération…
+            </>
+          ) : (
+            <>
+              <Download size={18} />
+              Générer le certificat (PDF)
+            </>
+          )}
+        </button>
+        <p className="text-gris text-xs">
+          Le paiement sécurisé (3&nbsp;€) sera requis avant téléchargement dès
+          l&apos;activation de Stripe.
+        </p>
+      </form>
+    </Card>
   );
 }
 

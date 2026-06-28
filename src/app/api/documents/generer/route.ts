@@ -1,6 +1,7 @@
 import { calculerFichePaie } from "@/lib/paie/calcul";
 import { buildFichePaiePDF } from "@/lib/pdf/fiche-paie";
 import { buildContratPDF } from "@/lib/pdf/contrat";
+import { buildCertificatPDF } from "@/lib/pdf/certificat";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -69,6 +70,23 @@ export async function POST(req: Request) {
       date: String(d.date ?? ""),
     });
     return pdfResponse(pdf, "contrat-de-travail.pdf");
+  }
+
+  if (type === "certificat-travail") {
+    const pdf = await buildCertificatPDF({
+      entrepriseNom: String(d.entrepriseNom ?? ""),
+      entrepriseAdresse: String(d.entrepriseAdresse ?? ""),
+      siret: String(d.siret ?? ""),
+      representantNom: String(d.representantNom ?? ""),
+      representantQualite: String(d.representantQualite ?? ""),
+      salarieNom: String(d.salarieNom ?? ""),
+      poste: String(d.poste ?? ""),
+      dateDebut: String(d.dateDebut ?? ""),
+      dateFin: String(d.dateFin ?? ""),
+      ville: String(d.ville ?? ""),
+      date: String(d.date ?? ""),
+    });
+    return pdfResponse(pdf, "certificat-de-travail.pdf");
   }
 
   return Response.json(
