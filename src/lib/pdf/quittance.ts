@@ -44,8 +44,16 @@ export async function buildQuittancePDF(d: QuittanceData): Promise<Uint8Array> {
 
   // — Titre —
   y -= 26;
-  text("QUITTANCE DE LOYER", M, y, 20, bold);
-  page.drawRectangle({ x: M, y: y - 8, width: 64, height: 3, color: OR });
+  const titre = "QUITTANCE DE LOYER";
+  text(titre, M, y, 20, bold);
+  // Soulignement sur toute la largeur du titre
+  page.drawRectangle({
+    x: M,
+    y: y - 8,
+    width: bold.widthOfTextAtSize(titre, 20),
+    height: 3,
+    color: OR,
+  });
   text(`Période : ${d.periode || "—"}`, M, y - 26, 11, font, GRIS);
 
   // — Corps —
