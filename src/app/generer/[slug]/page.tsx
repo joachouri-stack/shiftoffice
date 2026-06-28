@@ -71,6 +71,8 @@ export default function GenererPage() {
               <CertificatForm />
             ) : doc.slug === "solde-tout-compte" ? (
               <SoldeForm />
+            ) : doc.slug === "rupture-conventionnelle" ? (
+              <RuptureForm />
             ) : doc.free ? (
               <Card>
                 <p className="text-noir font-semibold">
@@ -1040,6 +1042,142 @@ function SoldeForm() {
         </button>
         <p className="text-gris text-xs">
           Le paiement sécurisé (3&nbsp;€) sera requis avant téléchargement dès
+          l&apos;activation de Stripe.
+        </p>
+      </form>
+    </Card>
+  );
+}
+
+function RuptureForm() {
+  const [f, setF] = useState({
+    entrepriseNom: "",
+    entrepriseAdresse: "",
+    siret: "",
+    representantNom: "",
+    representantQualite: "Gérant",
+    salarieNom: "",
+    salarieAdresse: "",
+    poste: "",
+    dateEmbauche: "",
+    salaireBrut: "",
+    indemniteRupture: "",
+    dateEntretien: "",
+    dateRupture: "",
+    ville: "",
+    date: aujourdhui(),
+  });
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+
+  function set<K extends keyof typeof f>(k: K, v: string) {
+    setF((p) => ({ ...p, [k]: v }));
+  }
+
+  const valid =
+    f.entrepriseNom.trim() &&
+    f.representantNom.trim() &&
+    f.salarieNom.trim() &&
+    f.poste.trim() &&
+    (parseFloat(f.indemniteRupture.replace(",", ".")) || 0) > 0;
+
+  async function generate() {
+    if (!valid || loading) return;
+    setLoading(true);
+    setError("");
+    try {
+      const ok = await downloadPdf(
+        "rupture-conventionnelle",
+        f,
+        "rupture-conventionnelle.pdf",
+        "/api/documents/generer"
+      );
+      if (!ok) throw new Error("génération");
+    } catch {
+      setError("La génération a échoué. Réessayez.");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  return (
+    <Card>
+      <form
+        onSubmit={(e) => {
+          e.preventDefault();
+          generate();
+        }}
+        className="space-y-5"
+      >
+        <div>
+          <p className="text-noir mb-3 text-sm font-bold">L&apos;employeur</p>
+          <div className="grid gap-3 sm:grid-cols-2">
+            <Input label="Nom de l'entreprise" value={f.entrepriseNom} onChange={(v) => set("entrepriseNom", v)} placeholder="Ex. Dupont Bâtiment" />
+            <Input label="SIRET (optionnel)" value={f.siret} onChange={(v) => set("siret", v)} placeholder="123 456 789 00012" />
+          </div>
+          <div className="mt-3 grid gap-3 sm:grid-cols-2">
+            <Input label="Représentant" value={f.representantNom} onChange={(v) => set("representantNom", v)} placeholder="Ex. M. Dupont" />
+            <Input label="Qualité" value={f.representantQualite} onChange={(v) => set("representantQualite", v)} placeholder="Ex. Gérant" />
+          </div>
+          <div className="mt-3">
+            <Input label="Adresse de l'entreprise" value={f.entrepriseAdresse} onChange={(v) => set("entrepriseAdresse", v)} placeholder="12 rue des Artisans, 69003 Lyon" />
+          </div>
+        </div>
+
+        <div>
+          <p className="text-noir mb-3 text-sm font-bold">Le salarié</p>
+          <div className="grid gap-3 sm:grid-cols-2">
+            <Input label="Nom et prénom" value={f.salarieNom} onChange={(v) => set("salarieNom", v)} placeholder="Ex. Sophie Martin" />
+            <Input label="Poste occupé" value={f.poste} onChange={(v) => set("poste", v)} placeholder="Ex. Assistante administrative" />
+          </div>
+          <div className="mt-3 grid gap-3 sm:grid-cols-2">
+            <Input label="Adresse du salarié" value={f.salarieAdresse} onChange={(v) => set("salarieAdresse", v)} placeholder="3 rue des Fleurs, 69003 Lyon" />
+            <Input label="Date d'embauche" value={f.dateEmbauche} onChange={(v) => set("dateEmbauche", v)} placeholder="01/03/2021" />
+          </div>
+        </div>
+
+        <div>
+          <p className="text-noir mb-3 text-sm font-bold">Conditions de la rupture</p>
+          <div className="grid gap-3 sm:grid-cols-2">
+            <Input label="Salaire brut mensuel (€)" value={f.salaireBrut} onChange={(v) => set("salaireBrut", v)} placeholder="2200" inputMode="decimal" />
+            <Input label="Indemnité de rupture (€)" value={f.indemniteRupture} onChange={(v) => set("indemniteRupture", v)} placeholder="1500" inputMode="decimal" />
+          </div>
+          <div className="mt-3 grid gap-3 sm:grid-cols-2">
+            <Input label="Date de l'entretien" value={f.dateEntretien} onChange={(v) => set("dateEntretien", v)} placeholder="20/06/2026" />
+            <Input label="Date envisagée de rupture" value={f.dateRupture} onChange={(v) => set("dateRupture", v)} placeholder="31/07/2026" />
+          </div>
+          <div className="mt-3 grid gap-3 sm:grid-cols-2">
+            <Input label="Ville (signature)" value={f.ville} onChange={(v) => set("ville", v)} placeholder="Lyon" />
+            <Input label="Date de signature" value={f.date} onChange={(v) => set("date", v)} placeholder="28/06/2026" />
+          </div>
+          <p className="text-gris mt-3 text-xs leading-relaxed">
+            L&apos;indemnité ne peut être inférieure à l&apos;indemnité légale de
+            licenciement. La rupture nécessite l&apos;homologation de la DREETS
+            (délai de rétractation de 15 jours).
+          </p>
+        </div>
+
+        {error && <p className="text-sm font-medium text-red-600">{error}</p>}
+
+        <button
+          type="submit"
+          disabled={!valid || loading}
+          className="bg-orange hover:bg-orange-d inline-flex w-full items-center justify-center gap-2 rounded-[10px] px-6 py-3.5 text-base font-bold text-white transition-colors disabled:opacity-50 sm:w-auto"
+        >
+          {loading ? (
+            <>
+              <Loader2 size={18} className="animate-spin" />
+              Génération…
+            </>
+          ) : (
+            <>
+              <Download size={18} />
+              Générer la convention (PDF)
+            </>
+          )}
+        </button>
+        <p className="text-gris text-xs">
+          Le paiement sécurisé (5&nbsp;€) sera requis avant téléchargement dès
           l&apos;activation de Stripe.
         </p>
       </form>

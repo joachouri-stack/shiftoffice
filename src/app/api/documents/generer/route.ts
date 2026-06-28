@@ -3,6 +3,7 @@ import { buildFichePaiePDF } from "@/lib/pdf/fiche-paie";
 import { buildContratPDF } from "@/lib/pdf/contrat";
 import { buildCertificatPDF } from "@/lib/pdf/certificat";
 import { buildSoldeToutComptePDF } from "@/lib/pdf/solde-tout-compte";
+import { buildRupturePDF } from "@/lib/pdf/rupture";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -112,6 +113,27 @@ export async function POST(req: Request) {
       date: String(d.date ?? ""),
     });
     return pdfResponse(pdf, "solde-de-tout-compte.pdf");
+  }
+
+  if (type === "rupture-conventionnelle") {
+    const pdf = await buildRupturePDF({
+      entrepriseNom: String(d.entrepriseNom ?? ""),
+      entrepriseAdresse: String(d.entrepriseAdresse ?? ""),
+      siret: String(d.siret ?? ""),
+      representantNom: String(d.representantNom ?? ""),
+      representantQualite: String(d.representantQualite ?? ""),
+      salarieNom: String(d.salarieNom ?? ""),
+      salarieAdresse: String(d.salarieAdresse ?? ""),
+      poste: String(d.poste ?? ""),
+      dateEmbauche: String(d.dateEmbauche ?? ""),
+      salaireBrut: num(d.salaireBrut),
+      indemniteRupture: num(d.indemniteRupture),
+      dateEntretien: String(d.dateEntretien ?? ""),
+      dateRupture: String(d.dateRupture ?? ""),
+      ville: String(d.ville ?? ""),
+      date: String(d.date ?? ""),
+    });
+    return pdfResponse(pdf, "rupture-conventionnelle.pdf");
   }
 
   return Response.json(
