@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 import { DOCUMENTS, formatPrice, type DocItem } from "@/lib/documents";
 
@@ -67,13 +68,13 @@ function DocCard({ doc }: { doc: DocItem }) {
             <span className="text-gris ml-1 text-sm font-medium">/ doc</span>
           )}
         </span>
-        <a
-          href="#"
+        <Link
+          href={`/generer/${doc.slug}`}
           className="bg-orange hover:bg-orange-d inline-flex items-center gap-1.5 rounded-[10px] px-4 py-2.5 text-sm font-bold text-white transition-colors"
         >
           Générer
           <ArrowRight size={16} />
-        </a>
+        </Link>
       </div>
     </article>
   );
