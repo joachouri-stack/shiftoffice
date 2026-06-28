@@ -55,3 +55,28 @@
 .animate-pulse-dot {
   animation: pulse-dot 2s infinite;
 }
+
+/* Pages légales : mise en forme lisible du contenu rédactionnel */
+.legal-prose p {
+  color: var(--color-gris);
+  font-size: 0.95rem;
+  line-height: 1.7;
+}
+.legal-prose strong {
+  color: var(--color-noir);
+  font-weight: 600;
+}
+.legal-prose ul {
+  list-style: disc;
+  padding-left: 1.25rem;
+  color: var(--color-gris);
+  font-size: 0.95rem;
+  line-height: 1.7;
+}
+.legal-prose li {
+  margin-top: 0.35rem;
+}
+.legal-prose a {
+  color: var(--color-orange);
+  font-weight: 600;
+}

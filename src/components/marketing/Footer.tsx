@@ -2,10 +2,10 @@ import Link from "next/link";
 import { Logo } from "@/components/brand/Logo";
 
 const LEGAL = [
-  { label: "CGU", href: "#" },
-  { label: "Politique de confidentialité", href: "#" },
-  { label: "Mentions légales", href: "#" },
-  { label: "Contact", href: "#" },
+  { label: "CGV", href: "/cgv" },
+  { label: "CGU", href: "/cgu" },
+  { label: "Confidentialité", href: "/confidentialite" },
+  { label: "Mentions légales", href: "/mentions-legales" },
 ];
 
 export function Footer() {
