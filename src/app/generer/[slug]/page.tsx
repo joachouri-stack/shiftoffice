@@ -65,6 +65,8 @@ export default function GenererPage() {
               <AttestationForm />
             ) : doc.slug === "fiche-paie" ? (
               <FichePaieForm />
+            ) : doc.slug === "contrat-travail" ? (
+              <ContratForm />
             ) : doc.free ? (
               <Card>
                 <p className="text-noir font-semibold">
@@ -591,6 +593,174 @@ function Row({
         {value}
       </span>
     </div>
+  );
+}
+
+function ContratForm() {
+  const [f, setF] = useState({
+    entrepriseNom: "",
+    entrepriseAdresse: "",
+    siret: "",
+    representantNom: "",
+    representantQualite: "Gérant",
+    salarieNom: "",
+    salarieAdresse: "",
+    typeContrat: "cdi",
+    dateDebut: aujourdhui(),
+    dateFin: "",
+    motifCdd: "",
+    poste: "",
+    salaireBrut: "",
+    heuresSemaine: "35",
+    lieuTravail: "",
+    periodeEssai: "2 mois",
+    conventionCollective: "",
+    ville: "",
+    date: aujourdhui(),
+  });
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+
+  function set<K extends keyof typeof f>(k: K, v: string) {
+    setF((p) => ({ ...p, [k]: v }));
+  }
+
+  const cdd = f.typeContrat === "cdd";
+  const valid =
+    f.entrepriseNom.trim() &&
+    f.representantNom.trim() &&
+    f.salarieNom.trim() &&
+    f.poste.trim() &&
+    (parseFloat(f.salaireBrut.replace(",", ".")) || 0) > 0;
+
+  async function generate() {
+    if (!valid || loading) return;
+    setLoading(true);
+    setError("");
+    try {
+      const ok = await downloadPdf(
+        "contrat-travail",
+        f,
+        "contrat-de-travail.pdf",
+        "/api/documents/generer"
+      );
+      if (!ok) throw new Error("génération");
+    } catch {
+      setError("La génération a échoué. Réessayez.");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  return (
+    <Card>
+      <form
+        onSubmit={(e) => {
+          e.preventDefault();
+          generate();
+        }}
+        className="space-y-5"
+      >
+        {/* Type */}
+        <div>
+          <span className="text-noir mb-1.5 block text-sm font-medium">
+            Type de contrat
+          </span>
+          <div className="flex gap-2">
+            {[
+              ["cdi", "CDI"],
+              ["cdd", "CDD"],
+            ].map(([val, label]) => (
+              <button
+                key={val}
+                type="button"
+                onClick={() => set("typeContrat", val)}
+                className={`h-11 flex-1 rounded-lg border text-sm font-semibold transition-colors sm:flex-none sm:px-10 ${
+                  f.typeContrat === val
+                    ? "border-or bg-or text-white"
+                    : "border-or/30 text-noir bg-white"
+                }`}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <div>
+          <p className="text-noir mb-3 text-sm font-bold">L&apos;employeur</p>
+          <div className="grid gap-3 sm:grid-cols-2">
+            <Input label="Nom de l'entreprise" value={f.entrepriseNom} onChange={(v) => set("entrepriseNom", v)} placeholder="Ex. Dupont Bâtiment" />
+            <Input label="SIRET (optionnel)" value={f.siret} onChange={(v) => set("siret", v)} placeholder="123 456 789 00012" />
+          </div>
+          <div className="mt-3 grid gap-3 sm:grid-cols-2">
+            <Input label="Représentant" value={f.representantNom} onChange={(v) => set("representantNom", v)} placeholder="Ex. M. Dupont" />
+            <Input label="Qualité" value={f.representantQualite} onChange={(v) => set("representantQualite", v)} placeholder="Ex. Gérant" />
+          </div>
+          <div className="mt-3">
+            <Input label="Adresse de l'entreprise" value={f.entrepriseAdresse} onChange={(v) => set("entrepriseAdresse", v)} placeholder="12 rue des Artisans, 69003 Lyon" />
+          </div>
+        </div>
+
+        <div>
+          <p className="text-noir mb-3 text-sm font-bold">Le salarié</p>
+          <div className="grid gap-3 sm:grid-cols-2">
+            <Input label="Nom et prénom" value={f.salarieNom} onChange={(v) => set("salarieNom", v)} placeholder="Ex. Sophie Martin" />
+            <Input label="Adresse du salarié" value={f.salarieAdresse} onChange={(v) => set("salarieAdresse", v)} placeholder="3 rue des Fleurs, 69003 Lyon" />
+          </div>
+        </div>
+
+        <div>
+          <p className="text-noir mb-3 text-sm font-bold">Le poste</p>
+          <div className="grid gap-3 sm:grid-cols-2">
+            <Input label="Poste" value={f.poste} onChange={(v) => set("poste", v)} placeholder="Ex. Assistante administrative" />
+            <Input label="Salaire brut mensuel (€)" value={f.salaireBrut} onChange={(v) => set("salaireBrut", v)} placeholder="1802" inputMode="decimal" />
+          </div>
+          <div className="mt-3 grid gap-3 sm:grid-cols-2">
+            <Input label="Date de début" value={f.dateDebut} onChange={(v) => set("dateDebut", v)} placeholder="01/07/2026" />
+            <Input label="Heures / semaine" value={f.heuresSemaine} onChange={(v) => set("heuresSemaine", v)} placeholder="35" inputMode="decimal" />
+          </div>
+          {cdd && (
+            <div className="mt-3 grid gap-3 sm:grid-cols-2">
+              <Input label="Date de fin (CDD)" value={f.dateFin} onChange={(v) => set("dateFin", v)} placeholder="31/12/2026" />
+              <Input label="Motif du CDD" value={f.motifCdd} onChange={(v) => set("motifCdd", v)} placeholder="Accroissement d'activité" />
+            </div>
+          )}
+          <div className="mt-3 grid gap-3 sm:grid-cols-2">
+            <Input label="Lieu de travail" value={f.lieuTravail} onChange={(v) => set("lieuTravail", v)} placeholder="12 rue des Artisans, Lyon" />
+            <Input label="Période d'essai" value={f.periodeEssai} onChange={(v) => set("periodeEssai", v)} placeholder="2 mois / Aucune" />
+          </div>
+          <div className="mt-3 grid gap-3 sm:grid-cols-2">
+            <Input label="Convention collective (optionnel)" value={f.conventionCollective} onChange={(v) => set("conventionCollective", v)} placeholder="Ex. Bâtiment" />
+            <Input label="Ville (signature)" value={f.ville} onChange={(v) => set("ville", v)} placeholder="Lyon" />
+          </div>
+        </div>
+
+        {error && <p className="text-sm font-medium text-red-600">{error}</p>}
+
+        <button
+          type="submit"
+          disabled={!valid || loading}
+          className="bg-orange hover:bg-orange-d inline-flex w-full items-center justify-center gap-2 rounded-[10px] px-6 py-3.5 text-base font-bold text-white transition-colors disabled:opacity-50 sm:w-auto"
+        >
+          {loading ? (
+            <>
+              <Loader2 size={18} className="animate-spin" />
+              Génération…
+            </>
+          ) : (
+            <>
+              <Download size={18} />
+              Générer le contrat (PDF)
+            </>
+          )}
+        </button>
+        <p className="text-gris text-xs">
+          Le paiement sécurisé (5&nbsp;€) sera requis avant téléchargement dès
+          l&apos;activation de Stripe.
+        </p>
+      </form>
+    </Card>
   );
 }
 
