@@ -1,4 +1,8 @@
 import { buildQuittancePDF, type QuittanceData } from "@/lib/pdf/quittance";
+import {
+  buildAttestationPDF,
+  type AttestationData,
+} from "@/lib/pdf/attestation";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -46,6 +50,23 @@ export async function POST(req: Request) {
     };
     pdf = await buildQuittancePDF(data);
     filename = "quittance-loyer.pdf";
+  } else if (type === "attestation-employeur") {
+    const data: AttestationData = {
+      entrepriseNom: String(d.entrepriseNom ?? ""),
+      entrepriseAdresse: String(d.entrepriseAdresse ?? ""),
+      siret: String(d.siret ?? ""),
+      representantNom: String(d.representantNom ?? ""),
+      representantQualite: String(d.representantQualite ?? ""),
+      salarieNom: String(d.salarieNom ?? ""),
+      poste: String(d.poste ?? ""),
+      typeContrat:
+        d.typeContrat === "determinee" ? "determinee" : "indeterminee",
+      dateEmbauche: String(d.dateEmbauche ?? ""),
+      ville: String(d.ville ?? ""),
+      date: String(d.date ?? ""),
+    };
+    pdf = await buildAttestationPDF(data);
+    filename = "attestation-employeur.pdf";
   } else {
     return Response.json(
       { error: "Document bientôt disponible." },

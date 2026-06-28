@@ -60,6 +60,8 @@ export default function GenererPage() {
 
             {doc.slug === "quittance-loyer" ? (
               <QuittanceForm />
+            ) : doc.slug === "attestation-employeur" ? (
+              <AttestationForm />
             ) : doc.free ? (
               <Card>
                 <p className="text-noir font-semibold">
@@ -232,6 +234,165 @@ function QuittanceForm() {
               {total.toLocaleString("fr-FR", { minimumFractionDigits: 2 })} €
             </span>
           </p>
+        </div>
+
+        {error && <p className="text-sm font-medium text-red-600">{error}</p>}
+
+        <button
+          type="submit"
+          disabled={!valid || loading}
+          className="bg-orange hover:bg-orange-d inline-flex w-full items-center justify-center gap-2 rounded-[10px] px-6 py-3.5 text-base font-bold text-white transition-colors disabled:opacity-50 sm:w-auto"
+        >
+          {loading ? (
+            <>
+              <Loader2 size={18} className="animate-spin" />
+              Génération…
+            </>
+          ) : (
+            <>
+              <Download size={18} />
+              Générer et télécharger le PDF
+            </>
+          )}
+        </button>
+      </form>
+    </Card>
+  );
+}
+
+async function downloadPdf(
+  type: string,
+  donnees: Record<string, string>,
+  filename: string
+): Promise<boolean> {
+  const res = await fetch("/api/documents/generer-gratuit", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ type_document: type, donnees }),
+  });
+  if (!res.ok) return false;
+  const blob = await res.blob();
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
+  return true;
+}
+
+function AttestationForm() {
+  const [f, setF] = useState({
+    entrepriseNom: "",
+    entrepriseAdresse: "",
+    siret: "",
+    ville: "",
+    representantNom: "",
+    representantQualite: "Gérant",
+    salarieNom: "",
+    poste: "",
+    typeContrat: "indeterminee",
+    dateEmbauche: "",
+    date: aujourdhui(),
+  });
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+
+  function set<K extends keyof typeof f>(k: K, v: string) {
+    setF((p) => ({ ...p, [k]: v }));
+  }
+
+  const valid =
+    f.entrepriseNom.trim() &&
+    f.representantNom.trim() &&
+    f.salarieNom.trim() &&
+    f.poste.trim();
+
+  async function generate() {
+    if (!valid || loading) return;
+    setLoading(true);
+    setError("");
+    try {
+      const ok = await downloadPdf(
+        "attestation-employeur",
+        f,
+        "attestation-employeur.pdf"
+      );
+      if (!ok) throw new Error("génération");
+    } catch {
+      setError("La génération a échoué. Réessayez.");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  return (
+    <Card>
+      <div className="bg-vert-l text-vert mb-5 inline-flex items-center gap-1.5 rounded-md border border-emerald-200 px-2.5 py-1 text-xs font-bold">
+        <FileText size={13} />
+        Gratuit · Sans compte
+      </div>
+
+      <form
+        onSubmit={(e) => {
+          e.preventDefault();
+          generate();
+        }}
+        className="space-y-5"
+      >
+        <div>
+          <p className="text-noir mb-3 text-sm font-bold">
+            L&apos;employeur (vous)
+          </p>
+          <div className="grid gap-3 sm:grid-cols-2">
+            <Input label="Nom de l'entreprise" value={f.entrepriseNom} onChange={(v) => set("entrepriseNom", v)} placeholder="Ex. Dupont Bâtiment" />
+            <Input label="Ville" value={f.ville} onChange={(v) => set("ville", v)} placeholder="Ex. Lyon" />
+          </div>
+          <div className="mt-3 grid gap-3 sm:grid-cols-2">
+            <Input label="Adresse de l'entreprise" value={f.entrepriseAdresse} onChange={(v) => set("entrepriseAdresse", v)} placeholder="12 rue des Artisans, 69003 Lyon" />
+            <Input label="SIRET (optionnel)" value={f.siret} onChange={(v) => set("siret", v)} placeholder="123 456 789 00012" />
+          </div>
+          <div className="mt-3 grid gap-3 sm:grid-cols-2">
+            <Input label="Nom du représentant" value={f.representantNom} onChange={(v) => set("representantNom", v)} placeholder="Ex. M. Dupont" />
+            <Input label="Qualité" value={f.representantQualite} onChange={(v) => set("representantQualite", v)} placeholder="Ex. Gérant" />
+          </div>
+        </div>
+
+        <div>
+          <p className="text-noir mb-3 text-sm font-bold">Le salarié</p>
+          <div className="grid gap-3 sm:grid-cols-2">
+            <Input label="Nom et prénom du salarié" value={f.salarieNom} onChange={(v) => set("salarieNom", v)} placeholder="Ex. Sophie Martin" />
+            <Input label="Poste occupé" value={f.poste} onChange={(v) => set("poste", v)} placeholder="Ex. Assistante administrative" />
+          </div>
+          <div className="mt-3 grid gap-3 sm:grid-cols-2">
+            <div>
+              <span className="text-noir mb-1.5 block text-sm font-medium">
+                Type de contrat
+              </span>
+              <div className="flex gap-2">
+                {[
+                  ["indeterminee", "CDI"],
+                  ["determinee", "CDD"],
+                ].map(([val, label]) => (
+                  <button
+                    key={val}
+                    type="button"
+                    onClick={() => set("typeContrat", val)}
+                    className={`h-11 flex-1 rounded-lg border text-sm font-semibold transition-colors ${
+                      f.typeContrat === val
+                        ? "border-or bg-or text-white"
+                        : "border-or/30 text-noir bg-white"
+                    }`}
+                  >
+                    {label}
+                  </button>
+                ))}
+              </div>
+            </div>
+            <Input label="Date d'embauche" value={f.dateEmbauche} onChange={(v) => set("dateEmbauche", v)} placeholder="01/03/2024" />
+          </div>
         </div>
 
         {error && <p className="text-sm font-medium text-red-600">{error}</p>}
