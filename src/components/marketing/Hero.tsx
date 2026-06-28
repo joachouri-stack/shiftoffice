@@ -1,4 +1,5 @@
 import { ScrollLink } from "./ScrollLink";
+import { AiBadge } from "./AiBadge";
 
 const POINTS = [
   "Conforme URSSAF 2026",
@@ -35,10 +36,13 @@ export function Hero() {
       />
 
       <div className="relative z-10 mx-auto max-w-[720px] text-center">
-        {/* Badge */}
-        <div className="border-or/30 bg-or/10 text-or mb-7 inline-flex items-center gap-2 rounded-full border px-[18px] py-[7px] text-[0.7rem] font-bold uppercase tracking-[0.16em]">
-          <span className="bg-or animate-pulse-dot h-1.5 w-1.5 rounded-full" />
-          ✦ Documents officiels — Conformes 2026
+        {/* Badges */}
+        <div className="mb-7 flex flex-wrap items-center justify-center gap-2.5">
+          <span className="border-or/30 bg-or/10 text-or inline-flex items-center gap-2 rounded-full border px-[18px] py-[7px] text-[0.7rem] font-bold uppercase tracking-[0.16em]">
+            <span className="bg-or animate-pulse-dot h-1.5 w-1.5 rounded-full" />
+            ✦ Documents officiels — Conformes 2026
+          </span>
+          <AiBadge />
         </div>
 
         {/* Titre */}
