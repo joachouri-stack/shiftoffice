@@ -1,11 +1,12 @@
 "use client";
 
 import { useState } from "react";
-import { Check, Flame, Star } from "lucide-react";
+import { Check, Flame } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { cn } from "@/lib/utils";
 
-export type PlanId = "gratuit" | "essentiel" | "pro";
+export type { PlanId } from "@/lib/plans";
+import type { PlanId } from "@/lib/plans";
 
 type Plan = {
   id: PlanId;
@@ -23,42 +24,27 @@ const PLANS: Plan[] = [
     price: 0,
     desc: "Pour découvrir Shift Office.",
     features: [
-      "1 devis par mois",
-      "1 facture par mois",
-      "1 document par mois",
+      "3 devis par mois",
+      "3 factures par mois",
       "1 demande IA par jour",
-    ],
-  },
-  {
-    id: "essentiel",
-    name: "Essentiel",
-    price: 29,
-    desc: "Pour gagner du temps au quotidien.",
-    features: [
-      "IA illimitée",
-      "Devis illimités",
-      "Factures illimitées",
-      "Documents illimités",
-      "Coffre-fort sécurisé",
-      "Intégration Stripe",
-      "Intégration Gmail",
+      "Téléchargement PDF",
+      "1 utilisateur",
     ],
   },
   {
     id: "pro",
     name: "Pro",
-    price: 59,
+    price: 29,
     desc: "Toute la puissance de Shift Office.",
     featured: true,
     features: [
-      "Tout Essentiel, plus :",
-      "Fiches de paie",
-      "Contrats",
-      "Quittances",
-      "Calcul de TVA & marges",
-      "Graphiques & évolution",
-      "Mémoire d'entreprise",
+      "Devis illimités",
+      "Factures illimitées",
       "Assistant IA bâtiment",
+      "Téléchargement PDF",
+      "Envoi email professionnel",
+      "Envoi WhatsApp Business",
+      "1 utilisateur",
     ],
   },
 ];
@@ -130,7 +116,7 @@ export function PricingPlans({
       </div>
 
       {/* Cartes */}
-      <div className="mx-auto mt-10 grid max-w-5xl items-stretch gap-5 lg:grid-cols-3">
+      <div className="mx-auto mt-10 grid max-w-3xl items-stretch gap-5 sm:grid-cols-2">
         {PLANS.map((plan) => (
           <PlanCard
             key={plan.id}
@@ -173,15 +159,14 @@ function PlanCard({
 }) {
   const onDark = surface === "dark";
   const featured = !!plan.featured; // Pro
-  const mid = !featured && plan.id === "essentiel"; // Essentiel
-  const base = !featured && !mid; // Gratuit
-  const highlight = featured || mid;
+  const base = !featured; // Gratuit
+  const highlight = featured;
   const isCurrent = current === plan.id;
   const monthly = annual ? Math.round((plan.price * 10) / 12) : plan.price;
 
   // Texte clair quand la carte a un fond sombre/translucide.
   const invert = onDark || featured;
-  const showGlow = featured || (onDark && mid);
+  const showGlow = featured;
 
   return (
     <div
@@ -190,15 +175,12 @@ function PlanCard({
         onDark
           ? cn(
               featured &&
-                "border-brand/50 bg-gradient-to-b from-brand/20 to-white/[0.03] text-paper shadow-[var(--shadow-pop)] ring-1 ring-brand/25 lg:-translate-y-3",
-              mid && "border-white/15 bg-white/[0.06] text-paper ring-1 ring-brand/15",
+                "border-brand/50 bg-gradient-to-b from-brand/20 to-white/[0.03] text-paper shadow-[var(--shadow-pop)] ring-1 ring-brand/25 lg:-translate-y-2",
               base && "border-white/10 bg-white/[0.035] text-paper"
             )
           : cn(
               featured &&
-                "border-ink bg-ink text-paper shadow-[var(--shadow-pop)] lg:-translate-y-3",
-              mid &&
-                "border-brand/30 text-ink bg-gradient-to-b from-brand-50/60 to-paper shadow-[var(--shadow-pop)] ring-1 ring-brand/15",
+                "border-ink bg-ink text-paper shadow-[var(--shadow-pop)] lg:-translate-y-2",
               base &&
                 "border-line bg-paper text-ink shadow-[var(--shadow-card)] hover:shadow-[var(--shadow-pop)]"
             )
@@ -225,12 +207,6 @@ function PlanCard({
             <span className="bg-brand text-paper inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-semibold shadow-[var(--shadow-brand)]">
               <Flame size={12} />
               Populaire
-            </span>
-          )}
-          {mid && !isCurrent && (
-            <span className="bg-brand text-paper inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-semibold shadow-[var(--shadow-brand)]">
-              <Star size={12} />
-              Recommandé
             </span>
           )}
           {isCurrent && (

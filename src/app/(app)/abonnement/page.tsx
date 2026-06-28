@@ -35,7 +35,7 @@ export default function AbonnementPage() {
       icon: Sparkles,
       label: "Assistant IA",
       used: 0,
-      max: limits.iaRequetes,
+      max: limits.iaParJour,
       isAI: true,
     },
   ];
@@ -65,7 +65,6 @@ export default function AbonnementPage() {
             const pct = unlimited
               ? 0
               : Math.min(100, Math.round((r.used / Math.max(1, r.max)) * 100));
-            const blocked = r.isAI && r.max === 0;
             return (
               <div key={r.label}>
                 <div className="mb-1.5 flex items-center gap-2">
@@ -73,14 +72,10 @@ export default function AbonnementPage() {
                   <span className="text-ink text-sm font-medium">{r.label}</span>
                 </div>
                 <p className="text-ink text-sm tabular">
-                  {blocked ? (
-                    <span className="text-muted">Non inclus</span>
-                  ) : unlimited ? (
-                    <span className="text-muted">
-                      {r.isAI
-                        ? `${fmtLimit(r.max)}`
-                        : `Illimité`}
-                    </span>
+                  {unlimited ? (
+                    <span className="text-muted">Illimité</span>
+                  ) : r.isAI ? (
+                    <span className="text-muted">{r.max} / jour</span>
                   ) : (
                     <>
                       <span className="text-ink font-semibold">{r.used}</span>
@@ -88,7 +83,7 @@ export default function AbonnementPage() {
                     </>
                   )}
                 </p>
-                {!unlimited && !blocked && (
+                {!unlimited && !r.isAI && (
                   <div className="bg-mist mt-1.5 h-1.5 overflow-hidden rounded-full">
                     <div
                       className="bg-brand h-full rounded-full transition-all"
@@ -104,7 +99,12 @@ export default function AbonnementPage() {
 
       <PricingPlans variant="app" current={plan} onSelect={onSelect} />
 
-      <div className="text-muted mt-6 flex items-start justify-center gap-2 text-xs">
+      <p className="text-muted mt-6 text-center text-sm">
+        Un plan <span className="text-ink font-medium">Business</span> avec
+        fonctionnalités avancées arrive bientôt.
+      </p>
+
+      <div className="text-muted mt-4 flex items-start justify-center gap-2 text-xs">
         <Info size={14} className="mt-0.5 shrink-0" />
         <span>
           Le paiement sécurisé (Stripe) sera activé prochainement. Pour

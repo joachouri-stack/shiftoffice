@@ -29,6 +29,10 @@ export function Pricing() {
         <div className="mt-12">
           <PricingPlans variant="marketing" surface="dark" />
         </div>
+        <p className="mt-8 text-center text-sm text-white/45">
+          Un plan <span className="text-white/75 font-medium">Business</span> avec
+          fonctionnalités avancées arrive bientôt.
+        </p>
       </Container>
     </section>
   );
