@@ -276,6 +276,22 @@ create policy "users_own_coffre" on public.coffre_fort
 
 create index if not exists coffre_user_id_idx on public.coffre_fort(user_id);
 
+-- ----------------------------------------------------------------------------
+-- 9. NOTIFICATIONS « COMING SOON » (capture marketing — fonctionnalités Business)
+-- ----------------------------------------------------------------------------
+create table if not exists public.notifications_coming_soon (
+  id uuid default gen_random_uuid() primary key,
+  email text not null,
+  feature_name text not null,
+  user_id uuid references public.profiles(id) on delete set null,
+  created_at timestamptz default now()
+);
+-- Pas de RLS : insertion publique (formulaire), lecture réservée au service_role.
+alter table public.notifications_coming_soon enable row level security;
+drop policy if exists "insert_coming_soon" on public.notifications_coming_soon;
+create policy "insert_coming_soon" on public.notifications_coming_soon
+  for insert with check (true);
+
 -- ============================================================================
 -- Fin du schéma.
 -- Étapes suivantes (dashboard Supabase) :

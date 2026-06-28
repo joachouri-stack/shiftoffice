@@ -5,7 +5,13 @@ import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { LogOut, Building2 } from "lucide-react";
 import { Logo } from "@/components/brand/Logo";
-import { APP_NAV, APP_NAV_SECONDARY, type NavItem } from "@/lib/navigation";
+import {
+  APP_NAV,
+  APP_NAV_SECONDARY,
+  COMING_SOON_FEATURES,
+  type NavItem,
+} from "@/lib/navigation";
+import { ComingSoonNavItem } from "@/components/app/ComingSoon";
 import { useCompanyProfile } from "@/lib/companyProfile";
 import { cn } from "@/lib/utils";
 
@@ -101,6 +107,19 @@ export function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
       <nav className="flex-1 space-y-1 overflow-y-auto px-3 py-2">
         {APP_NAV.map((item) => (
           <NavLink key={item.href} item={item} onNavigate={onNavigate} />
+        ))}
+
+        {/* Fonctionnalités à venir (plan Business) */}
+        <p className="text-muted/70 px-3 pb-1 pt-4 text-[0.65rem] font-semibold uppercase tracking-wide">
+          Bientôt
+        </p>
+        {COMING_SOON_FEATURES.map((f) => (
+          <ComingSoonNavItem
+            key={f.feature}
+            icon={f.icon}
+            label={f.label}
+            featureName={f.feature}
+          />
         ))}
       </nav>
 

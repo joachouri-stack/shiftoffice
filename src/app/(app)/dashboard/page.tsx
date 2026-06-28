@@ -14,6 +14,8 @@ import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
 import { PageHeader } from "@/components/app/PageHeader";
+import { ComingSoonCard } from "@/components/app/ComingSoon";
+import { COMING_SOON_FEATURES } from "@/lib/navigation";
 import { useCompanyProfile } from "@/lib/companyProfile";
 import { useQuotes, computeTotals, formatEUR, type Quote } from "@/lib/quotes";
 
@@ -207,6 +209,27 @@ export default function DashboardPage() {
           </Button>
         </div>
       </Card>
+
+      {/* Fonctionnalités à venir (plan Business) */}
+      <div className="reveal mt-8">
+        <div className="mb-3 flex items-baseline justify-between">
+          <h2 className="text-ink font-semibold tracking-tight">
+            Bientôt disponible
+          </h2>
+          <span className="text-muted text-xs">Plan Business</span>
+        </div>
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+          {COMING_SOON_FEATURES.map((f) => (
+            <ComingSoonCard
+              key={f.feature}
+              icon={f.icon}
+              label={f.label}
+              desc={f.desc}
+              featureName={f.feature}
+            />
+          ))}
+        </div>
+      </div>
     </>
   );
 }

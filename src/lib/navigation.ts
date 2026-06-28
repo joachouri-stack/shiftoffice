@@ -11,6 +11,10 @@ import {
   CreditCard,
   Building2,
   Settings,
+  Calculator,
+  LineChart,
+  Brain,
+  Blocks,
   type LucideIcon,
 } from "lucide-react";
 
@@ -105,6 +109,39 @@ export const MARKETING_NAV = [
   { label: "Fonctionnalités", href: "/#fonctionnalites" },
   { label: "Abonnements", href: "/#abonnements" },
   { label: "FAQ", href: "/#faq" },
+];
+
+/** Fonctionnalités à venir (plan Business) — verrouillées, capture d'email. */
+export const COMING_SOON_FEATURES: {
+  icon: LucideIcon;
+  label: string;
+  feature: string;
+  desc: string;
+}[] = [
+  {
+    icon: Calculator,
+    label: "TVA & marges",
+    feature: "Calcul de TVA & marges",
+    desc: "Suivez votre TVA et vos marges automatiquement.",
+  },
+  {
+    icon: LineChart,
+    label: "Graphiques",
+    feature: "Graphiques & évolution",
+    desc: "Visualisez l'évolution de votre activité.",
+  },
+  {
+    icon: Brain,
+    label: "Mémoire d'entreprise",
+    feature: "Mémoire d'entreprise",
+    desc: "L'IA se souvient de vos chantiers et préférences.",
+  },
+  {
+    icon: Blocks,
+    label: "Intégrations avancées",
+    feature: "Intégrations avancées",
+    desc: "Google Drive, Google Agenda et bien plus.",
+  },
 ];
 
 /** Liens légaux (footer). */

@@ -166,6 +166,14 @@ export type CoffreRow = {
   created_at: string;
 };
 
+export type NotifComingSoonRow = {
+  id: string;
+  email: string;
+  feature_name: string;
+  user_id: string | null;
+  created_at: string;
+};
+
 /** Helper : une table dont Insert/Update dérivent de la Row. */
 type TableShape<Row> = {
   Row: Row;
@@ -185,6 +193,7 @@ export type Database = {
       emails_envoyes: TableShape<EmailRow>;
       conversations_ia: TableShape<ConversationRow>;
       coffre_fort: TableShape<CoffreRow>;
+      notifications_coming_soon: TableShape<NotifComingSoonRow>;
     };
     Views: Record<string, never>;
     Functions: Record<string, never>;
