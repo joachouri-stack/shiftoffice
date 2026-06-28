@@ -1,0 +1,100 @@
+/** Catalogue des documents générables (module pur, réutilisable partout). */
+
+export type DocItem = {
+  slug: string;
+  title: string;
+  badge: string;
+  price: number; // 0 = gratuit
+  desc: string;
+  tags: string[];
+  /** true = accessible sans compte (gratuit) */
+  free: boolean;
+};
+
+export const DOCUMENTS: DocItem[] = [
+  {
+    slug: "fiche-paie",
+    title: "Fiche de paie",
+    badge: "Le + demandé",
+    price: 8,
+    desc: "Bulletin de salaire conforme, cotisations URSSAF 2026 calculées automatiquement.",
+    tags: ["URSSAF 2026", "Cotisations", "Cumuls annuels"],
+    free: false,
+  },
+  {
+    slug: "contrat-travail",
+    title: "Contrat de travail",
+    badge: "CDI / CDD",
+    price: 5,
+    desc: "CDI ou CDD avec toutes les clauses légales obligatoires.",
+    tags: ["Clauses légales", "Période d'essai", "Convention"],
+    free: false,
+  },
+  {
+    slug: "solde-tout-compte",
+    title: "Solde de tout compte",
+    badge: "Officiel",
+    price: 3,
+    desc: "Reçu pour solde de tout compte avec calcul des indemnités.",
+    tags: ["Indemnités", "Congés payés", "Reçu légal"],
+    free: false,
+  },
+  {
+    slug: "rupture-conventionnelle",
+    title: "Rupture conventionnelle",
+    badge: "CERFA inclus",
+    price: 5,
+    desc: "Formulaire CERFA officiel et indemnité spécifique calculée.",
+    tags: ["CERFA 14598", "Indemnité", "Délai 15 j"],
+    free: false,
+  },
+  {
+    slug: "bail-commercial",
+    title: "Bail commercial",
+    badge: "Bail 3-6-9",
+    price: 9,
+    desc: "Bail commercial complet : durée 3-6-9, clauses et révision du loyer.",
+    tags: ["Durée 3-6-9", "Dépôt de garantie", "Révision"],
+    free: false,
+  },
+  {
+    slug: "certificat-travail",
+    title: "Certificat de travail",
+    badge: "Officiel",
+    price: 3,
+    desc: "Certificat de travail à remettre au salarié en fin de contrat.",
+    tags: ["Fin de contrat", "Mentions légales", "PDF"],
+    free: false,
+  },
+  {
+    slug: "statuts-societe",
+    title: "Statuts de société",
+    badge: "SASU / EURL",
+    price: 19,
+    desc: "Statuts juridiques pour créer votre société (SASU, EURL, SARL).",
+    tags: ["SASU / EURL", "Capital", "Gérance"],
+    free: false,
+  },
+  {
+    slug: "quittance-loyer",
+    title: "Quittance de loyer",
+    badge: "Gratuit",
+    price: 0,
+    desc: "Quittance pour votre locataire : loyer, charges et total calculés.",
+    tags: ["Loyer + charges", "Sans compte", "PDF immédiat"],
+    free: true,
+  },
+  {
+    slug: "attestation-employeur",
+    title: "Attestation employeur",
+    badge: "Gratuit",
+    price: 0,
+    desc: "Attestation employeur officielle, prête à remettre, sans compte.",
+    tags: ["Officiel", "Sans compte", "PDF immédiat"],
+    free: true,
+  },
+];
+
+export function formatPrice(price: number): string {
+  return price === 0 ? "Gratuit" : `${price}€`;
+}
