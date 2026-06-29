@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 
 export async function addEntreprise(formData: FormData) {
@@ -8,13 +9,13 @@ export async function addEntreprise(formData: FormData) {
   const {
     data: { user },
   } = await supabase.auth.getUser();
-  if (!user) return;
+  if (!user) redirect("/connexion");
 
   const champ = (k: string) => (formData.get(k) as string | null)?.trim() ?? "";
   const nom = champ("nom");
-  if (!nom) return;
+  if (!nom) redirect("/compte/entreprise?erreur=nom");
 
-  await supabase.from("entreprises").insert({
+  const { error } = await supabase.from("entreprises").insert({
     user_id: user.id,
     nom,
     adresse: champ("adresse"),
@@ -24,8 +25,14 @@ export async function addEntreprise(formData: FormData) {
     ville: champ("ville"),
   });
 
+  if (error) {
+    console.error("addEntreprise:", error.message);
+    redirect(`/compte/entreprise?erreur=${encodeURIComponent(error.message)}`);
+  }
+
   revalidatePath("/compte/entreprise");
   revalidatePath("/compte");
+  redirect("/compte/entreprise?ok=1");
 }
 
 export async function deleteEntreprise(formData: FormData) {

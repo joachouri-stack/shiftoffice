@@ -15,7 +15,12 @@ type Entreprise = {
   representant_nom: string | null;
 };
 
-export default async function EntreprisesPage() {
+export default async function EntreprisesPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ ok?: string; erreur?: string }>;
+}) {
+  const { ok, erreur } = await searchParams;
   const supabase = await createClient();
   const { data } = await supabase
     .from("entreprises")
@@ -32,6 +37,23 @@ export default async function EntreprisesPage() {
       <p className="text-gris mt-1 text-sm">
         Enregistrez vos entreprises pour pré-remplir vos documents plus vite.
       </p>
+
+      {ok && (
+        <div className="bg-vert-l text-vert mt-4 rounded-lg border border-emerald-200 px-3 py-2 text-sm font-semibold">
+          Entreprise ajoutée.
+        </div>
+      )}
+      {erreur && erreur !== "nom" && (
+        <div className="mt-4 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm font-medium text-red-700">
+          L&apos;enregistrement a échoué : {erreur}. (As-tu bien exécuté le SQL
+          de création de la table&nbsp;?)
+        </div>
+      )}
+      {erreur === "nom" && (
+        <div className="mt-4 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm font-medium text-red-700">
+          Le nom de l&apos;entreprise est obligatoire.
+        </div>
+      )}
 
       {/* Liste */}
       <div className="border-or/20 mt-6 rounded-2xl border bg-white p-2">
