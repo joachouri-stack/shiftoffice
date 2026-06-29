@@ -12,6 +12,7 @@ export type ContratData = {
   salarieDateNaissance: string;
   salarieLieuNaissance: string;
   salarieNationalite: string;
+  salarieNumeroSecu: string;
   typeContrat: "cdi" | "cdd";
   dateDebut: string;
   dateFin: string; // CDD
@@ -149,6 +150,7 @@ export async function buildContratPDF(d: ContratData): Promise<Uint8Array> {
       `${d.salarieDateNaissance || "—"}${d.salarieLieuNaissance ? ` à ${d.salarieLieuNaissance}` : ""}`,
     ],
     ["Nationalité :", d.salarieNationalite || "—"],
+    ["N° Sécu. :", d.salarieNumeroSecu || "—"],
   ];
 
   // Hauteur d'un bloc partie selon le nombre de lignes (valeurs qui s'enroulent).
@@ -208,6 +210,15 @@ export async function buildContratPDF(d: ContratData): Promise<Uint8Array> {
   tracked("L'ESSENTIEL DU CONTRAT", M + ipad, y - 15, 9, sansB, WHITE, 1.5);
   for (let c = 1; c < eCols; c++)
     rect(M + c * eColW, y - essH + 10, 1, essH - eHead - 20, G300);
+  // Pour une adresse (lieu de travail), on coupe au dernier virgule :
+  // la rue sur une ligne, le code postal + ville en dessous.
+  const valueLines = (label: string, val: string): string[] => {
+    if (label.includes("LIEU")) {
+      const idx = val.lastIndexOf(",");
+      if (idx > 0) return [val.slice(0, idx).trim(), val.slice(idx + 1).trim()];
+    }
+    return wrap(val, sansB, 10, eInner).slice(0, 2);
+  };
   recap.forEach((cell, i) => {
     const r = Math.floor(i / eCols);
     const c = i % eCols;
@@ -215,7 +226,7 @@ export async function buildContratPDF(d: ContratData): Promise<Uint8Array> {
     const iy = y - eHead - 18 - r * eRowH;
     tracked(cell[0], ix, iy, 7, sansB, G500, 0.4);
     let vy = iy - 13;
-    for (const vl of wrap(cell[1], sansB, 10, eInner).slice(0, 2)) {
+    for (const vl of valueLines(cell[0], cell[1])) {
       t(vl, ix, vy, 10, sansB, TEXT);
       vy -= 11.5;
     }

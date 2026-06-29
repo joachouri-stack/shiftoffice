@@ -73,6 +73,7 @@ export async function buildDocument(
         salarieDateNaissance: S(d.salarieDateNaissance),
         salarieLieuNaissance: S(d.salarieLieuNaissance),
         salarieNationalite: S(d.salarieNationalite),
+        salarieNumeroSecu: S(d.salarieNumeroSecu),
         typeContrat: d.typeContrat === "cdd" ? "cdd" : "cdi",
         dateDebut: S(d.dateDebut),
         dateFin: S(d.dateFin),

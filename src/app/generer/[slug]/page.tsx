@@ -918,6 +918,7 @@ function ContratForm() {
     salarieDateNaissance: "",
     salarieLieuNaissance: "",
     salarieNationalite: "",
+    salarieNumeroSecu: "",
     typeContrat: "cdi",
     dateDebut: aujourdhui(),
     dateFin: "",
@@ -1025,6 +1026,9 @@ function ContratForm() {
             <Input label="Date de naissance" value={f.salarieDateNaissance} onChange={(v) => set("salarieDateNaissance", v)} placeholder="12/05/1990" />
             <Input label="Lieu de naissance" value={f.salarieLieuNaissance} onChange={(v) => set("salarieLieuNaissance", v)} placeholder="Avignon" />
             <Input label="Nationalité" value={f.salarieNationalite} onChange={(v) => set("salarieNationalite", v)} placeholder="Française" />
+          </div>
+          <div className="mt-3">
+            <Input label="N° de sécurité sociale" value={f.salarieNumeroSecu} onChange={(v) => set("salarieNumeroSecu", v)} placeholder="2 85 06 84 007 042 31" />
           </div>
         </div>
 
