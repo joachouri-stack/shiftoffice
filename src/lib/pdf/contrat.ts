@@ -1,5 +1,5 @@
 import { PDFDocument, StandardFonts, rgb, type PDFPage } from "pdf-lib";
-import { INK, GRIS, OR, CREME, eur, wrap } from "./helpers";
+import { INK, GRIS, OR, eur, wrap } from "./helpers";
 
 export type ContratData = {
   entrepriseNom: string;
@@ -57,6 +57,15 @@ export async function buildContratPDF(d: ContratData): Promise<Uint8Array> {
     page.drawText(s, { x: xR - f.widthOfTextAtSize(s, size), y: yy, size, font: f, color: c });
   const tc = (s: string, cx: number, yy: number, size = 10.5, f = font, c = INK) =>
     page.drawText(s, { x: cx - f.widthOfTextAtSize(s, size) / 2, y: yy, size, font: f, color: c });
+  // Texte avec interlettrage (effet éditorial premium pour les intitulés).
+  const tracked = (s: string, x: number, yy: number, size: number, f: typeof font, c: typeof INK, tr = 2) => {
+    let cx = x;
+    for (const ch of s) {
+      page.drawText(ch, { x: cx, y: yy, size, font: f, color: c });
+      cx += f.widthOfTextAtSize(ch, size) + tr;
+    }
+    return cx - tr;
+  };
   const rect = (
     x: number,
     yy: number,
@@ -78,8 +87,6 @@ export async function buildContratPDF(d: ContratData): Promise<Uint8Array> {
     page.drawLine({ start: { x: x1, y: yy }, end: { x: x2, y: yy }, thickness: th, color: c });
   const vline = (x: number, y1: number, y2: number, c = LIGNE, th = 0.6) =>
     page.drawLine({ start: { x, y: y1 }, end: { x, y: y2 }, thickness: th, color: c });
-  // Trait doré en tête d'un encadré (effet carte premium).
-  const goldTop = (x: number, topY: number, w: number) => rect(x, topY - 3, w, 3, OR);
 
   const ensure = (space: number) => {
     if (y - space < BOTTOM) newPage();
@@ -133,15 +140,14 @@ export async function buildContratPDF(d: ContratData): Promise<Uint8Array> {
     }
   };
 
-  // En-tête d'encadré, sobre et homogène pour tous les blocs : bandeau crème,
-  // fin trait doré en tête, petit repère doré + intitulé, filet de séparation.
-  const HB = 28;
+  // En-tête d'encadré, style éditorial : intitulé doré en capitales avec
+  // interlettrage, souligné d'un filet gris à amorce dorée. Aucun bandeau.
+  const HB = 30;
   const cardHead = (x: number, top: number, w: number, titre: string) => {
-    rect(x, top - HB, w, HB, CREME);
-    goldTop(x, top, w);
-    rect(x + PAD, top - 18.5, 5, 5, OR);
-    t(titre, x + PAD + 13, top - 19, 9, bold, INK);
-    hline(x, x + w, top - HB, LIGNE, 0.8);
+    tracked(titre, x + PAD, top - 17, 8.5, bold, OR, 2);
+    const sepY = top - HB;
+    hline(x, x + w, sepY, LIGNE, 0.8);
+    rect(x + PAD, sepY - 0.9, 30, 1.8, OR); // amorce dorée à gauche du filet
   };
 
   const col2 = M + PAD + colW + 24;
