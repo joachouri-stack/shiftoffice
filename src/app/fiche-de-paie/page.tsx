@@ -357,6 +357,12 @@ export default function FicheDePaieFlow() {
             ) : (
               <div className="space-y-4">
                 <h3 className="text-noir font-display text-lg font-bold">Récapitulatif</h3>
+                {sal?.id && localStore.ficheExiste(sal.id, `${mois} ${annee}`) && (
+                  <p className="flex items-start gap-2 rounded-lg bg-amber-50 px-3 py-2 text-xs font-medium text-amber-800">
+                    <TriangleAlert size={14} className="mt-0.5 shrink-0" />
+                    Une fiche existe déjà pour {sal.nom} en {mois} {annee}. Vous pouvez tout de même en générer une nouvelle.
+                  </p>
+                )}
                 <div className="divide-or/10 divide-y">
                   <Row label="Entreprise" value={ent?.nom ?? "—"} pad />
                   <Row label="Salarié" value={sal?.nom ?? "—"} pad />

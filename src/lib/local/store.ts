@@ -89,12 +89,26 @@ export const localStore = {
     write(K.salaries, [...list, item]);
     return item;
   },
+  updateSalarie: (id: string, patch: Partial<Omit<LocalSalarie, "id">>) => {
+    write(
+      K.salaries,
+      read<LocalSalarie[]>(K.salaries, []).map((s) =>
+        s.id === id ? { ...s, ...patch } : s
+      )
+    );
+  },
   removeSalarie: (id: string) => {
     write(
       K.salaries,
       read<LocalSalarie[]>(K.salaries, []).filter((s) => s.id !== id)
     );
   },
+
+  // Une fiche existe-t-elle déjà pour ce salarié sur cette période ?
+  ficheExiste: (salarieId: string, periode: string) =>
+    read<LocalFiche[]>(K.fiches, []).some(
+      (f) => f.salarieId === salarieId && f.periode === periode
+    ),
 
   getFiches: () => read<LocalFiche[]>(K.fiches, []),
   // Dernière fiche enregistrée pour un salarié (les plus récentes en tête).

@@ -38,6 +38,7 @@ export default function EspaceLocalPage() {
   const [salaries, setSalaries] = useState<LocalSalarie[]>([]);
   const [fiches, setFiches] = useState<LocalFiche[]>([]);
   const [editEnt, setEditEnt] = useState(false);
+  const [editingSal, setEditingSal] = useState<string | null>(null);
   const [ready, setReady] = useState(false);
 
   useEffect(() => {
@@ -186,10 +187,20 @@ export default function EspaceLocalPage() {
             {salaries.length > 0 && (
               <ul className="divide-or/10 mb-4 divide-y">
                 {salaries.map((s) => (
-                  <li
-                    key={s.id}
-                    className="flex items-center justify-between gap-4 py-3"
-                  >
+                  <li key={s.id} className="py-3">
+                   {editingSal === s.id ? (
+                    <SalarieForm
+                      initial={s}
+                      submitLabel="Enregistrer"
+                      onCancel={() => setEditingSal(null)}
+                      onSubmit={(patch) => {
+                        localStore.updateSalarie(s.id, patch);
+                        setSalaries(localStore.getSalaries());
+                        setEditingSal(null);
+                      }}
+                    />
+                   ) : (
+                    <div className="flex items-center justify-between gap-4">
                     <div className="flex min-w-0 items-center gap-3">
                       <div className="bg-or/15 text-or-d grid h-9 w-9 shrink-0 place-items-center rounded-lg text-xs font-bold">
                         {s.nom
@@ -224,6 +235,13 @@ export default function EspaceLocalPage() {
                         Fiche de paie
                       </Link>
                       <button
+                        onClick={() => setEditingSal(s.id)}
+                        aria-label={`Modifier ${s.nom}`}
+                        className="text-gris hover:bg-or/10 hover:text-or-d grid h-8 w-8 place-items-center rounded-lg transition-colors"
+                      >
+                        <Pencil size={14} />
+                      </button>
+                      <button
                         onClick={() => {
                           localStore.removeSalarie(s.id);
                           setSalaries(localStore.getSalaries());
@@ -234,13 +252,15 @@ export default function EspaceLocalPage() {
                         <Trash2 size={15} />
                       </button>
                     </div>
+                    </div>
+                   )}
                   </li>
                 ))}
               </ul>
             )}
 
             <SalarieForm
-              onAdd={(s) => {
+              onSubmit={(s) => {
                 localStore.addSalarie(s);
                 setSalaries(localStore.getSalaries());
               }}
@@ -373,23 +393,28 @@ function EntrepriseForm({
   );
 }
 
-function SalarieForm({ onAdd }: { onAdd: (s: Omit<LocalSalarie, "id">) => void }) {
-  const [nom, setNom] = useState("");
-  const [poste, setPoste] = useState("");
-  const [salaire, setSalaire] = useState("");
-  const [numeroSecu, setNumeroSecu] = useState("");
-  const [dateEntree, setDateEntree] = useState("");
-  const [typeContrat, setTypeContrat] = useState("CDI");
-  const [classification, setClassification] = useState("");
+function SalarieForm({
+  initial,
+  submitLabel = "Ajouter le salarié",
+  onSubmit,
+  onCancel,
+}: {
+  initial?: LocalSalarie;
+  submitLabel?: string;
+  onSubmit: (s: Omit<LocalSalarie, "id">) => void;
+  onCancel?: () => void;
+}) {
+  const [nom, setNom] = useState(initial?.nom ?? "");
+  const [poste, setPoste] = useState(initial?.poste ?? "");
+  const [salaire, setSalaire] = useState(initial?.salaireBrut ? String(initial.salaireBrut) : "");
+  const [numeroSecu, setNumeroSecu] = useState(initial?.numeroSecu ?? "");
+  const [dateEntree, setDateEntree] = useState(initial?.dateEntree ?? "");
+  const [typeContrat, setTypeContrat] = useState(initial?.typeContrat ?? "CDI");
+  const [classification, setClassification] = useState(initial?.classification ?? "");
 
   function reset() {
-    setNom("");
-    setPoste("");
-    setSalaire("");
-    setNumeroSecu("");
-    setDateEntree("");
-    setTypeContrat("CDI");
-    setClassification("");
+    setNom(""); setPoste(""); setSalaire(""); setNumeroSecu("");
+    setDateEntree(""); setTypeContrat("CDI"); setClassification("");
   }
 
   return (
@@ -397,7 +422,7 @@ function SalarieForm({ onAdd }: { onAdd: (s: Omit<LocalSalarie, "id">) => void }
       onSubmit={(e) => {
         e.preventDefault();
         if (!nom.trim()) return;
-        onAdd({
+        onSubmit({
           nom: nom.trim(),
           poste: poste.trim() || undefined,
           salaireBrut: salaire ? parseFloat(salaire.replace(",", ".")) : undefined,
@@ -406,13 +431,15 @@ function SalarieForm({ onAdd }: { onAdd: (s: Omit<LocalSalarie, "id">) => void }
           typeContrat,
           classification: classification.trim() || undefined,
         });
-        reset();
+        if (!initial) reset();
       }}
       className="border-or/20 space-y-3 rounded-xl border border-dashed p-4"
     >
-      <p className="text-gris text-xs">
-        Saisi une fois — repris automatiquement sur chaque fiche de paie.
-      </p>
+      {!initial && (
+        <p className="text-gris text-xs">
+          Saisi une fois — repris automatiquement sur chaque fiche de paie.
+        </p>
+      )}
       <div className="grid gap-3 sm:grid-cols-2">
         <input className={FIELD} placeholder="Nom et prénom *" value={nom} onChange={(e) => setNom(e.target.value)} />
         <input className={FIELD} placeholder="Poste" value={poste} onChange={(e) => setPoste(e.target.value)} />
@@ -429,13 +456,17 @@ function SalarieForm({ onAdd }: { onAdd: (s: Omit<LocalSalarie, "id">) => void }
         </select>
         <input className={FIELD} placeholder="Classification (optionnel)" value={classification} onChange={(e) => setClassification(e.target.value)} />
       </div>
-      <button
-        type="submit"
-        className="bg-noir inline-flex items-center justify-center gap-2 rounded-[10px] px-5 py-2.5 text-sm font-bold text-white"
-      >
-        <Plus size={16} />
-        Ajouter le salarié
-      </button>
+      <div className="flex items-center gap-2">
+        <button type="submit" className="bg-noir inline-flex items-center justify-center gap-2 rounded-[10px] px-5 py-2.5 text-sm font-bold text-white">
+          <Plus size={16} />
+          {submitLabel}
+        </button>
+        {onCancel && (
+          <button type="button" onClick={onCancel} className="text-gris hover:text-noir px-3 py-2.5 text-sm font-semibold">
+            Annuler
+          </button>
+        )}
+      </div>
     </form>
   );
 }
