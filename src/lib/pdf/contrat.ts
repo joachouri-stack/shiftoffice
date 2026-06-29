@@ -365,7 +365,7 @@ export async function buildContratPDF(d: ContratData): Promise<Uint8Array> {
     rect(x, y - sigBlocH, sigW, sigBlocH, G100, G300, 1);
     rect(x, y - 20, sigW, 20, NAVY);
     tracked(label, x + ipad, y - 14, 9, sansB, WHITE, 1.5);
-    t(name || "—", x + ipad, y - 38, 10.5, sansB, NAVY);
+    t(name || "—", x + ipad, y - 38, 10.5, sansB, TEXT);
     t(role, x + ipad, y - 51, 8.5, sans, G500);
     hline(x + ipad, x + sigW - ipad, y - sigBlocH + 24, NAVY, 0.8);
     t("Lu et approuvé — Bon pour accord", x + ipad, y - sigBlocH + 11, 8, serifI, G500);
