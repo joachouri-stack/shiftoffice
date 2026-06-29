@@ -377,6 +377,20 @@ function SalarieForm({ onAdd }: { onAdd: (s: Omit<LocalSalarie, "id">) => void }
   const [nom, setNom] = useState("");
   const [poste, setPoste] = useState("");
   const [salaire, setSalaire] = useState("");
+  const [numeroSecu, setNumeroSecu] = useState("");
+  const [dateEntree, setDateEntree] = useState("");
+  const [typeContrat, setTypeContrat] = useState("CDI");
+  const [classification, setClassification] = useState("");
+
+  function reset() {
+    setNom("");
+    setPoste("");
+    setSalaire("");
+    setNumeroSecu("");
+    setDateEntree("");
+    setTypeContrat("CDI");
+    setClassification("");
+  }
 
   return (
     <form
@@ -387,38 +401,40 @@ function SalarieForm({ onAdd }: { onAdd: (s: Omit<LocalSalarie, "id">) => void }
           nom: nom.trim(),
           poste: poste.trim() || undefined,
           salaireBrut: salaire ? parseFloat(salaire.replace(",", ".")) : undefined,
+          numeroSecu: numeroSecu.trim() || undefined,
+          dateEntree: dateEntree.trim() || undefined,
+          typeContrat,
+          classification: classification.trim() || undefined,
         });
-        setNom("");
-        setPoste("");
-        setSalaire("");
+        reset();
       }}
-      className="border-or/20 grid gap-3 rounded-xl border border-dashed p-3 sm:grid-cols-[1fr_1fr_140px_auto]"
+      className="border-or/20 space-y-3 rounded-xl border border-dashed p-4"
     >
-      <input
-        className={FIELD}
-        placeholder="Nom du salarié"
-        value={nom}
-        onChange={(e) => setNom(e.target.value)}
-      />
-      <input
-        className={FIELD}
-        placeholder="Poste"
-        value={poste}
-        onChange={(e) => setPoste(e.target.value)}
-      />
-      <input
-        className={FIELD}
-        placeholder="Brut €"
-        inputMode="decimal"
-        value={salaire}
-        onChange={(e) => setSalaire(e.target.value)}
-      />
+      <p className="text-gris text-xs">
+        Saisi une fois — repris automatiquement sur chaque fiche de paie.
+      </p>
+      <div className="grid gap-3 sm:grid-cols-2">
+        <input className={FIELD} placeholder="Nom et prénom *" value={nom} onChange={(e) => setNom(e.target.value)} />
+        <input className={FIELD} placeholder="Poste" value={poste} onChange={(e) => setPoste(e.target.value)} />
+      </div>
+      <div className="grid gap-3 sm:grid-cols-2">
+        <input className={FIELD} placeholder="Salaire brut mensuel (€)" inputMode="decimal" value={salaire} onChange={(e) => setSalaire(e.target.value)} />
+        <input className={FIELD} placeholder="N° de sécurité sociale" value={numeroSecu} onChange={(e) => setNumeroSecu(e.target.value)} />
+      </div>
+      <div className="grid gap-3 sm:grid-cols-3">
+        <input className={FIELD} placeholder="Date d'entrée (jj/mm/aaaa)" value={dateEntree} onChange={(e) => setDateEntree(e.target.value)} />
+        <select className={FIELD} value={typeContrat} onChange={(e) => setTypeContrat(e.target.value)}>
+          <option value="CDI">CDI</option>
+          <option value="CDD">CDD</option>
+        </select>
+        <input className={FIELD} placeholder="Classification (optionnel)" value={classification} onChange={(e) => setClassification(e.target.value)} />
+      </div>
       <button
         type="submit"
-        className="bg-noir inline-flex items-center justify-center gap-2 rounded-[10px] px-4 text-sm font-bold text-white"
+        className="bg-noir inline-flex items-center justify-center gap-2 rounded-[10px] px-5 py-2.5 text-sm font-bold text-white"
       >
         <Plus size={16} />
-        Ajouter
+        Ajouter le salarié
       </button>
     </form>
   );

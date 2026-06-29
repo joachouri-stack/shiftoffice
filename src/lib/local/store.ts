@@ -24,6 +24,9 @@ export type LocalSalarie = {
   poste?: string;
   salaireBrut?: number;
   typeContrat?: string;
+  numeroSecu?: string;
+  dateEntree?: string;
+  classification?: string;
 };
 
 export type LocalFiche = {
