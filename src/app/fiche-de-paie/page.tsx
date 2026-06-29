@@ -16,6 +16,7 @@ import {
 } from "lucide-react";
 import { Logo } from "@/components/brand/Logo";
 import { SiretSearch } from "@/components/SiretSearch";
+import { EmailCopy } from "@/components/documents/EmailCopy";
 import {
   calculerFichePaie,
   brutPourNetAvantImpot,
@@ -71,6 +72,7 @@ export default function FicheDePaieFlow() {
   const [done, setDone] = useState(false);
   const [err, setErr] = useState("");
   const [repris, setRepris] = useState<string | null>(null);
+  const [lastDonnees, setLastDonnees] = useState<Record<string, unknown> | null>(null);
 
   // Mois suivant à partir d'un libellé mois + année.
   const nextPeriod = (m?: string, a?: string) => {
@@ -185,6 +187,7 @@ export default function FicheDePaieFlow() {
       conges,
       creeLe: new Date().toISOString(),
     };
+    setLastDonnees(donnees);
     try {
       // 1) Paiement : si Stripe est configuré, on passe par Checkout et la page
       //    de succès génère le PDF après confirmation du paiement.
@@ -366,6 +369,11 @@ export default function FicheDePaieFlow() {
                 </div>
                 <p className="text-noir text-lg font-bold">Fiche générée 🎉</p>
                 <p className="text-gris mt-1 text-sm">Le PDF a été téléchargé et ajouté à votre espace.</p>
+                {lastDonnees && (
+                  <div className="mt-5 text-left">
+                    <EmailCopy type="fiche-paie" donnees={lastDonnees} defaultEmail={sal?.email ?? ""} />
+                  </div>
+                )}
                 <Link href="/espace" className="bg-noir mt-5 inline-flex items-center gap-2 rounded-[10px] px-5 py-2.5 text-sm font-bold text-white">
                   Voir mon espace
                 </Link>
@@ -471,7 +479,7 @@ function EntrepriseStep({ onSave }: { onSave: (e: LocalEntreprise) => void }) {
 function SalarieStep({ onSelect }: { onSelect: (s: LocalSalarie) => void }) {
   const existing = localStore.getSalaries();
   const [creating, setCreating] = useState(existing.length === 0);
-  const [f, setF] = useState({ nom: "", poste: "", salaire: "", numeroSecu: "", dateEntree: "", typeContrat: "CDI", classification: "" });
+  const [f, setF] = useState({ nom: "", poste: "", salaire: "", numeroSecu: "", dateEntree: "", typeContrat: "CDI", classification: "", email: "" });
   const set = (k: keyof typeof f, v: string) => setF((p) => ({ ...p, [k]: v }));
 
   if (!creating) {
@@ -511,6 +519,7 @@ function SalarieStep({ onSelect }: { onSelect: (s: LocalSalarie) => void }) {
           dateEntree: f.dateEntree.trim() || undefined,
           typeContrat: f.typeContrat,
           classification: f.classification.trim() || undefined,
+          email: f.email.trim() || undefined,
         });
         onSelect(created);
       }}
@@ -526,6 +535,7 @@ function SalarieStep({ onSelect }: { onSelect: (s: LocalSalarie) => void }) {
         <input className={FIELD} placeholder="Salaire brut mensuel (€)" inputMode="decimal" value={f.salaire} onChange={(e) => set("salaire", e.target.value)} />
         <input className={FIELD} placeholder="N° de sécurité sociale" value={f.numeroSecu} onChange={(e) => set("numeroSecu", e.target.value)} />
       </div>
+      <input className={FIELD} type="email" placeholder="Email du salarié (pour l'envoi de la fiche)" value={f.email} onChange={(e) => set("email", e.target.value)} />
       <div className="grid gap-3 sm:grid-cols-3">
         <input className={FIELD} placeholder="Date d'entrée" value={f.dateEntree} onChange={(e) => set("dateEntree", e.target.value)} />
         <select className={FIELD} value={f.typeContrat} onChange={(e) => set("typeContrat", e.target.value)}>

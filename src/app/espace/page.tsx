@@ -411,10 +411,11 @@ function SalarieForm({
   const [dateEntree, setDateEntree] = useState(initial?.dateEntree ?? "");
   const [typeContrat, setTypeContrat] = useState(initial?.typeContrat ?? "CDI");
   const [classification, setClassification] = useState(initial?.classification ?? "");
+  const [email, setEmail] = useState(initial?.email ?? "");
 
   function reset() {
     setNom(""); setPoste(""); setSalaire(""); setNumeroSecu("");
-    setDateEntree(""); setTypeContrat("CDI"); setClassification("");
+    setDateEntree(""); setTypeContrat("CDI"); setClassification(""); setEmail("");
   }
 
   return (
@@ -430,6 +431,7 @@ function SalarieForm({
           dateEntree: dateEntree.trim() || undefined,
           typeContrat,
           classification: classification.trim() || undefined,
+          email: email.trim() || undefined,
         });
         if (!initial) reset();
       }}
@@ -448,6 +450,7 @@ function SalarieForm({
         <input className={FIELD} placeholder="Salaire brut mensuel (€)" inputMode="decimal" value={salaire} onChange={(e) => setSalaire(e.target.value)} />
         <input className={FIELD} placeholder="N° de sécurité sociale" value={numeroSecu} onChange={(e) => setNumeroSecu(e.target.value)} />
       </div>
+      <input className={FIELD} type="email" placeholder="Email du salarié (pour l'envoi de la fiche)" value={email} onChange={(e) => setEmail(e.target.value)} />
       <div className="grid gap-3 sm:grid-cols-3">
         <input className={FIELD} placeholder="Date d'entrée (jj/mm/aaaa)" value={dateEntree} onChange={(e) => setDateEntree(e.target.value)} />
         <select className={FIELD} value={typeContrat} onChange={(e) => setTypeContrat(e.target.value)}>

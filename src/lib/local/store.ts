@@ -27,6 +27,7 @@ export type LocalSalarie = {
   numeroSecu?: string;
   dateEntree?: string;
   classification?: string;
+  email?: string;
 };
 
 export type LocalFiche = {
