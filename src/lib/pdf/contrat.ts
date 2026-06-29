@@ -345,7 +345,7 @@ export async function buildContratPDF(d: ContratData): Promise<Uint8Array> {
   if (y - needed < BOTTOM) newPage();
   // titre section avec soulignement doré
   const stitle = "SIGNATURES";
-  tracked(stitle, M, y, 10, sansB, NAVY, 0.6);
+  tracked(stitle, M, y, 10, sansB, TEXT, 0.6);
   let sw = 0;
   for (const ch of stitle) sw += sansB.widthOfTextAtSize(ch, 10) + 0.6;
   rect(M, y - 6, sw, 2, GOLD);
