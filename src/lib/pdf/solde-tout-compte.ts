@@ -166,16 +166,17 @@ export async function buildSoldeToutComptePDF(d: SoldeData): Promise<Uint8Array>
   );
 
   // Signatures
-  ensure(96);
+  ensure(110);
   y -= 10;
   para(
     `Fait à ${d.ville || "—"}, le ${d.date || "—"}, en double exemplaire.`
   );
   y -= 18;
   line("Le Salarié", 10.5, bold, INK, M);
-  line("(précédé de la mention « Pour solde de tout compte »)", 8.5, font, GRIS, M);
   line("L'Employeur", 10.5, bold, INK, M + W - 150);
-  y -= 14;
+  y -= 12;
+  line("(précédé de la mention « Pour solde de tout compte »)", 8, font, GRIS, M);
+  y -= 16;
   line(d.salarieNom || "", 9.5, font, GRIS, M);
   line(d.representantNom || "", 9.5, font, GRIS, M + W - 150);
 
