@@ -82,7 +82,9 @@ function DocCard({ doc }: { doc: DocItem }) {
                       ? "/attestation-employeur"
                       : doc.slug === "contrat-travail"
                         ? "/contrat-travail"
-                        : `/generer/${doc.slug}`
+                        : doc.slug === "quittance-loyer"
+                          ? "/quittance-loyer"
+                          : `/generer/${doc.slug}`
           }
           className="bg-orange hover:bg-orange-d inline-flex items-center gap-1.5 rounded-[10px] px-4 py-2.5 text-sm font-bold text-white transition-colors"
         >

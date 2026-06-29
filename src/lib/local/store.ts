@@ -53,10 +53,22 @@ export type LocalFiche = {
   creeLe: string; // ISO
 };
 
+export type LocalBien = {
+  id: string;
+  bailleurNom: string;
+  bailleurAdresse?: string;
+  locataire: string;
+  adresseBien?: string;
+  loyer?: number;
+  charges?: number;
+  ville?: string;
+};
+
 const K = {
   entreprise: "so.entreprise",
   salaries: "so.salaries",
   fiches: "so.fiches",
+  biens: "so.biens",
 };
 
 const isBrowser = () => typeof window !== "undefined";
@@ -128,9 +140,20 @@ export const localStore = {
     return item;
   },
 
+  getBiens: () => read<LocalBien[]>(K.biens, []),
+  addBien: (b: Omit<LocalBien, "id">) => {
+    const list = read<LocalBien[]>(K.biens, []);
+    const item = { ...b, id: uid() };
+    write(K.biens, [...list, item]);
+    return item;
+  },
+  removeBien: (id: string) => {
+    write(K.biens, read<LocalBien[]>(K.biens, []).filter((b) => b.id !== id));
+  },
+
   clearAll: () => {
     if (!isBrowser()) return;
-    [K.entreprise, K.salaries, K.fiches].forEach((k) =>
+    [K.entreprise, K.salaries, K.fiches, K.biens].forEach((k) =>
       window.localStorage.removeItem(k)
     );
   },
