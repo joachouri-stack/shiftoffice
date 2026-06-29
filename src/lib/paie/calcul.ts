@@ -61,8 +61,9 @@ export type FichePaieResult = {
 // plafond annuel 48 060 €).
 const PMSS = 4005;
 
-// SMIC mensuel brut au 1ᵉʳ janvier 2026 (35 h) — sert de référence à la RGDU.
-const SMIC_MENSUEL = 1823.03;
+// SMIC mensuel brut au 1ᵉʳ janvier 2026 (35 h) — sert de référence à la RGDU
+// et aux contrôles d'anomalies du formulaire.
+export const SMIC_MENSUEL = 1823.03;
 
 // Paramètres 2026 de la Réduction Générale Dégressive Unique (RGDU),
 // employeurs de moins de 50 salariés (FNAL à 0,10 %).
