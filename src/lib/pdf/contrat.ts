@@ -166,7 +166,7 @@ export async function buildContratPDF(d: ContratData): Promise<Uint8Array> {
   y -= 8;
   hline(M + W / 2 - 64, M + W / 2 - 18, y - 3, LIGNE);
   hline(M + W / 2 + 18, M + W / 2 + 64, y - 3, LIGNE);
-  tc("ET", M + W / 2, y - 6, 8.5, bold, OR);
+  tc("ET", M + W / 2, y - 6, 8.5, bold, INK);
   y -= 22;
 
   // SALARIÉ
