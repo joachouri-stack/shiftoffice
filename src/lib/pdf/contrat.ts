@@ -115,10 +115,9 @@ export async function buildContratPDF(d: ContratData): Promise<Uint8Array> {
   const typW = bold.widthOfTextAtSize(typ, 11) + 28;
   rect(CX - typW / 2, y - 6, typW, 23, ORL, OR, 1);
   tc(typ, CX, y + 1, 11, bold, INK);
-  y -= 24;
-  // Date, centrée sous la pastille
-  tc(`Établi à ${d.ville || "—"}, le ${d.date || "—"}`, CX, y, 9, font, GRIS);
-  y -= 30;
+  // La date n'est pas répétée ici : la mention légale « Fait à …, le … »
+  // figure à côté des signatures, en bas du contrat.
+  y -= 36;
 
   // ─── Parties (empilées, niveaux distincts) ───
   const PAD = 16;
