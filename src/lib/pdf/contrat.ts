@@ -386,7 +386,7 @@ export async function buildContratPDF(d: ContratData): Promise<Uint8Array> {
     G500
   );
   tc(
-    "Document généré via Shift Office — conforme aux dispositions du Code du travail en vigueur.",
+    "Conforme aux dispositions du Code du travail en vigueur.",
     cx,
     y - 24,
     8,
