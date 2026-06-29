@@ -27,10 +27,10 @@ const FIELD =
   "border-or/30 bg-white text-noir placeholder:text-gris/50 focus:border-or focus:ring-or/15 h-11 w-full rounded-lg border px-3.5 text-sm outline-none transition-all focus:ring-4";
 
 const NAV = [
-  { label: "Tableau de bord", icon: Home, active: true },
-  { label: "Mes documents", icon: FileClock },
-  { label: "Mes salariés", icon: Users },
-  { label: "Mon entreprise", icon: Building2 },
+  { label: "Tableau de bord", icon: Home, href: "#top", active: true },
+  { label: "Mes documents", icon: FileClock, href: "#fiches" },
+  { label: "Mes salariés", icon: Users, href: "#salaries" },
+  { label: "Mon entreprise", icon: Building2, href: "#entreprise" },
 ];
 
 export default function EspaceLocalPage() {
@@ -67,8 +67,9 @@ export default function EspaceLocalPage() {
         <aside className="lg:sticky lg:top-8 lg:self-start">
           <nav className="flex gap-2 overflow-x-auto lg:flex-col">
             {NAV.map((item) => (
-              <span
+              <a
                 key={item.label}
+                href={item.href}
                 className={`inline-flex shrink-0 items-center gap-2.5 rounded-lg px-3.5 py-2.5 text-sm font-semibold transition-colors ${
                   item.active
                     ? "bg-or/15 text-or-d"
@@ -77,14 +78,14 @@ export default function EspaceLocalPage() {
               >
                 <item.icon size={17} />
                 {item.label}
-              </span>
+              </a>
             ))}
           </nav>
         </aside>
 
         {/* Contenu */}
         <main className="space-y-6">
-          <div>
+          <div id="top" className="scroll-mt-8">
             <h1 className="font-display text-noir text-2xl font-extrabold tracking-tight">
               Bonjour 👋
             </h1>
@@ -116,7 +117,7 @@ export default function EspaceLocalPage() {
           </div>
 
           {/* Entreprise */}
-          <section className="border-or/20 rounded-2xl border bg-white p-6">
+          <section id="entreprise" className="border-or/20 scroll-mt-8 rounded-2xl border bg-white p-6">
             <div className="mb-4 flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <Building2 size={18} className="text-or-d" />
@@ -171,7 +172,7 @@ export default function EspaceLocalPage() {
           </section>
 
           {/* Salariés */}
-          <section className="border-or/20 rounded-2xl border bg-white p-6">
+          <section id="salaries" className="border-or/20 scroll-mt-8 rounded-2xl border bg-white p-6">
             <div className="mb-4 flex items-center gap-2">
               <Users size={18} className="text-or-d" />
               <h2 className="font-display text-noir text-lg font-bold">
@@ -244,7 +245,7 @@ export default function EspaceLocalPage() {
           </section>
 
           {/* Fiches récentes */}
-          <section className="border-or/20 rounded-2xl border bg-white p-6">
+          <section id="fiches" className="border-or/20 scroll-mt-8 rounded-2xl border bg-white p-6">
             <div className="mb-4 flex items-center gap-2">
               <FileClock size={18} className="text-or-d" />
               <h2 className="font-display text-noir text-lg font-bold">

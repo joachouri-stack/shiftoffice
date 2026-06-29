@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { ArrowLeft, FileClock, Home, LogOut, Users, Building2 } from "lucide-react";
+import { FileClock, Home, LogOut, Users, Building2 } from "lucide-react";
 import { Logo } from "@/components/brand/Logo";
 import { isSupabaseEnabled } from "@/lib/supabase/config";
 import { getUser } from "@/lib/supabase/auth";
@@ -17,31 +17,11 @@ export default async function CompteLayout({
 }: {
   children: React.ReactNode;
 }) {
+  // Sans Supabase : plus de « bientôt disponible » — on bascule sur l'espace
+  // local (localStorage). Quand Supabase est activé, /compte reprend la main
+  // automatiquement avec le même espace, en mode cloud.
   if (!isSupabaseEnabled()) {
-    return (
-      <div className="bg-creme grid min-h-dvh place-items-center px-4 text-center">
-        <div className="max-w-md">
-          <div className="mb-6 flex justify-center">
-            <Logo theme="light" />
-          </div>
-          <h1 className="font-display text-noir text-2xl font-extrabold">
-            Espace compte bientôt disponible
-          </h1>
-          <p className="text-gris mt-2 text-sm">
-            La connexion et l&apos;historique des documents seront activés très
-            prochainement. En attendant, tous les documents restent générables
-            sans compte.
-          </p>
-          <Link
-            href="/"
-            className="bg-noir mt-6 inline-flex items-center gap-2 rounded-[10px] px-6 py-3 text-sm font-bold text-white"
-          >
-            <ArrowLeft size={16} />
-            Retour à l&apos;accueil
-          </Link>
-        </div>
-      </div>
-    );
+    redirect("/espace");
   }
 
   const user = await getUser();
