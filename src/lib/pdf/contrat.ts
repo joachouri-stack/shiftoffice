@@ -115,7 +115,7 @@ export async function buildContratPDF(d: ContratData): Promise<Uint8Array> {
   trackedC(cdi ? "CDI" : "CDD", cx, PH - 78, 11, sansB, GOLD, 2.5);
   y = PH - bandH;
 
-  // ── Récap (bandeau gris clair, grille) ──
+  // Données de synthèse, rendues dans l'encadré « L'essentiel » sous les parties.
   const recap: Array<[string, string]> = [
     ["POSTE", d.poste || "—"],
     ["LIEU DE TRAVAIL", d.lieuTravail || d.entrepriseAdresse || "—"],
@@ -126,22 +126,7 @@ export async function buildContratPDF(d: ContratData): Promise<Uint8Array> {
     ["RÉMUNÉRATION", `${eur(d.salaireBrut || 0)} € brut/mois`],
     ["CONVENTION", d.conventionCollective || "—"],
   ];
-  const rcCols = 3;
-  const rcRows = Math.ceil(recap.length / rcCols);
-  const rcRowH = 30;
-  const recapH = 14 + rcRows * rcRowH;
-  rect(0, y - recapH, PW, recapH, G100);
-  hline(0, PW, y - recapH, G300, 1);
-  const rcColW = W / rcCols;
-  recap.forEach((cell, i) => {
-    const r = Math.floor(i / rcCols);
-    const c = i % rcCols;
-    const ix = M + c * rcColW;
-    const iy = y - 16 - r * rcRowH;
-    tracked(cell[0], ix, iy, 7, sansB, G500, 0.4);
-    t(cell[1], ix, iy - 13, 11, sansB, TEXT);
-  });
-  y -= recapH + 18;
+  y -= 22;
 
   // ── Parties (côte à côte, Employeur navy / Salarié or) ──
   const gap = 14;
@@ -206,7 +191,36 @@ export async function buildContratPDF(d: ContratData): Promise<Uint8Array> {
   };
   drawParty(M, NAVY, NAVY, WHITE, "L'EMPLOYEUR", d.entrepriseNom || "L'entreprise", empItems);
   drawParty(M + colW + gap, GOLD, GOLD, NAVY, "LE SALARIÉ", d.salarieNom || "Le/la salarié(e)", salItems);
-  y -= partyH + 16;
+  y -= partyH + 18;
+
+  // ── L'essentiel du contrat (placé sous les parties) ──
+  const eCols = 3;
+  const eRows = Math.ceil(recap.length / eCols);
+  const eColW = W / eCols;
+  const eInner = eColW - 24;
+  const eRowH = 36;
+  const eHead = 22;
+  const essH = eHead + 12 + eRows * eRowH;
+  if (y - essH < BOTTOM) newPage();
+  rect(M, y - essH, W, essH, G100, G300, 1);
+  rect(M, y - eHead, W, eHead, NAVY);
+  rect(M, y - eHead, W, 2, GOLD); // liseré doré sous l'en-tête
+  tracked("L'ESSENTIEL DU CONTRAT", M + ipad, y - 15, 9, sansB, WHITE, 1.5);
+  for (let c = 1; c < eCols; c++)
+    rect(M + c * eColW, y - essH + 10, 1, essH - eHead - 20, G300);
+  recap.forEach((cell, i) => {
+    const r = Math.floor(i / eCols);
+    const c = i % eCols;
+    const ix = M + c * eColW + 14;
+    const iy = y - eHead - 18 - r * eRowH;
+    tracked(cell[0], ix, iy, 7, sansB, G500, 0.4);
+    let vy = iy - 13;
+    for (const vl of wrap(cell[1], sansB, 10, eInner).slice(0, 2)) {
+      t(vl, ix, vy, 10, sansB, TEXT);
+      vy -= 11.5;
+    }
+  });
+  y -= essH + 18;
 
   // ── « Il a été convenu… » (encadré, italique serif, centré) ──
   hline(M, M + W, y, G300, 1);
