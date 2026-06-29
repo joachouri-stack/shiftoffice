@@ -196,13 +196,28 @@ export default function FicheDePaieFlow() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ type: "fiche-paie", slug: "fiche-paie" }),
       });
-      const cod = (await co.json().catch(() => ({}))) as { url?: string };
+      const cod = (await co.json().catch(() => ({}))) as {
+        url?: string;
+        paymentDisabled?: boolean;
+        error?: string;
+      };
       if (cod?.url) {
         sessionStorage.setItem(
           "shiftoffice:pending:fiche-paie",
           JSON.stringify({ type: "fiche-paie", donnees, filename, ficheMeta })
         );
         window.location.assign(cod.url);
+        return;
+      }
+
+      // Stripe est configuré mais la session n'a pas pu être créée : on le dit
+      // clairement, sans retomber en génération « gratuite ».
+      if (!cod?.paymentDisabled) {
+        setErr(
+          cod?.error ??
+            "Le paiement n'a pas pu démarrer. Vérifiez votre configuration Stripe, ou réessayez dans un instant."
+        );
+        setBusy(false);
         return;
       }
 
