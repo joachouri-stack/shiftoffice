@@ -19,6 +19,20 @@ create table if not exists public.profiles (
   updated_at timestamptz not null default now()
 );
 
+-- ---------- entreprises (plusieurs par utilisateur) ----------
+create table if not exists public.entreprises (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid not null references auth.users (id) on delete cascade,
+  nom text not null,
+  adresse text,
+  siret text,
+  representant_nom text,
+  representant_qualite text,
+  ville text,
+  created_at timestamptz not null default now()
+);
+create index if not exists entreprises_user_idx on public.entreprises (user_id);
+
 -- ---------- salaries ----------
 create table if not exists public.salaries (
   id uuid primary key default gen_random_uuid(),
@@ -47,8 +61,13 @@ create index if not exists historique_user_idx on public.documents_historique (u
 -- Row Level Security
 -- ============================================================
 alter table public.profiles enable row level security;
+alter table public.entreprises enable row level security;
 alter table public.salaries enable row level security;
 alter table public.documents_historique enable row level security;
+
+drop policy if exists "entreprises_self" on public.entreprises;
+create policy "entreprises_self" on public.entreprises
+  for all using (auth.uid() = user_id) with check (auth.uid() = user_id);
 
 drop policy if exists "profiles_self" on public.profiles;
 create policy "profiles_self" on public.profiles

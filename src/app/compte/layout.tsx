@@ -9,7 +9,7 @@ const NAV = [
   { href: "/compte", label: "Tableau de bord", icon: Home },
   { href: "/compte/historique", label: "Mes documents", icon: FileClock },
   { href: "/compte/salaries", label: "Mes salariés", icon: Users },
-  { href: "/compte/entreprise", label: "Mon entreprise", icon: Building2 },
+  { href: "/compte/entreprise", label: "Mes entreprises", icon: Building2 },
 ];
 
 export default async function CompteLayout({
