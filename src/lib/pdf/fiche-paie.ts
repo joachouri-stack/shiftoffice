@@ -237,12 +237,16 @@ export async function buildFichePaiePDF(d: FichePaieData): Promise<Uint8Array> {
   // ─── Congés payés + Cumuls ───
   const half = (W - gap) / 2;
   const cby = y - 52;
-  const solde = (d.congesAcquis ?? 0) - (d.congesPris ?? 0);
-  rect(M, cby, half, 52, undefined, LIGNE, 1);
-  t("CONGÉS PAYÉS", M + 8, cby + 40, 7, bold, GRIS);
-  t(`Acquis : ${(d.congesAcquis ?? 0).toLocaleString("fr-FR")} j`, M + 8, cby + 27, 7.5);
-  t(`Pris : ${(d.congesPris ?? 0).toLocaleString("fr-FR")} j`, M + 8, cby + 16, 7.5);
-  t(`Solde : ${solde.toLocaleString("fr-FR")} j`, M + 8, cby + 5, 7.5, bold);
+  // La case congés n'apparaît que si des congés ont été saisis.
+  const aConges = (d.congesAcquis ?? 0) > 0 || (d.congesPris ?? 0) > 0;
+  if (aConges) {
+    const solde = (d.congesAcquis ?? 0) - (d.congesPris ?? 0);
+    rect(M, cby, half, 52, undefined, LIGNE, 1);
+    t("CONGÉS PAYÉS", M + 8, cby + 40, 7, bold, GRIS);
+    t(`Acquis : ${(d.congesAcquis ?? 0).toLocaleString("fr-FR")} j`, M + 8, cby + 27, 7.5);
+    t(`Pris : ${(d.congesPris ?? 0).toLocaleString("fr-FR")} j`, M + 8, cby + 16, 7.5);
+    t(`Solde : ${solde.toLocaleString("fr-FR")} j`, M + 8, cby + 5, 7.5, bold);
+  }
 
   const cx = M + half + gap;
   const cumulBrut = d.cumulBrut && d.cumulBrut > 0 ? d.cumulBrut : r.brut;
