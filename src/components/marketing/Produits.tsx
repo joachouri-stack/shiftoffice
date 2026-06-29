@@ -74,7 +74,9 @@ function DocCard({ doc }: { doc: DocItem }) {
               ? "/fiche-de-paie"
               : doc.slug === "solde-tout-compte"
                 ? "/solde-tout-compte"
-                : `/generer/${doc.slug}`
+                : doc.slug === "rupture-conventionnelle"
+                  ? "/rupture-conventionnelle"
+                  : `/generer/${doc.slug}`
           }
           className="bg-orange hover:bg-orange-d inline-flex items-center gap-1.5 rounded-[10px] px-4 py-2.5 text-sm font-bold text-white transition-colors"
         >
