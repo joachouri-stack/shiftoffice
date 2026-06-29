@@ -1,7 +1,5 @@
 import { PDFDocument, StandardFonts, rgb, type PDFPage } from "pdf-lib";
-import fontkit from "@pdf-lib/fontkit";
 import { eur, wrap } from "./helpers";
-import { EB_GARAMOND_B64 } from "./fonts/eb-garamond";
 
 export type ContratData = {
   entrepriseNom: string;
@@ -48,14 +46,9 @@ const BOTTOM = 60;
 
 export async function buildContratPDF(d: ContratData): Promise<Uint8Array> {
   const pdf = await PDFDocument.create();
-  pdf.registerFontkit(fontkit);
   const sans = await pdf.embedFont(StandardFonts.Helvetica);
   const sansB = await pdf.embedFont(StandardFonts.HelveticaBold);
   const serifI = await pdf.embedFont(StandardFonts.TimesRomanItalic);
-  // Police de titre EB Garamond embarquée (rendu élégant, fidèle au modèle).
-  const titleFont = await pdf.embedFont(Buffer.from(EB_GARAMOND_B64, "base64"), {
-    subset: true,
-  });
 
   const pages: PDFPage[] = [];
   let page!: PDFPage;
@@ -117,9 +110,9 @@ export async function buildContratPDF(d: ContratData): Promise<Uint8Array> {
   rect(0, PH - bandH, PW, bandH, NAVY);
   rect(0, PH - bandH, PW, 3, GOLD); // liseré doré en bas du bandeau
   const cx = PW / 2;
-  tc("CONTRAT DE TRAVAIL", cx, PH - 40, 24, titleFont, WHITE);
-  tc(cdi ? "À DURÉE INDÉTERMINÉE" : "À DURÉE DÉTERMINÉE", cx, PH - 66, 24, titleFont, WHITE);
-  trackedC(cdi ? "CDI" : "CDD", cx, PH - 86, 10.5, sansB, GOLD, 2.5);
+  trackedC("CONTRAT DE TRAVAIL", cx, PH - 41, 18, sansB, WHITE, 3.5);
+  trackedC(cdi ? "À DURÉE INDÉTERMINÉE" : "À DURÉE DÉTERMINÉE", cx, PH - 64, 18, sansB, WHITE, 3.5);
+  trackedC(cdi ? "CDI" : "CDD", cx, PH - 84, 10, sansB, GOLD, 3);
   y = PH - bandH;
 
   // Données de synthèse, rendues dans l'encadré « L'essentiel » sous les parties.
