@@ -180,6 +180,14 @@ export default function FicheDePaieFlow() {
       conges,
       creeLe: new Date().toISOString(),
     };
+    const docMeta = {
+      type: "fiche-paie",
+      titre: "Fiche de paie",
+      libelle: `${sal?.nom ?? "Salarié"} · ${mois} ${annee}`,
+      montant: res.netPaye,
+      refaireHref: sal?.id ? `/fiche-de-paie?s=${sal.id}` : "/fiche-de-paie",
+      creeLe: new Date().toISOString(),
+    };
     setLastDonnees(donnees);
     try {
       // 1) Paiement : si Stripe est configuré, on passe par Checkout et la page
@@ -197,7 +205,7 @@ export default function FicheDePaieFlow() {
       if (cod?.url) {
         sessionStorage.setItem(
           "shiftoffice:pending:fiche-paie",
-          JSON.stringify({ type: "fiche-paie", donnees, filename, ficheMeta })
+          JSON.stringify({ type: "fiche-paie", donnees, filename, ficheMeta, docMeta })
         );
         window.location.assign(cod.url);
         return;
@@ -233,6 +241,7 @@ export default function FicheDePaieFlow() {
       a.click();
       URL.revokeObjectURL(url);
       localStore.addFiche(ficheMeta);
+      localStore.addDocument(docMeta);
       setDone(true);
     } catch {
       setErr("La génération a échoué. Réessayez.");

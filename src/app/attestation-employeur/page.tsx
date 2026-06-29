@@ -70,6 +70,13 @@ export default function AttestationEmployeurFlow() {
       date: todayFr(),
     };
     const filename = `attestation-employeur-${(sal?.nom ?? "salarie").replace(/\s+/g, "-").toLowerCase()}.pdf`;
+    const docMeta = {
+      type: "attestation-employeur",
+      titre: "Attestation employeur",
+      libelle: sal?.nom ?? "Salarié",
+      refaireHref: sal?.id ? `/attestation-employeur?s=${sal.id}` : "/attestation-employeur",
+      creeLe: new Date().toISOString(),
+    };
     setLastDonnees(donnees);
     try {
       // Document gratuit → génération directe (route gratuite, sans paiement).
@@ -90,6 +97,7 @@ export default function AttestationEmployeurFlow() {
       a.download = filename;
       a.click();
       URL.revokeObjectURL(url);
+      localStore.addDocument(docMeta);
       setDone(true);
     } catch {
       setErr("La génération a échoué. Réessayez.");

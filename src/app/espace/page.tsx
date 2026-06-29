@@ -21,8 +21,8 @@ import {
   localStore,
   type LocalEntreprise,
   type LocalSalarie,
-  type LocalFiche,
   type LocalBien,
+  type LocalDoc,
 } from "@/lib/local/store";
 
 const FIELD =
@@ -40,7 +40,7 @@ export default function EspaceLocalPage() {
   const [ent, setEnt] = useState<LocalEntreprise | null>(null);
   const [salaries, setSalaries] = useState<LocalSalarie[]>([]);
   const [biens, setBiens] = useState<LocalBien[]>([]);
-  const [fiches, setFiches] = useState<LocalFiche[]>([]);
+  const [documents, setDocuments] = useState<LocalDoc[]>([]);
   const [editEnt, setEditEnt] = useState(false);
   const [editingSal, setEditingSal] = useState<string | null>(null);
   const [ready, setReady] = useState(false);
@@ -49,7 +49,7 @@ export default function EspaceLocalPage() {
     setEnt(localStore.getEntreprise());
     setSalaries(localStore.getSalaries());
     setBiens(localStore.getBiens());
-    setFiches(localStore.getFiches());
+    setDocuments(localStore.getDocuments());
     setReady(true);
   }, []);
 
@@ -331,34 +331,42 @@ export default function EspaceLocalPage() {
             />
           </section>
 
-          {/* Fiches récentes */}
+          {/* Mes documents */}
           <section id="fiches" className="border-or/20 scroll-mt-8 rounded-2xl border bg-white p-6">
             <div className="mb-4 flex items-center gap-2">
               <FileClock size={18} className="text-or-d" />
               <h2 className="font-display text-noir text-lg font-bold">
-                Fiches récentes
+                Mes documents
               </h2>
+              {documents.length > 0 && (
+                <span className="bg-or/10 text-or-d ml-1 rounded-full px-2 py-0.5 text-xs font-bold">
+                  {documents.length}
+                </span>
+              )}
             </div>
-            {fiches.length > 0 ? (
+            {documents.length > 0 ? (
               <ul className="divide-or/10 divide-y">
-                {fiches.map((f) => (
-                  <li
-                    key={f.id}
-                    className="flex items-center justify-between gap-4 py-3"
-                  >
-                    <div className="min-w-0">
-                      <p className="text-noir truncate text-sm font-semibold">
-                        {f.salarieNom} — {f.periode}
-                      </p>
-                      <p className="text-gris truncate text-xs">
-                        Brut {f.brut.toLocaleString("fr-FR")} € · Net{" "}
-                        {f.net.toLocaleString("fr-FR")} €
-                      </p>
+                {documents.map((d) => (
+                  <li key={d.id} className="flex items-center justify-between gap-4 py-3">
+                    <div className="flex min-w-0 items-center gap-3">
+                      <div className="bg-or/15 text-or-d grid h-9 w-9 shrink-0 place-items-center rounded-lg">
+                        <FileText size={16} />
+                      </div>
+                      <div className="min-w-0">
+                        <p className="text-noir truncate text-sm font-semibold">
+                          {d.titre}
+                        </p>
+                        <p className="text-gris truncate text-xs">
+                          {[d.libelle, d.montant ? `${Math.round(d.montant).toLocaleString("fr-FR")} €` : null]
+                            .filter(Boolean)
+                            .join(" · ") || "—"}
+                        </p>
+                      </div>
                     </div>
-                    {f.salarieId ? (
+                    {d.refaireHref ? (
                       <Link
-                        href={`/fiche-de-paie?s=${f.salarieId}`}
-                        className="text-or-d hover:bg-or/10 inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-bold"
+                        href={d.refaireHref}
+                        className="text-or-d hover:bg-or/10 inline-flex shrink-0 items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-bold"
                       >
                         Refaire
                         <ArrowRight size={13} />
@@ -369,8 +377,7 @@ export default function EspaceLocalPage() {
               </ul>
             ) : (
               <p className="text-gris py-6 text-center text-sm">
-                Vos fiches générées apparaîtront ici, prêtes à être reprises le
-                mois suivant.
+                Vos documents générés apparaîtront ici, prêts à être refaits en un clic.
               </p>
             )}
           </section>

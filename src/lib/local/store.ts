@@ -64,11 +64,23 @@ export type LocalBien = {
   ville?: string;
 };
 
+// Journal générique de tous les documents générés (tous types confondus).
+export type LocalDoc = {
+  id: string;
+  type: string; // slug du document
+  titre: string; // libellé du type, ex. « Fiche de paie »
+  libelle?: string; // contexte, ex. « Cherryne Tossou · Juin 2026 »
+  montant?: number; // montant à afficher si pertinent
+  refaireHref?: string; // lien pour régénérer
+  creeLe: string; // ISO
+};
+
 const K = {
   entreprise: "so.entreprise",
   salaries: "so.salaries",
   fiches: "so.fiches",
   biens: "so.biens",
+  documents: "so.documents",
 };
 
 const isBrowser = () => typeof window !== "undefined";
@@ -140,6 +152,14 @@ export const localStore = {
     return item;
   },
 
+  getDocuments: () => read<LocalDoc[]>(K.documents, []),
+  addDocument: (d: Omit<LocalDoc, "id">) => {
+    const list = read<LocalDoc[]>(K.documents, []);
+    const item = { ...d, id: uid() };
+    write(K.documents, [item, ...list].slice(0, 50));
+    return item;
+  },
+
   getBiens: () => read<LocalBien[]>(K.biens, []),
   addBien: (b: Omit<LocalBien, "id">) => {
     const list = read<LocalBien[]>(K.biens, []);
@@ -153,7 +173,7 @@ export const localStore = {
 
   clearAll: () => {
     if (!isBrowser()) return;
-    [K.entreprise, K.salaries, K.fiches, K.biens].forEach((k) =>
+    [K.entreprise, K.salaries, K.fiches, K.biens, K.documents].forEach((k) =>
       window.localStorage.removeItem(k)
     );
   },

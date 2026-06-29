@@ -78,6 +78,13 @@ export default function CertificatTravailFlow() {
       date: todayFr(),
     };
     const filename = `certificat-travail-${(sal?.nom ?? "salarie").replace(/\s+/g, "-").toLowerCase()}.pdf`;
+    const docMeta = {
+      type: "certificat-travail",
+      titre: "Certificat de travail",
+      libelle: sal?.nom ?? "Salarié",
+      refaireHref: sal?.id ? `/certificat-travail?s=${sal.id}` : "/certificat-travail",
+      creeLe: new Date().toISOString(),
+    };
     setLastDonnees(donnees);
     try {
       const co = await fetch("/api/checkout", {
@@ -89,7 +96,7 @@ export default function CertificatTravailFlow() {
       if (cod?.url) {
         sessionStorage.setItem(
           "shiftoffice:pending:certificat-travail",
-          JSON.stringify({ type: "certificat-travail", donnees, filename })
+          JSON.stringify({ type: "certificat-travail", donnees, filename, docMeta })
         );
         window.location.assign(cod.url);
         return;
@@ -116,6 +123,7 @@ export default function CertificatTravailFlow() {
       a.download = filename;
       a.click();
       URL.revokeObjectURL(url);
+      localStore.addDocument(docMeta);
       setDone(true);
     } catch {
       setErr("La génération a échoué. Réessayez.");

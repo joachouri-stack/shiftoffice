@@ -122,6 +122,14 @@ export default function SoldeToutCompteFlow() {
       date: todayFr(),
     };
     const filename = `solde-tout-compte-${(sal?.nom ?? "salarie").replace(/\s+/g, "-").toLowerCase()}.pdf`;
+    const docMeta = {
+      type: "solde-tout-compte",
+      titre: "Solde de tout compte",
+      libelle: sal?.nom ?? "Salarié",
+      montant: total,
+      refaireHref: sal?.id ? `/solde-tout-compte?s=${sal.id}` : "/solde-tout-compte",
+      creeLe: new Date().toISOString(),
+    };
     setLastDonnees(donnees);
     try {
       const co = await fetch("/api/checkout", {
@@ -133,7 +141,7 @@ export default function SoldeToutCompteFlow() {
       if (cod?.url) {
         sessionStorage.setItem(
           "shiftoffice:pending:solde-tout-compte",
-          JSON.stringify({ type: "solde-tout-compte", donnees, filename })
+          JSON.stringify({ type: "solde-tout-compte", donnees, filename, docMeta })
         );
         window.location.assign(cod.url);
         return;
@@ -160,6 +168,7 @@ export default function SoldeToutCompteFlow() {
       a.download = filename;
       a.click();
       URL.revokeObjectURL(url);
+      localStore.addDocument(docMeta);
       setDone(true);
     } catch {
       setErr("La génération a échoué. Réessayez.");

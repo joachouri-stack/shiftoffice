@@ -111,6 +111,14 @@ export default function RuptureConventionnelleFlow() {
       date: todayFr(),
     };
     const filename = `rupture-conventionnelle-${(sal?.nom ?? "salarie").replace(/\s+/g, "-").toLowerCase()}.pdf`;
+    const docMeta = {
+      type: "rupture-conventionnelle",
+      titre: "Rupture conventionnelle",
+      libelle: sal?.nom ?? "Salarié",
+      montant: n(indemnite),
+      refaireHref: sal?.id ? `/rupture-conventionnelle?s=${sal.id}` : "/rupture-conventionnelle",
+      creeLe: new Date().toISOString(),
+    };
     setLastDonnees(donnees);
     try {
       const co = await fetch("/api/checkout", {
@@ -122,7 +130,7 @@ export default function RuptureConventionnelleFlow() {
       if (cod?.url) {
         sessionStorage.setItem(
           "shiftoffice:pending:rupture-conventionnelle",
-          JSON.stringify({ type: "rupture-conventionnelle", donnees, filename })
+          JSON.stringify({ type: "rupture-conventionnelle", donnees, filename, docMeta })
         );
         window.location.assign(cod.url);
         return;
@@ -149,6 +157,7 @@ export default function RuptureConventionnelleFlow() {
       a.download = filename;
       a.click();
       URL.revokeObjectURL(url);
+      localStore.addDocument(docMeta);
       setDone(true);
     } catch {
       setErr("La génération a échoué. Réessayez.");

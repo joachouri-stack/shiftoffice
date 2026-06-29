@@ -6,6 +6,7 @@ import { ArrowLeft, ArrowRight, Check, Download, Loader2, Plus, Trash2 } from "l
 import { Logo } from "@/components/brand/Logo";
 import { EmailCopy } from "@/components/documents/EmailCopy";
 import { Row, ProgressBar, FIELD } from "@/components/flow/Steps";
+import { localStore } from "@/lib/local/store";
 
 const FORMES = ["SARL", "SAS", "EURL", "SASU"] as const;
 const LABELS: Record<string, string> = {
@@ -81,6 +82,14 @@ export default function StatutsSocieteFlow() {
       date: todayFr(),
     };
     const filename = `statuts-${(denomination || "societe").replace(/\s+/g, "-").toLowerCase()}.pdf`;
+    const docMeta = {
+      type: "statuts-societe",
+      titre: "Statuts de société",
+      libelle: denomination || forme,
+      montant: capital,
+      refaireHref: "/statuts-societe",
+      creeLe: new Date().toISOString(),
+    };
     setLastDonnees(donnees);
     try {
       const co = await fetch("/api/checkout", {
@@ -90,7 +99,7 @@ export default function StatutsSocieteFlow() {
       });
       const cod = (await co.json().catch(() => ({}))) as { url?: string; paymentDisabled?: boolean; error?: string };
       if (cod?.url) {
-        sessionStorage.setItem("shiftoffice:pending:statuts-societe", JSON.stringify({ type: "statuts-societe", donnees, filename }));
+        sessionStorage.setItem("shiftoffice:pending:statuts-societe", JSON.stringify({ type: "statuts-societe", donnees, filename, docMeta }));
         window.location.assign(cod.url);
         return;
       }
@@ -116,6 +125,7 @@ export default function StatutsSocieteFlow() {
       a.download = filename;
       a.click();
       URL.revokeObjectURL(url);
+      localStore.addDocument(docMeta);
       setDone(true);
     } catch {
       setErr("La génération a échoué. Réessayez.");

@@ -97,6 +97,14 @@ export default function BailCommercialFlow() {
       date: todayFr(),
     };
     const filename = `bail-commercial-${(preneurNom || "preneur").replace(/\s+/g, "-").toLowerCase()}.pdf`;
+    const docMeta = {
+      type: "bail-commercial",
+      titre: "Bail commercial",
+      libelle: preneurNom || "Preneur",
+      montant: n(loyerAnnuel),
+      refaireHref: "/bail-commercial",
+      creeLe: new Date().toISOString(),
+    };
     setLastDonnees(donnees);
     try {
       const co = await fetch("/api/checkout", {
@@ -108,7 +116,7 @@ export default function BailCommercialFlow() {
       if (cod?.url) {
         sessionStorage.setItem(
           "shiftoffice:pending:bail-commercial",
-          JSON.stringify({ type: "bail-commercial", donnees, filename })
+          JSON.stringify({ type: "bail-commercial", donnees, filename, docMeta })
         );
         window.location.assign(cod.url);
         return;
@@ -135,6 +143,7 @@ export default function BailCommercialFlow() {
       a.download = filename;
       a.click();
       URL.revokeObjectURL(url);
+      localStore.addDocument(docMeta);
       setDone(true);
     } catch {
       setErr("La génération a échoué. Réessayez.");

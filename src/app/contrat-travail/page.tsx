@@ -132,6 +132,13 @@ export default function ContratTravailFlow() {
       date: todayFr(),
     };
     const filename = `contrat-travail-${(sal?.nom ?? "salarie").replace(/\s+/g, "-").toLowerCase()}.pdf`;
+    const docMeta = {
+      type: "contrat-travail",
+      titre: "Contrat de travail",
+      libelle: `${sal?.nom ?? "Salarié"} · ${typeContrat.toUpperCase()}`,
+      refaireHref: sal?.id ? `/contrat-travail?s=${sal.id}` : "/contrat-travail",
+      creeLe: new Date().toISOString(),
+    };
     setLastDonnees(donnees);
     try {
       const co = await fetch("/api/checkout", {
@@ -143,7 +150,7 @@ export default function ContratTravailFlow() {
       if (cod?.url) {
         sessionStorage.setItem(
           "shiftoffice:pending:contrat-travail",
-          JSON.stringify({ type: "contrat-travail", donnees, filename })
+          JSON.stringify({ type: "contrat-travail", donnees, filename, docMeta })
         );
         window.location.assign(cod.url);
         return;
@@ -170,6 +177,7 @@ export default function ContratTravailFlow() {
       a.download = filename;
       a.click();
       URL.revokeObjectURL(url);
+      localStore.addDocument(docMeta);
       setDone(true);
     } catch {
       setErr("La génération a échoué. Réessayez.");

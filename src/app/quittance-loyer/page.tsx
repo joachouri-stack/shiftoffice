@@ -78,6 +78,14 @@ export default function QuittanceLoyerFlow() {
       datePaiement,
     };
     const filename = `quittance-${(bien.locataire || "loyer").replace(/\s+/g, "-").toLowerCase()}-${mois.toLowerCase()}-${annee}.pdf`;
+    const docMeta = {
+      type: "quittance-loyer",
+      titre: "Quittance de loyer",
+      libelle: `${bien.locataire} · ${mois} ${annee}`,
+      montant: total,
+      refaireHref: `/quittance-loyer?b=${bien.id}`,
+      creeLe: new Date().toISOString(),
+    };
     setLastDonnees(donnees);
     try {
       const r = await fetch("/api/documents/generer-gratuit", {
@@ -97,6 +105,7 @@ export default function QuittanceLoyerFlow() {
       a.download = filename;
       a.click();
       URL.revokeObjectURL(url);
+      localStore.addDocument(docMeta);
       setDone(true);
     } catch {
       setErr("La génération a échoué. Réessayez.");
