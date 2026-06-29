@@ -1,0 +1,247 @@
+"use client";
+
+import { useEffect, useState } from "react";
+import Link from "next/link";
+import { ArrowLeft, ArrowRight, Check, Download, Loader2 } from "lucide-react";
+import { Logo } from "@/components/brand/Logo";
+import { EmailCopy } from "@/components/documents/EmailCopy";
+import { EntrepriseStep, Row, ProgressBar, FIELD } from "@/components/flow/Steps";
+import { localStore, type LocalEntreprise } from "@/lib/local/store";
+
+const LABELS: Record<string, string> = {
+  entreprise: "Le bailleur",
+  preneur: "Le preneur",
+  local: "Le local",
+  loyer: "Loyer & charges",
+  duree: "Durée du bail",
+  verification: "Vérification",
+};
+
+const eur = (n: number) =>
+  n.toLocaleString("fr-FR", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + " €";
+
+function todayFr() {
+  const d = new Date();
+  return `${String(d.getDate()).padStart(2, "0")}/${String(d.getMonth() + 1).padStart(2, "0")}/${d.getFullYear()}`;
+}
+
+export default function BailCommercialFlow() {
+  const [ready, setReady] = useState(false);
+  const [ent, setEnt] = useState<LocalEntreprise | null>(null);
+  const [steps, setSteps] = useState<string[]>([]);
+  const [i, setI] = useState(0);
+
+  const [preneurNom, setPreneurNom] = useState("");
+  const [preneurAdresse, setPreneurAdresse] = useState("");
+  const [preneurRcs, setPreneurRcs] = useState("");
+
+  const [adresseLocal, setAdresseLocal] = useState("");
+  const [descriptionLocal, setDescriptionLocal] = useState("");
+  const [surface, setSurface] = useState("");
+  const [destination, setDestination] = useState("");
+
+  const [loyerAnnuel, setLoyerAnnuel] = useState("");
+  const [depotGarantie, setDepotGarantie] = useState("");
+  const [charges, setCharges] = useState("");
+
+  const [dateDebut, setDateDebut] = useState(todayFr());
+  const [duree, setDuree] = useState("9 ans (3-6-9)");
+  const [indiceRevision, setIndiceRevision] = useState("ILC (Indice des loyers commerciaux)");
+
+  const [busy, setBusy] = useState(false);
+  const [done, setDone] = useState(false);
+  const [err, setErr] = useState("");
+  const [lastDonnees, setLastDonnees] = useState<Record<string, unknown> | null>(null);
+
+  useEffect(() => {
+    const e = localStore.getEntreprise();
+    setEnt(e);
+    const list: string[] = [];
+    if (!e) list.push("entreprise");
+    list.push("preneur", "local", "loyer", "duree", "verification");
+    setSteps(list);
+    setReady(true);
+  }, []);
+
+  if (!ready) return null;
+
+  const n = (v: string) => parseFloat(v.replace(",", ".")) || 0;
+  const key = steps[i] ?? "verification";
+  const goNext = () => setI((v) => Math.min(steps.length - 1, v + 1));
+  const goBack = () => setI((v) => Math.max(0, v - 1));
+
+  async function generer() {
+    if (busy) return;
+    setBusy(true);
+    setErr("");
+    const donnees = {
+      bailleurNom: ent?.nom ?? "",
+      bailleurAdresse: [ent?.adresse, [ent?.codePostal, ent?.ville].filter(Boolean).join(" ")]
+        .filter(Boolean)
+        .join(", "),
+      bailleurQualite: ent?.representantQualite || "Propriétaire",
+      preneurNom,
+      preneurAdresse,
+      preneurRcs,
+      adresseLocal,
+      descriptionLocal,
+      surface,
+      destination,
+      loyerAnnuel: String(n(loyerAnnuel)),
+      depotGarantie: String(n(depotGarantie)),
+      charges,
+      indiceRevision,
+      dateDebut,
+      duree,
+      ville: ent?.ville ?? "",
+      date: todayFr(),
+    };
+    const filename = `bail-commercial-${(preneurNom || "preneur").replace(/\s+/g, "-").toLowerCase()}.pdf`;
+    setLastDonnees(donnees);
+    try {
+      const co = await fetch("/api/checkout", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ type: "bail-commercial", slug: "bail-commercial" }),
+      });
+      const cod = (await co.json().catch(() => ({}))) as { url?: string; paymentDisabled?: boolean; error?: string };
+      if (cod?.url) {
+        sessionStorage.setItem(
+          "shiftoffice:pending:bail-commercial",
+          JSON.stringify({ type: "bail-commercial", donnees, filename })
+        );
+        window.location.assign(cod.url);
+        return;
+      }
+      if (!cod?.paymentDisabled) {
+        setErr(cod?.error ?? "Le paiement n'a pas pu démarrer. Réessayez dans un instant.");
+        setBusy(false);
+        return;
+      }
+      const r = await fetch("/api/documents/generer", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ type_document: "bail-commercial", donnees }),
+      });
+      if (!r.ok) {
+        setErr("La génération a échoué. Réessayez.");
+        setBusy(false);
+        return;
+      }
+      const blob = await r.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = filename;
+      a.click();
+      URL.revokeObjectURL(url);
+      setDone(true);
+    } catch {
+      setErr("La génération a échoué. Réessayez.");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  const L = ({ children }: { children: string }) => (
+    <label className="text-noir mb-1.5 block text-sm font-semibold">{children}</label>
+  );
+
+  return (
+    <div className="bg-creme min-h-dvh">
+      <header className="bg-noir">
+        <div className="mx-auto flex h-16 max-w-2xl items-center justify-between px-4 sm:px-6">
+          <Link href="/"><Logo theme="dark" /></Link>
+          <Link href="/espace" className="text-sm font-semibold text-white/70 hover:text-white">Mon espace</Link>
+        </div>
+      </header>
+
+      <div className="mx-auto max-w-2xl px-4 py-6 sm:px-6">
+        <ProgressBar index={i} total={steps.length} label={LABELS[key]} />
+
+        {ent?.nom && <div className="text-gris mb-4 text-sm">Bailleur : <strong className="text-noir">{ent.nom}</strong></div>}
+
+        <div className="border-or/20 rounded-2xl border bg-white p-5 sm:p-6">
+          {key === "entreprise" && (
+            <EntrepriseStep onSave={(e) => { localStore.setEntreprise(e); setEnt(e); goNext(); }} />
+          )}
+
+          {key === "preneur" && (
+            <div className="space-y-4">
+              <h3 className="text-noir font-display text-lg font-bold">Le preneur (locataire)</h3>
+              <input className={FIELD} placeholder="Nom / dénomination du preneur" value={preneurNom} onChange={(e) => setPreneurNom(e.target.value)} />
+              <input className={FIELD} placeholder="Adresse du preneur" value={preneurAdresse} onChange={(e) => setPreneurAdresse(e.target.value)} />
+              <input className={FIELD} placeholder="RCS / SIRET du preneur" value={preneurRcs} onChange={(e) => setPreneurRcs(e.target.value)} />
+            </div>
+          )}
+
+          {key === "local" && (
+            <div className="space-y-4">
+              <div><L>Adresse du local</L><input className={FIELD} value={adresseLocal} onChange={(e) => setAdresseLocal(e.target.value)} placeholder="10 rue du Commerce, 84100 Orange" /></div>
+              <div><L>Description</L><input className={FIELD} value={descriptionLocal} onChange={(e) => setDescriptionLocal(e.target.value)} placeholder="Local commercial en rez-de-chaussée" /></div>
+              <div className="grid gap-3 sm:grid-cols-2">
+                <div><L>Surface (m²)</L><input className={FIELD} value={surface} onChange={(e) => setSurface(e.target.value)} placeholder="80" /></div>
+                <div><L>Destination</L><input className={FIELD} value={destination} onChange={(e) => setDestination(e.target.value)} placeholder="Commerce de détail" /></div>
+              </div>
+            </div>
+          )}
+
+          {key === "loyer" && (
+            <div className="space-y-4">
+              <div><L>Loyer annuel (€)</L><input className={FIELD} inputMode="decimal" value={loyerAnnuel} onChange={(e) => setLoyerAnnuel(e.target.value)} placeholder="12000" /></div>
+              <div className="grid gap-3 sm:grid-cols-2">
+                <div><L>Dépôt de garantie (€)</L><input className={FIELD} inputMode="decimal" value={depotGarantie} onChange={(e) => setDepotGarantie(e.target.value)} placeholder="3000" /></div>
+                <div><L>Charges</L><input className={FIELD} value={charges} onChange={(e) => setCharges(e.target.value)} placeholder="Récupérables selon décret" /></div>
+              </div>
+            </div>
+          )}
+
+          {key === "duree" && (
+            <div className="space-y-4">
+              <div><L>Date de début</L><input className={FIELD} value={dateDebut} onChange={(e) => setDateDebut(e.target.value)} /></div>
+              <div><L>Durée</L><input className={FIELD} value={duree} onChange={(e) => setDuree(e.target.value)} /></div>
+              <div><L>Indice de révision</L><input className={FIELD} value={indiceRevision} onChange={(e) => setIndiceRevision(e.target.value)} /></div>
+            </div>
+          )}
+
+          {key === "verification" && (
+            done ? (
+              <div className="py-6 text-center">
+                <div className="bg-vert-l text-vert mx-auto mb-3 grid h-12 w-12 place-items-center rounded-full"><Check size={24} /></div>
+                <p className="text-noir text-lg font-bold">Bail généré 🎉</p>
+                <p className="text-gris mt-1 text-sm">Le PDF a été téléchargé.</p>
+                {lastDonnees && <div className="mt-5 text-left"><EmailCopy type="bail-commercial" donnees={lastDonnees} defaultEmail="" /></div>}
+                <Link href="/espace" className="bg-noir mt-5 inline-flex items-center gap-2 rounded-[10px] px-5 py-2.5 text-sm font-bold text-white">Mon espace</Link>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                <h3 className="text-noir font-display text-lg font-bold">Récapitulatif</h3>
+                <div className="divide-or/10 divide-y">
+                  <Row label="Bailleur" value={ent?.nom ?? "—"} pad />
+                  <Row label="Preneur" value={preneurNom || "—"} pad />
+                  <Row label="Local" value={adresseLocal || "—"} pad />
+                  <Row label="Durée" value={duree} pad />
+                  <Row label="Loyer annuel" value={eur(n(loyerAnnuel))} pad strong />
+                </div>
+                {err && <p className="rounded-lg bg-red-50 px-3 py-2 text-sm font-medium text-red-700">{err}</p>}
+                <button onClick={generer} disabled={busy} className="bg-orange hover:bg-orange-d inline-flex w-full items-center justify-center gap-2 rounded-[10px] px-6 py-3.5 text-base font-bold text-white disabled:opacity-50">
+                  {busy ? <Loader2 size={18} className="animate-spin" /> : <Download size={18} />}
+                  Générer le bail commercial
+                </button>
+              </div>
+            )
+          )}
+
+          {!done && key !== "entreprise" && (
+            <div className="mt-6 flex items-center justify-between">
+              <button onClick={goBack} disabled={i === 0} className="text-gris hover:text-noir inline-flex items-center gap-1.5 text-sm font-semibold disabled:opacity-0"><ArrowLeft size={16} /> Précédent</button>
+              {key !== "verification" && (
+                <button onClick={goNext} className="bg-noir inline-flex items-center gap-2 rounded-[10px] px-5 py-2.5 text-sm font-bold text-white">Continuer <ArrowRight size={16} /></button>
+              )}
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
