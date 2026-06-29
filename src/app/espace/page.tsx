@@ -217,7 +217,7 @@ export default function EspaceLocalPage() {
                     </div>
                     <div className="flex items-center gap-1">
                       <Link
-                        href={`/espace/fiche-de-paie?s=${s.id}`}
+                        href={`/fiche-de-paie?s=${s.id}`}
                         className="bg-orange hover:bg-orange-d inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-bold text-white"
                       >
                         <FileText size={13} />
