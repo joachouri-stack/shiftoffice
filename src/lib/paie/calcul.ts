@@ -1,7 +1,10 @@
 /**
- * Moteur de calcul d'un bulletin de paie (France) — version détaillée mais
- * indicative. Taux du régime général (non-cadre), à affiner avec les barèmes
- * URSSAF officiels en vigueur.
+ * Moteur de calcul d'un bulletin de paie (France) — barèmes du régime général
+ * 2026 (employeur de moins de 50 salariés, salarié non-cadre). Inclut la
+ * Réduction Générale Dégressive Unique (RGDU) qui, depuis le 1ᵉʳ janvier 2026,
+ * remplace l'ancienne réduction Fillon ainsi que les taux réduits de maladie
+ * (7 %) et d'allocations familiales (3,45 %), désormais supprimés.
+ * Reste indicatif : à affiner selon la convention collective applicable.
  */
 
 export type FichePaieInput = {
@@ -50,11 +53,37 @@ export type FichePaieResult = {
   tauxPAS: number;
   montantPAS: number;
   netPaye: number;
+  reductionGenerale: number;
   coutEmployeur: number;
 };
 
-// Plafond mensuel de la Sécurité sociale (indicatif).
-const PMSS = 3925;
+// Plafond mensuel de la Sécurité sociale 2026 (arrêté du 22 décembre 2025 ;
+// plafond annuel 48 060 €).
+const PMSS = 4005;
+
+// SMIC mensuel brut au 1ᵉʳ janvier 2026 (35 h) — sert de référence à la RGDU.
+const SMIC_MENSUEL = 1823.03;
+
+// Paramètres 2026 de la Réduction Générale Dégressive Unique (RGDU),
+// employeurs de moins de 50 salariés (FNAL à 0,10 %).
+const RGDU_TMIN = 0.02; // exonération plancher de 2 % en dessous de 3 SMIC
+const RGDU_TDELTA = 0.3781;
+const RGDU_TMAX = 0.3973; // valeur maximale du coefficient (au niveau du SMIC)
+const RGDU_P = 1.75;
+
+/**
+ * Réduction générale dégressive unique sur les cotisations patronales.
+ * Dégressive du SMIC (coefficient maximal) jusqu'à 3 SMIC (point de sortie),
+ * et nulle à partir de 3 SMIC. Calcul mensuel indicatif sur le brut.
+ */
+function calculerReductionGenerale(brut: number): number {
+  const seuil = 3 * SMIC_MENSUEL; // point de sortie : 3 SMIC
+  if (brut <= 0 || brut >= seuil) return 0;
+  let coef = RGDU_TMIN + RGDU_TDELTA * Math.pow(0.5 * (seuil / brut - 1), RGDU_P);
+  if (coef > RGDU_TMAX) coef = RGDU_TMAX;
+  if (coef < 0) coef = 0;
+  return r2(coef * brut);
+}
 
 type Def = {
   categorie: Categorie;
@@ -66,15 +95,17 @@ type Def = {
 };
 
 const DEFS: Def[] = [
-  { categorie: "Santé", label: "Sécurité sociale — Maladie, maternité", tauxSal: 0, tauxPat: 7.0, base: "brut" },
+  // Maladie : taux unique 13 % depuis 2026 (taux réduit de 7 % supprimé).
+  { categorie: "Santé", label: "Sécurité sociale — Maladie, maternité", tauxSal: 0, tauxPat: 13.0, base: "brut" },
   { categorie: "Santé", label: "Complémentaire santé (mutuelle)", tauxSal: 0, tauxPat: 0, base: "brut" },
   { categorie: "Retraite", label: "Sécurité sociale — Vieillesse plafonnée", tauxSal: 6.9, tauxPat: 8.55, base: "plafond" },
-  { categorie: "Retraite", label: "Sécurité sociale — Vieillesse déplafonnée", tauxSal: 0.4, tauxPat: 2.02, base: "brut" },
+  { categorie: "Retraite", label: "Sécurité sociale — Vieillesse déplafonnée", tauxSal: 0.4, tauxPat: 2.11, base: "brut" },
   { categorie: "Retraite", label: "Retraite complémentaire Agirc-Arrco (T1)", tauxSal: 3.15, tauxPat: 4.72, base: "plafond" },
   { categorie: "Retraite", label: "Contribution d'équilibre général (T1)", tauxSal: 0.86, tauxPat: 1.29, base: "plafond" },
-  { categorie: "Famille / Accidents", label: "Allocations familiales", tauxSal: 0, tauxPat: 3.45, base: "brut" },
+  // Allocations familiales : taux unique 5,25 % depuis 2026 (taux réduit de 3,45 % supprimé).
+  { categorie: "Famille / Accidents", label: "Allocations familiales", tauxSal: 0, tauxPat: 5.25, base: "brut" },
   { categorie: "Famille / Accidents", label: "Accident du travail", tauxSal: 0, tauxPat: 2.0, base: "brut" },
-  { categorie: "Assurance chômage", label: "Assurance chômage", tauxSal: 0, tauxPat: 4.05, base: "brut" },
+  { categorie: "Assurance chômage", label: "Assurance chômage", tauxSal: 0, tauxPat: 4.0, base: "brut" },
   { categorie: "Assurance chômage", label: "AGS (garantie des salaires)", tauxSal: 0, tauxPat: 0.25, base: "brut" },
   { categorie: "Autres contributions", label: "FNAL", tauxSal: 0, tauxPat: 0.1, base: "brut" },
   { categorie: "Autres contributions", label: "Contribution solidarité autonomie", tauxSal: 0, tauxPat: 0.3, base: "brut" },
@@ -141,7 +172,8 @@ export function calculerFichePaie(input: FichePaieInput): FichePaieResult {
   const tauxPAS = Math.max(0, input.tauxPAS || 0);
   const montantPAS = r2((netImposable * tauxPAS) / 100);
   const netPaye = r2(netAvantImpot - montantPAS);
-  const coutEmployeur = r2(brut + totalPat);
+  const reductionGenerale = calculerReductionGenerale(brut);
+  const coutEmployeur = r2(brut + totalPat - reductionGenerale);
 
   return {
     heuresMois,
@@ -160,6 +192,7 @@ export function calculerFichePaie(input: FichePaieInput): FichePaieResult {
     tauxPAS,
     montantPAS,
     netPaye,
+    reductionGenerale,
     coutEmployeur,
   };
 }

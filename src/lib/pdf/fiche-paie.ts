@@ -208,7 +208,16 @@ export async function buildFichePaiePDF(d: FichePaieData): Promise<Uint8Array> {
   t("TOTAL DES COTISATIONS", M + 8, y, 8, bold, CREME);
   rt(eur(r.totalSal), cSal, y, 8, bold, CREME);
   rt(eur(r.totalPat), cPat, y, 8, bold, CREME);
-  y -= rh + 14;
+  y -= rh + 4;
+
+  // Réduction générale (RGDU) — allègement patronal, masqué au-delà de 3 SMIC.
+  if (r.reductionGenerale > 0) {
+    t("Réduction générale de cotisations (RGDU)", M + 12, y, 7.5, font, INK);
+    rt(`- ${eur(r.reductionGenerale)} €`, cPat, y, 7.5, font, OR);
+    y -= rh + 10;
+  } else {
+    y -= 10;
+  }
 
   // ─── Bloc Net ───
   const netRows: Array<[string, string]> = [
