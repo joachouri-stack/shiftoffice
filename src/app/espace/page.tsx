@@ -371,6 +371,26 @@ function EntrepriseForm({
           onChange={(e) => set("convention", e.target.value)}
         />
       </div>
+      <input
+        className={FIELD}
+        placeholder="Adresse"
+        value={f.adresse ?? ""}
+        onChange={(e) => set("adresse", e.target.value)}
+      />
+      <div className="grid gap-3 sm:grid-cols-2">
+        <input
+          className={FIELD}
+          placeholder="Représentant (ex. Jean Martin)"
+          value={f.representantNom ?? ""}
+          onChange={(e) => set("representantNom", e.target.value)}
+        />
+        <input
+          className={FIELD}
+          placeholder="Qualité (Gérant…)"
+          value={f.representantQualite ?? ""}
+          onChange={(e) => set("representantQualite", e.target.value)}
+        />
+      </div>
       <div className="flex items-center gap-2">
         <button
           type="submit"
@@ -412,10 +432,11 @@ function SalarieForm({
   const [typeContrat, setTypeContrat] = useState(initial?.typeContrat ?? "CDI");
   const [classification, setClassification] = useState(initial?.classification ?? "");
   const [email, setEmail] = useState(initial?.email ?? "");
+  const [adresse, setAdresse] = useState(initial?.adresse ?? "");
 
   function reset() {
     setNom(""); setPoste(""); setSalaire(""); setNumeroSecu("");
-    setDateEntree(""); setTypeContrat("CDI"); setClassification(""); setEmail("");
+    setDateEntree(""); setTypeContrat("CDI"); setClassification(""); setEmail(""); setAdresse("");
   }
 
   return (
@@ -432,6 +453,7 @@ function SalarieForm({
           typeContrat,
           classification: classification.trim() || undefined,
           email: email.trim() || undefined,
+          adresse: adresse.trim() || undefined,
         });
         if (!initial) reset();
       }}
@@ -450,6 +472,7 @@ function SalarieForm({
         <input className={FIELD} placeholder="Salaire brut mensuel (€)" inputMode="decimal" value={salaire} onChange={(e) => setSalaire(e.target.value)} />
         <input className={FIELD} placeholder="N° de sécurité sociale" value={numeroSecu} onChange={(e) => setNumeroSecu(e.target.value)} />
       </div>
+      <input className={FIELD} placeholder="Adresse du salarié" value={adresse} onChange={(e) => setAdresse(e.target.value)} />
       <input className={FIELD} type="email" placeholder="Email du salarié (pour l'envoi de la fiche)" value={email} onChange={(e) => setEmail(e.target.value)} />
       <div className="grid gap-3 sm:grid-cols-3">
         <input className={FIELD} placeholder="Date d'entrée (jj/mm/aaaa)" value={dateEntree} onChange={(e) => setDateEntree(e.target.value)} />

@@ -16,6 +16,8 @@ export type LocalEntreprise = {
   codeNaf?: string;
   effectif?: string;
   convention?: string;
+  representantNom?: string;
+  representantQualite?: string;
 };
 
 export type LocalSalarie = {
@@ -28,6 +30,7 @@ export type LocalSalarie = {
   dateEntree?: string;
   classification?: string;
   email?: string;
+  adresse?: string;
 };
 
 export type LocalFiche = {
