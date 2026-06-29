@@ -1,17 +1,11 @@
 import { ScrollLink } from "./ScrollLink";
 import { AiBadge } from "./AiBadge";
 
-const POINTS = [
-  "Conforme URSSAF 2026",
+const TRUST = [
+  "Conforme 2026",
   "PDF immédiat",
   "Sans abonnement",
   "Paiement sécurisé",
-];
-
-const TRUST = [
-  "Aucun abonnement requis",
-  "PDF téléchargeable immédiatement",
-  "Législation française 2026",
 ];
 
 export function Hero() {
@@ -58,25 +52,10 @@ export function Hero() {
         </p>
 
         {/* Sous-titre secondaire */}
-        <p className="mx-auto mt-3.5 max-w-[480px] text-base leading-[1.75] text-white/45">
-          Fiches de paie, contrats, quittances… Remplissez un formulaire simple,
-          téléchargez votre PDF conforme immédiatement.
+        <p className="mx-auto mt-4 max-w-[440px] text-base leading-[1.7] text-white/45">
+          Fiches de paie, contrats, quittances, statuts… votre PDF conforme,
+          téléchargeable immédiatement.
         </p>
-
-        {/* Points */}
-        <div className="mt-9 flex flex-wrap items-center justify-center gap-x-2.5 gap-y-2">
-          {POINTS.map((p, i) => (
-            <div key={p} className="flex items-center gap-2.5">
-              <span className="text-sm font-semibold text-white/50">
-                <span className="bg-or mr-1.5 inline-block h-1.5 w-1.5 rounded-full align-middle" />
-                {p}
-              </span>
-              {i < POINTS.length - 1 && (
-                <span className="h-[3px] w-[3px] rounded-full bg-white/20" />
-              )}
-            </div>
-          ))}
-        </div>
 
         {/* Boutons */}
         <div className="mt-9 flex flex-col items-center justify-center gap-3 sm:flex-row">
