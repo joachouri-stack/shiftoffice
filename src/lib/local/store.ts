@@ -31,6 +31,9 @@ export type LocalSalarie = {
   classification?: string;
   email?: string;
   adresse?: string;
+  dateNaissance?: string;
+  lieuNaissance?: string;
+  nationalite?: string;
 };
 
 export type LocalFiche = {
