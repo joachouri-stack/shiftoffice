@@ -7,6 +7,7 @@ import {
   Users,
   FileClock,
   Home,
+  KeyRound,
   Plus,
   Trash2,
   HardDrive,
@@ -21,6 +22,7 @@ import {
   type LocalEntreprise,
   type LocalSalarie,
   type LocalFiche,
+  type LocalBien,
 } from "@/lib/local/store";
 
 const FIELD =
@@ -30,12 +32,14 @@ const NAV = [
   { label: "Tableau de bord", icon: Home, href: "#top", active: true },
   { label: "Mes documents", icon: FileClock, href: "#fiches" },
   { label: "Mes salariés", icon: Users, href: "#salaries" },
+  { label: "Mes locations", icon: KeyRound, href: "#biens" },
   { label: "Mon entreprise", icon: Building2, href: "#entreprise" },
 ];
 
 export default function EspaceLocalPage() {
   const [ent, setEnt] = useState<LocalEntreprise | null>(null);
   const [salaries, setSalaries] = useState<LocalSalarie[]>([]);
+  const [biens, setBiens] = useState<LocalBien[]>([]);
   const [fiches, setFiches] = useState<LocalFiche[]>([]);
   const [editEnt, setEditEnt] = useState(false);
   const [editingSal, setEditingSal] = useState<string | null>(null);
@@ -44,6 +48,7 @@ export default function EspaceLocalPage() {
   useEffect(() => {
     setEnt(localStore.getEntreprise());
     setSalaries(localStore.getSalaries());
+    setBiens(localStore.getBiens());
     setFiches(localStore.getFiches());
     setReady(true);
   }, []);
@@ -267,6 +272,65 @@ export default function EspaceLocalPage() {
             />
           </section>
 
+          {/* Locations */}
+          <section id="biens" className="border-or/20 scroll-mt-8 rounded-2xl border bg-white p-6">
+            <div className="mb-4 flex items-center gap-2">
+              <KeyRound size={18} className="text-or-d" />
+              <h2 className="font-display text-noir text-lg font-bold">Mes locations</h2>
+              <span className="bg-or/10 text-or-d ml-1 rounded-full px-2 py-0.5 text-xs font-bold">
+                {biens.length}
+              </span>
+            </div>
+
+            {biens.length > 0 && (
+              <ul className="divide-or/10 mb-4 divide-y">
+                {biens.map((b) => (
+                  <li key={b.id} className="flex items-center justify-between gap-4 py-3">
+                    <div className="flex min-w-0 items-center gap-3">
+                      <div className="bg-or/15 text-or-d grid h-9 w-9 shrink-0 place-items-center rounded-lg">
+                        <KeyRound size={16} />
+                      </div>
+                      <div className="min-w-0">
+                        <p className="text-noir truncate text-sm font-semibold">{b.locataire}</p>
+                        <p className="text-gris truncate text-xs">
+                          {[b.adresseBien, b.loyer ? `${b.loyer.toLocaleString("fr-FR")} €` : null]
+                            .filter(Boolean)
+                            .join(" · ") || "—"}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <Link
+                        href={`/quittance-loyer?b=${b.id}`}
+                        className="bg-orange hover:bg-orange-d inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-bold text-white"
+                      >
+                        <FileText size={13} />
+                        Quittance
+                      </Link>
+                      <button
+                        onClick={() => {
+                          localStore.removeBien(b.id);
+                          setBiens(localStore.getBiens());
+                        }}
+                        aria-label={`Supprimer ${b.locataire}`}
+                        className="text-gris hover:bg-red-50 hover:text-red-600 grid h-8 w-8 place-items-center rounded-lg transition-colors"
+                      >
+                        <Trash2 size={15} />
+                      </button>
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            )}
+
+            <BienForm
+              onAdd={(b) => {
+                localStore.addBien(b);
+                setBiens(localStore.getBiens());
+              }}
+            />
+          </section>
+
           {/* Fiches récentes */}
           <section id="fiches" className="border-or/20 scroll-mt-8 rounded-2xl border bg-white p-6">
             <div className="mb-4 flex items-center gap-2">
@@ -291,10 +355,15 @@ export default function EspaceLocalPage() {
                         {f.net.toLocaleString("fr-FR")} €
                       </p>
                     </div>
-                    <button className="text-or-d hover:bg-or/10 inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-bold">
-                      Revoir
-                      <ArrowRight size={13} />
-                    </button>
+                    {f.salarieId ? (
+                      <Link
+                        href={`/fiche-de-paie?s=${f.salarieId}`}
+                        className="text-or-d hover:bg-or/10 inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-bold"
+                      >
+                        Refaire
+                        <ArrowRight size={13} />
+                      </Link>
+                    ) : null}
                   </li>
                 ))}
               </ul>
@@ -493,6 +562,46 @@ function SalarieForm({
           </button>
         )}
       </div>
+    </form>
+  );
+}
+
+function BienForm({ onAdd }: { onAdd: (b: Omit<LocalBien, "id">) => void }) {
+  const [f, setF] = useState({ bailleurNom: "", bailleurAdresse: "", locataire: "", adresseBien: "", loyer: "", charges: "", ville: "" });
+  const set = (k: keyof typeof f, v: string) => setF((p) => ({ ...p, [k]: v }));
+  return (
+    <form
+      onSubmit={(e) => {
+        e.preventDefault();
+        if (!f.bailleurNom.trim() || !f.locataire.trim()) return;
+        onAdd({
+          bailleurNom: f.bailleurNom.trim(),
+          bailleurAdresse: f.bailleurAdresse.trim() || undefined,
+          locataire: f.locataire.trim(),
+          adresseBien: f.adresseBien.trim() || undefined,
+          loyer: f.loyer ? parseFloat(f.loyer.replace(",", ".")) : undefined,
+          charges: f.charges ? parseFloat(f.charges.replace(",", ".")) : undefined,
+          ville: f.ville.trim() || undefined,
+        });
+        setF({ bailleurNom: "", bailleurAdresse: "", locataire: "", adresseBien: "", loyer: "", charges: "", ville: "" });
+      }}
+      className="border-or/20 space-y-3 rounded-xl border border-dashed p-4"
+    >
+      <p className="text-gris text-xs">Saisi une fois — réutilisé chaque mois pour la quittance.</p>
+      <div className="grid gap-3 sm:grid-cols-2">
+        <input className={FIELD} placeholder="Bailleur (vous) *" value={f.bailleurNom} onChange={(e) => set("bailleurNom", e.target.value)} />
+        <input className={FIELD} placeholder="Locataire *" value={f.locataire} onChange={(e) => set("locataire", e.target.value)} />
+      </div>
+      <input className={FIELD} placeholder="Adresse du logement loué" value={f.adresseBien} onChange={(e) => set("adresseBien", e.target.value)} />
+      <div className="grid gap-3 sm:grid-cols-3">
+        <input className={FIELD} inputMode="decimal" placeholder="Loyer (€)" value={f.loyer} onChange={(e) => set("loyer", e.target.value)} />
+        <input className={FIELD} inputMode="decimal" placeholder="Charges (€)" value={f.charges} onChange={(e) => set("charges", e.target.value)} />
+        <input className={FIELD} placeholder="Ville" value={f.ville} onChange={(e) => set("ville", e.target.value)} />
+      </div>
+      <button type="submit" className="bg-noir inline-flex items-center justify-center gap-2 rounded-[10px] px-5 py-2.5 text-sm font-bold text-white">
+        <Plus size={16} />
+        Ajouter la location
+      </button>
     </form>
   );
 }
