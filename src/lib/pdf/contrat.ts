@@ -31,7 +31,6 @@ const TOPC = 792; // haut de contenu des pages courantes
 const BOTTOM = 78;
 const LIGNE = rgb(0.86, 0.83, 0.77);
 const ORL = rgb(0.96, 0.92, 0.82);
-const BLANC = rgb(1, 1, 1);
 
 export async function buildContratPDF(d: ContratData): Promise<Uint8Array> {
   const pdf = await PDFDocument.create();
@@ -74,6 +73,8 @@ export async function buildContratPDF(d: ContratData): Promise<Uint8Array> {
     });
   const hline = (x1: number, x2: number, yy: number, c = LIGNE, th = 0.6) =>
     page.drawLine({ start: { x: x1, y: yy }, end: { x: x2, y: yy }, thickness: th, color: c });
+  const vline = (x: number, y1: number, y2: number, c = LIGNE, th = 0.6) =>
+    page.drawLine({ start: { x, y: y1 }, end: { x, y: y2 }, thickness: th, color: c });
   // Trait doré en tête d'un encadré (effet carte premium).
   const goldTop = (x: number, topY: number, w: number) => rect(x, topY - 3, w, 3, OR);
 
@@ -120,45 +121,40 @@ export async function buildContratPDF(d: ContratData): Promise<Uint8Array> {
   const PAD = 16;
   const colW = (W - PAD * 2 - 24) / 2;
 
-  // Un « champ » = label gris en capitales + valeur en gras (max 2 lignes).
+  // Un « champ » : intitulé gris en capitales + valeur en gras (max 2 lignes).
   const field = (x: number, w: number, topY: number, label: string, value: string) => {
     t(label, x, topY, 6.8, bold, GRIS);
-    let yy = topY - 12;
+    let yy = topY - 13;
     for (const l of wrap(value || "—", font, 10, w).slice(0, 2)) {
       t(l, x, yy, 10, bold, INK);
       yy -= 12;
     }
   };
 
-  // En-tête de bloc partie ; `dark` = bandeau foncé (employeur, mis en avant).
-  const partyHeader = (titreBloc: string, tag: string, dark: boolean) => {
-    const hh = 22;
-    if (dark) {
-      rect(M, y - hh, W, hh, INK);
-      rect(M, y - hh, 4, hh, OR);
-      t(titreBloc, M + PAD, y - 15, 9, bold, BLANC);
-      rt(tag, M + W - PAD, y - 15, 7.5, bold, OR);
-    } else {
-      rect(M, y - hh, W, hh, CREME);
-      rect(M, y - hh, 4, hh, OR);
-      t(titreBloc, M + PAD, y - 15, 9, bold, INK);
-      rt(tag, M + W - PAD, y - 15, 7.5, bold, GRIS);
-    }
-    return hh;
+  // En-tête d'encadré, sobre et homogène pour tous les blocs : bandeau crème,
+  // fin trait doré en tête, petit repère doré + intitulé, filet de séparation.
+  const HB = 28;
+  const cardHead = (x: number, top: number, w: number, titre: string) => {
+    rect(x, top - HB, w, HB, CREME);
+    goldTop(x, top, w);
+    rect(x + PAD, top - 18.5, 5, 5, OR);
+    t(titre, x + PAD + 13, top - 19, 9, bold, INK);
+    hline(x, x + w, top - HB, LIGNE, 0.8);
   };
 
-  // EMPLOYEUR — bloc mis en avant (bandeau foncé), 2 lignes de champs
-  const empBoxH = 22 + 14 + 30 + 30 + 8;
+  const col2 = M + PAD + colW + 24;
+
+  // EMPLOYEUR
+  const empBoxH = HB + 18 + 32 + 32;
   rect(M, y - empBoxH, W, empBoxH, undefined, LIGNE, 1);
-  partyHeader("L'EMPLOYEUR", "PARTIE 1", true);
-  goldTop(M, y, W);
-  let fy = y - 22 - 16;
+  cardHead(M, y, W, "EMPLOYEUR");
+  let fy = y - HB - 18;
   field(M + PAD, colW, fy, "DÉNOMINATION", d.entrepriseNom || "L'entreprise");
-  field(M + PAD + colW + 24, colW, fy, "SIRET", d.siret || "—");
-  fy -= 30;
+  field(col2, colW, fy, "SIRET", d.siret || "—");
+  fy -= 32;
   field(M + PAD, colW, fy, "SIÈGE SOCIAL", d.entrepriseAdresse || "—");
   field(
-    M + PAD + colW + 24,
+    col2,
     colW,
     fy,
     "REPRÉSENTÉE PAR",
@@ -167,20 +163,19 @@ export async function buildContratPDF(d: ContratData): Promise<Uint8Array> {
   y -= empBoxH;
 
   // Connecteur « ET »
-  y -= 4;
+  y -= 8;
   hline(M + W / 2 - 64, M + W / 2 - 18, y - 3, LIGNE);
   hline(M + W / 2 + 18, M + W / 2 + 64, y - 3, LIGNE);
   tc("ET", M + W / 2, y - 6, 8.5, bold, OR);
-  y -= 18;
+  y -= 22;
 
-  // SALARIÉ — bloc secondaire (bandeau crème)
-  const salBoxH = 22 + 14 + 30 + 8;
+  // SALARIÉ
+  const salBoxH = HB + 18 + 32;
   rect(M, y - salBoxH, W, salBoxH, undefined, LIGNE, 1);
-  partyHeader("LE SALARIÉ", "PARTIE 2", false);
-  goldTop(M, y, W);
-  fy = y - 22 - 16;
+  cardHead(M, y, W, "SALARIÉ");
+  fy = y - HB - 18;
   field(M + PAD, colW, fy, "NOM ET PRÉNOM", d.salarieNom || "Le/la salarié(e)");
-  field(M + PAD + colW + 24, colW, fy, "ADRESSE", d.salarieAdresse || "—");
+  field(col2, colW, fy, "ADRESSE", d.salarieAdresse || "—");
   y -= salBoxH;
 
   // ─── Encadré « L'essentiel du contrat » ───
@@ -198,26 +193,23 @@ export async function buildContratPDF(d: ContratData): Promise<Uint8Array> {
   ];
   const rcCols = 3;
   const rcRows = Math.ceil(recap.length / rcCols);
-  const rcHead = 22;
-  const rcRowH = 32;
-  const rcH = rcHead + 8 + rcRows * rcRowH;
+  const rcRowH = 34;
+  const rcH = HB + 14 + rcRows * rcRowH;
   rect(M, y - rcH, W, rcH, undefined, LIGNE, 1);
-  rect(M, y - rcHead, W, rcHead, ORL);
-  goldTop(M, y, W);
-  t("L'ESSENTIEL DU CONTRAT", M + PAD, y - 15, 9, bold, INK);
+  cardHead(M, y, W, "L'ESSENTIEL DU CONTRAT");
   const rcColW = (W - PAD * 2) / rcCols;
+  // séparateurs verticaux fins entre les colonnes
+  for (let c = 1; c < rcCols; c++)
+    vline(M + PAD + c * rcColW - 12, y - HB - 12, y - rcH + 12, LIGNE);
   recap.forEach((cell, i) => {
     const r = Math.floor(i / rcCols);
     const c = i % rcCols;
     const cx = M + PAD + c * rcColW;
-    const cy = y - rcHead - 18 - r * rcRowH;
+    const cy = y - HB - 20 - r * rcRowH;
     t(cell[0], cx, cy, 6.5, bold, GRIS);
-    for (const l of wrap(cell[1], bold, 10, rcColW - 12).slice(0, 1))
-      t(l, cx, cy - 13, 10.5, bold, INK);
+    for (const l of wrap(cell[1], bold, 10.5, rcColW - 18).slice(0, 1))
+      t(l, cx, cy - 14, 10.5, bold, INK);
   });
-  // séparateurs de colonnes
-  for (let c = 1; c < rcCols; c++)
-    hline(M + PAD - 6 + c * rcColW, M + PAD - 6 + c * rcColW, y - rcHead - 6, LIGNE);
   y -= rcH + 22;
 
   // ─── Préambule ───
@@ -366,14 +358,12 @@ export async function buildContratPDF(d: ContratData): Promise<Uint8Array> {
   const sigH = 150;
   const sigBox = (x: number, role: string, name: string) => {
     rect(x, y - sigH, sigW, sigH, undefined, LIGNE, 1);
-    rect(x, y - 24, sigW, 24, CREME);
-    goldTop(x, y, sigW);
-    t(role, x + 16, y - 16, 8.5, bold, GRIS);
-    t(name || "—", x + 16, y - 44, 11, bold, INK);
-    t("Signature, précédée de la mention « Lu et approuvé »", x + 16, y - 60, 7.5, font, GRIS);
+    cardHead(x, y, sigW, role);
+    t(name || "—", x + PAD, y - HB - 22, 11, bold, INK);
+    t("Précédée de la mention « Lu et approuvé »", x + PAD, y - HB - 37, 7.5, font, GRIS);
     // Large zone de signature, refermée par une ligne en bas du cadre.
-    hline(x + 16, x + sigW - 16, y - sigH + 24, LIGNE, 0.6);
-    t("Signature", x + 16, y - sigH + 11, 7, font, GRIS);
+    hline(x + PAD, x + sigW - PAD, y - sigH + 26, LIGNE, 0.6);
+    t("Signature", x + PAD, y - sigH + 13, 7, font, GRIS);
   };
   sigBox(M, "POUR L'EMPLOYEUR", d.representantNom);
   sigBox(M + sigW + sigGap, "LE SALARIÉ", d.salarieNom);
