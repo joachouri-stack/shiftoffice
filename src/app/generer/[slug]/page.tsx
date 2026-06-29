@@ -915,6 +915,9 @@ function ContratForm() {
     representantQualite: "Gérant",
     salarieNom: "",
     salarieAdresse: "",
+    salarieDateNaissance: "",
+    salarieLieuNaissance: "",
+    salarieNationalite: "",
     typeContrat: "cdi",
     dateDebut: aujourdhui(),
     dateFin: "",
@@ -1017,6 +1020,11 @@ function ContratForm() {
           <div className="grid gap-3 sm:grid-cols-2">
             <Input label="Nom et prénom" value={f.salarieNom} onChange={(v) => set("salarieNom", v)} placeholder="Ex. Sophie Martin" />
             <Input label="Adresse du salarié" value={f.salarieAdresse} onChange={(v) => set("salarieAdresse", v)} placeholder="3 rue des Fleurs, 69003 Lyon" />
+          </div>
+          <div className="mt-3 grid gap-3 sm:grid-cols-3">
+            <Input label="Date de naissance" value={f.salarieDateNaissance} onChange={(v) => set("salarieDateNaissance", v)} placeholder="12/05/1990" />
+            <Input label="Lieu de naissance" value={f.salarieLieuNaissance} onChange={(v) => set("salarieLieuNaissance", v)} placeholder="Avignon" />
+            <Input label="Nationalité" value={f.salarieNationalite} onChange={(v) => set("salarieNationalite", v)} placeholder="Française" />
           </div>
         </div>
 

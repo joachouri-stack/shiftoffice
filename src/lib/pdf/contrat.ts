@@ -9,6 +9,9 @@ export type ContratData = {
   representantQualite: string;
   salarieNom: string;
   salarieAdresse: string;
+  salarieDateNaissance: string;
+  salarieLieuNaissance: string;
+  salarieNationalite: string;
   typeContrat: "cdi" | "cdd";
   dateDebut: string;
   dateFin: string; // CDD
@@ -170,12 +173,17 @@ export async function buildContratPDF(d: ContratData): Promise<Uint8Array> {
   y -= 22;
 
   // SALARIÉ
-  const salBoxH = HB + 18 + 32;
+  const salBoxH = HB + 18 + 32 + 32 + 32;
   rect(M, y - salBoxH, W, salBoxH, undefined, LIGNE, 1);
   cardHead(M, y, W, "SALARIÉ");
   fy = y - HB - 18;
   field(M + PAD, colW, fy, "NOM ET PRÉNOM", d.salarieNom || "Le/la salarié(e)");
-  field(col2, colW, fy, "ADRESSE", d.salarieAdresse || "—");
+  field(col2, colW, fy, "NATIONALITÉ", d.salarieNationalite || "—");
+  fy -= 32;
+  field(M + PAD, colW, fy, "NÉ(E) LE", d.salarieDateNaissance || "—");
+  field(col2, colW, fy, "À", d.salarieLieuNaissance || "—");
+  fy -= 32;
+  field(M + PAD, colW, fy, "ADRESSE", d.salarieAdresse || "—");
   y -= salBoxH;
 
   // ─── Encadré « L'essentiel du contrat » ───
