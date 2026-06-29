@@ -31,10 +31,18 @@ export type LocalSalarie = {
 
 export type LocalFiche = {
   id: string;
+  salarieId?: string;
   salarieNom: string;
   periode: string; // ex. "Juin 2026"
+  mois?: string;
+  annee?: string;
   brut: number;
   net: number;
+  // Entrées mémorisées pour la reprise du mois suivant
+  heures?: string;
+  heuresSup?: number;
+  primes?: number;
+  conges?: number;
   creeLe: string; // ISO
 };
 
@@ -89,6 +97,9 @@ export const localStore = {
   },
 
   getFiches: () => read<LocalFiche[]>(K.fiches, []),
+  // Dernière fiche enregistrée pour un salarié (les plus récentes en tête).
+  lastFicheForSalarie: (salarieId: string) =>
+    read<LocalFiche[]>(K.fiches, []).find((f) => f.salarieId === salarieId) ?? null,
   addFiche: (f: Omit<LocalFiche, "id">) => {
     const list = read<LocalFiche[]>(K.fiches, []);
     const item = { ...f, id: uid() };

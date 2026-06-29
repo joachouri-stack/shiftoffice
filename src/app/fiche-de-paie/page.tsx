@@ -70,6 +70,38 @@ export default function FicheDePaieFlow() {
   const [busy, setBusy] = useState(false);
   const [done, setDone] = useState(false);
   const [err, setErr] = useState("");
+  const [repris, setRepris] = useState<string | null>(null);
+
+  // Mois suivant à partir d'un libellé mois + année.
+  const nextPeriod = (m?: string, a?: string) => {
+    const idx = m ? MOIS.indexOf(m) : -1;
+    if (idx < 0 || !a) return null;
+    const ni = (idx + 1) % 12;
+    const ny = ni === 0 ? Number(a) + 1 : Number(a);
+    return { mois: MOIS[ni], annee: String(ny) };
+  };
+
+  // Reprise : pré-remplit la rémunération depuis la dernière fiche du salarié
+  // et avance la période au mois suivant.
+  const appliquerReprise = (s: LocalSalarie) => {
+    const last = localStore.lastFicheForSalarie(s.id);
+    if (!last) {
+      if (s.salaireBrut) setBrut(String(s.salaireBrut));
+      return;
+    }
+    setMode("brut");
+    setBrut(String(last.brut ?? s.salaireBrut ?? ""));
+    if (last.heures) setHeures(last.heures);
+    setHeuresSup(last.heuresSup ?? 0);
+    setPrimes(last.primes ?? 0);
+    setConges(last.conges ?? 0);
+    const np = nextPeriod(last.mois, last.annee);
+    if (np) {
+      setMois(np.mois);
+      setAnnee(np.annee);
+    }
+    setRepris(last.periode);
+  };
 
   useEffect(() => {
     const e = localStore.getEntreprise();
@@ -78,7 +110,7 @@ export default function FicheDePaieFlow() {
     const found = id ? localStore.getSalaries().find((x) => x.id === id) : null;
     if (found) {
       setSal(found);
-      if (found.salaireBrut) setBrut(String(found.salaireBrut));
+      appliquerReprise(found);
     }
     const list: string[] = [];
     if (!e) list.push("entreprise");
@@ -86,6 +118,7 @@ export default function FicheDePaieFlow() {
     list.push("remuneration", "periode", "verification");
     setSteps(list);
     setReady(true);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const n = (v: string) => parseFloat(v.replace(",", ".")) || 0;
@@ -160,10 +193,17 @@ export default function FicheDePaieFlow() {
       a.click();
       URL.revokeObjectURL(url);
       localStore.addFiche({
+        salarieId: sal?.id,
         salarieNom: sal?.nom ?? "Salarié",
         periode: `${mois} ${annee}`,
-        brut: Math.round(res.brut),
-        net: Math.round(res.netPaye),
+        mois,
+        annee,
+        brut: res.brut,
+        net: res.netPaye,
+        heures,
+        heuresSup,
+        primes,
+        conges,
         creeLe: new Date().toISOString(),
       });
       setDone(true);
@@ -225,7 +265,7 @@ export default function FicheDePaieFlow() {
             <SalarieStep
               onSelect={(s) => {
                 setSal(s);
-                if (s.salaireBrut) setBrut(String(s.salaireBrut));
+                appliquerReprise(s);
                 goNext();
               }}
             />
@@ -233,6 +273,14 @@ export default function FicheDePaieFlow() {
 
           {key === "remuneration" && (
             <div className="space-y-5">
+              {repris && (
+                <div className="border-or/30 bg-or/5 flex items-center gap-2 rounded-lg border px-3 py-2 text-sm">
+                  <Sparkles size={15} className="text-or-d shrink-0" />
+                  <span className="text-noir font-medium">
+                    Repris depuis la fiche de <strong>{repris}</strong> — vérifiez et validez.
+                  </span>
+                </div>
+              )}
               <div className="bg-creme inline-flex rounded-lg p-1">
                 {(["brut", "net"] as const).map((m) => (
                   <button key={m} onClick={() => setMode(m)} className={`rounded-md px-4 py-1.5 text-sm font-bold transition-colors ${mode === m ? "bg-noir text-white" : "text-gris"}`}>
