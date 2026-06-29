@@ -503,13 +503,27 @@ function FichePaieForm() {
     entrepriseNom: "",
     entrepriseAdresse: "",
     siret: "",
+    codeApe: "",
+    conventionCollective: "",
     salarieNom: "",
     poste: "",
+    classification: "",
+    dateEntree: "",
+    typeContrat: "CDI",
     numeroSecu: "",
     periode: moisCourant(),
+    datePaiement: aujourdhui(),
     salaireBrut: "",
+    heuresMois: "151.67",
+    tauxHoraire: "",
     heuresSup: "0",
+    heuresSup50: "0",
     primes: "0",
+    tauxPAS: "0",
+    congesAcquis: "",
+    congesPris: "",
+    cumulBrut: "",
+    cumulNetImposable: "",
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -524,10 +538,22 @@ function FichePaieForm() {
     () =>
       calculerFichePaie({
         salaireBrut: n(f.salaireBrut),
+        heuresMois: n(f.heuresMois),
+        tauxHoraire: n(f.tauxHoraire),
         heuresSup: n(f.heuresSup),
+        heuresSup50: n(f.heuresSup50),
         primes: n(f.primes),
+        tauxPAS: n(f.tauxPAS),
       }),
-    [f.salaireBrut, f.heuresSup, f.primes]
+    [
+      f.salaireBrut,
+      f.heuresMois,
+      f.tauxHoraire,
+      f.heuresSup,
+      f.heuresSup50,
+      f.primes,
+      f.tauxPAS,
+    ]
   );
 
   const valid =
@@ -564,10 +590,14 @@ function FichePaieForm() {
             <p className="text-noir mb-3 text-sm font-bold">L&apos;employeur</p>
             <div className="grid gap-3 sm:grid-cols-2">
               <Input label="Nom de l'entreprise" value={f.entrepriseNom} onChange={(v) => set("entrepriseNom", v)} placeholder="Ex. Dupont Bâtiment" />
-              <Input label="SIRET (optionnel)" value={f.siret} onChange={(v) => set("siret", v)} placeholder="123 456 789 00012" />
+              <Input label="SIRET" value={f.siret} onChange={(v) => set("siret", v)} placeholder="123 456 789 00012" />
             </div>
             <div className="mt-3">
               <Input label="Adresse de l'entreprise" value={f.entrepriseAdresse} onChange={(v) => set("entrepriseAdresse", v)} placeholder="12 rue des Artisans, 69003 Lyon" />
+            </div>
+            <div className="mt-3 grid gap-3 sm:grid-cols-2">
+              <Input label="Code APE / NAF (optionnel)" value={f.codeApe} onChange={(v) => set("codeApe", v)} placeholder="4120A" />
+              <Input label="Convention collective (optionnel)" value={f.conventionCollective} onChange={(v) => set("conventionCollective", v)} placeholder="Bâtiment" />
             </div>
           </div>
 
@@ -577,9 +607,15 @@ function FichePaieForm() {
               <Input label="Nom et prénom" value={f.salarieNom} onChange={(v) => set("salarieNom", v)} placeholder="Ex. Ahmed Karim" />
               <Input label="Poste" value={f.poste} onChange={(v) => set("poste", v)} placeholder="Ex. Ouvrier BTP" />
             </div>
-            <div className="mt-3 grid gap-3 sm:grid-cols-2">
-              <Input label="N° de sécurité sociale (optionnel)" value={f.numeroSecu} onChange={(v) => set("numeroSecu", v)} placeholder="1 85 03 69…" />
-              <Input label="Période" value={f.periode} onChange={(v) => set("periode", v)} placeholder="Ex. Juin 2025" />
+            <div className="mt-3 grid gap-3 sm:grid-cols-3">
+              <Input label="Classification (optionnel)" value={f.classification} onChange={(v) => set("classification", v)} placeholder="Niveau II, coef. 210" />
+              <Input label="Date d'entrée (optionnel)" value={f.dateEntree} onChange={(v) => set("dateEntree", v)} placeholder="01/03/2023" />
+              <Input label="Type de contrat" value={f.typeContrat} onChange={(v) => set("typeContrat", v)} placeholder="CDI" />
+            </div>
+            <div className="mt-3 grid gap-3 sm:grid-cols-3">
+              <Input label="N° de sécurité sociale" value={f.numeroSecu} onChange={(v) => set("numeroSecu", v)} placeholder="1 85 03 69…" />
+              <Input label="Période" value={f.periode} onChange={(v) => set("periode", v)} placeholder="Ex. Juin 2026" />
+              <Input label="Date de paiement" value={f.datePaiement} onChange={(v) => set("datePaiement", v)} placeholder="30/06/2026" />
             </div>
           </div>
 
@@ -587,8 +623,28 @@ function FichePaieForm() {
             <p className="text-noir mb-3 text-sm font-bold">Rémunération</p>
             <div className="grid gap-3 sm:grid-cols-3">
               <Input label="Salaire brut (€)" value={f.salaireBrut} onChange={(v) => set("salaireBrut", v)} placeholder="2200" inputMode="decimal" />
-              <Input label="Heures sup." value={f.heuresSup} onChange={(v) => set("heuresSup", v)} placeholder="0" inputMode="decimal" />
+              <Input label="Heures / mois" value={f.heuresMois} onChange={(v) => set("heuresMois", v)} placeholder="151.67" inputMode="decimal" />
+              <Input label="Taux horaire (auto)" value={f.tauxHoraire} onChange={(v) => set("tauxHoraire", v)} placeholder="auto" inputMode="decimal" />
+            </div>
+            <div className="mt-3 grid gap-3 sm:grid-cols-3">
+              <Input label="Heures sup. 25%" value={f.heuresSup} onChange={(v) => set("heuresSup", v)} placeholder="0" inputMode="decimal" />
+              <Input label="Heures sup. 50%" value={f.heuresSup50} onChange={(v) => set("heuresSup50", v)} placeholder="0" inputMode="decimal" />
               <Input label="Primes (€)" value={f.primes} onChange={(v) => set("primes", v)} placeholder="0" inputMode="decimal" />
+            </div>
+          </div>
+
+          <div>
+            <p className="text-noir mb-3 text-sm font-bold">
+              Impôt, congés & cumuls (optionnel)
+            </p>
+            <div className="grid gap-3 sm:grid-cols-3">
+              <Input label="Taux prélèvement source (%)" value={f.tauxPAS} onChange={(v) => set("tauxPAS", v)} placeholder="0" inputMode="decimal" />
+              <Input label="Congés acquis (jours)" value={f.congesAcquis} onChange={(v) => set("congesAcquis", v)} placeholder="25" inputMode="decimal" />
+              <Input label="Congés pris (jours)" value={f.congesPris} onChange={(v) => set("congesPris", v)} placeholder="0" inputMode="decimal" />
+            </div>
+            <div className="mt-3 grid gap-3 sm:grid-cols-2">
+              <Input label="Cumul brut annuel (€)" value={f.cumulBrut} onChange={(v) => set("cumulBrut", v)} placeholder="auto = ce mois" inputMode="decimal" />
+              <Input label="Cumul net imposable annuel (€)" value={f.cumulNetImposable} onChange={(v) => set("cumulNetImposable", v)} placeholder="auto = ce mois" inputMode="decimal" />
             </div>
           </div>
 
@@ -626,12 +682,18 @@ function FichePaieForm() {
         <Row label="Salaire brut" value={`${eur2(res.brut)} €`} />
         <Row label="Cotisations salariales" value={`− ${eur2(res.totalSal)} €`} />
         <div className="my-2 h-px bg-white/10" />
-        <Row label="Net à payer" value={`${eur2(res.netAvantImpot)} €`} strong />
+        <Row label="Net avant impôt" value={`${eur2(res.netAvantImpot)} €`} />
         <Row label="Net imposable" value={`${eur2(res.netImposable)} €`} muted />
+        {res.montantPAS > 0 && (
+          <Row label="Prélèvement source" value={`− ${eur2(res.montantPAS)} €`} muted />
+        )}
+        <div className="my-2 h-px bg-white/10" />
+        <Row label="Net payé" value={`${eur2(res.netPaye)} €`} strong />
         <div className="my-2 h-px bg-white/10" />
         <Row label="Coût employeur" value={`${eur2(res.coutEmployeur)} €`} muted />
         <p className="mt-3 text-[0.65rem] leading-relaxed text-white/40">
-          Calcul indicatif (taux simplifiés). Le PDF détaille chaque cotisation.
+          Calcul indicatif (taux 2026 simplifiés). Le PDF détaille chaque
+          cotisation.
         </p>
       </div>
     </div>

@@ -31,17 +31,31 @@ export async function buildDocument(
     case "fiche-paie": {
       const result = calculerFichePaie({
         salaireBrut: num(d.salaireBrut),
+        heuresMois: num(d.heuresMois),
+        tauxHoraire: num(d.tauxHoraire),
         heuresSup: num(d.heuresSup),
+        heuresSup50: num(d.heuresSup50),
         primes: num(d.primes),
+        tauxPAS: num(d.tauxPAS),
       });
       const pdf = await buildFichePaiePDF({
         entrepriseNom: S(d.entrepriseNom),
         entrepriseAdresse: S(d.entrepriseAdresse),
         siret: S(d.siret),
+        codeApe: S(d.codeApe),
+        conventionCollective: S(d.conventionCollective),
         salarieNom: S(d.salarieNom),
         poste: S(d.poste),
+        classification: S(d.classification),
+        dateEntree: S(d.dateEntree),
+        typeContrat: S(d.typeContrat),
         numeroSecu: S(d.numeroSecu),
         periode: S(d.periode),
+        datePaiement: S(d.datePaiement),
+        congesAcquis: num(d.congesAcquis),
+        congesPris: num(d.congesPris),
+        cumulBrut: num(d.cumulBrut),
+        cumulNetImposable: num(d.cumulNetImposable),
         result,
       });
       return { pdf, filename: "fiche-de-paie.pdf" };

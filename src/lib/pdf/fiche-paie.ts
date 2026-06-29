@@ -1,22 +1,42 @@
 import { PDFDocument, StandardFonts, rgb } from "pdf-lib";
 import { INK, GRIS, OR, eur } from "./helpers";
-import type { FichePaieResult } from "@/lib/paie/calcul";
+import type { FichePaieResult, Categorie } from "@/lib/paie/calcul";
 
 export type FichePaieData = {
   entrepriseNom: string;
   entrepriseAdresse: string;
   siret: string;
+  codeApe?: string;
+  conventionCollective?: string;
   salarieNom: string;
+  salarieAdresse?: string;
   poste: string;
+  classification?: string;
+  dateEntree?: string;
+  typeContrat?: string;
   numeroSecu: string;
   periode: string;
+  datePaiement?: string;
+  congesAcquis?: number;
+  congesPris?: number;
+  cumulBrut?: number;
+  cumulNetImposable?: number;
   result: FichePaieResult;
 };
 
 const CREME = rgb(0.98, 0.965, 0.93);
 const ZEBRA = rgb(0.975, 0.96, 0.93);
-const LIGNE = rgb(0.87, 0.84, 0.78);
-const ORL = rgb(0.96, 0.92, 0.82); // doré très clair
+const LIGNE = rgb(0.86, 0.83, 0.77);
+const ORL = rgb(0.96, 0.92, 0.82);
+
+const CATS: Categorie[] = [
+  "Santé",
+  "Retraite",
+  "Famille / Accidents",
+  "Assurance chômage",
+  "CSG / CRDS",
+  "Autres contributions",
+];
 
 export async function buildFichePaiePDF(d: FichePaieData): Promise<Uint8Array> {
   const pdf = await PDFDocument.create();
@@ -24,36 +44,21 @@ export async function buildFichePaiePDF(d: FichePaieData): Promise<Uint8Array> {
   const font = await pdf.embedFont(StandardFonts.Helvetica);
   const bold = await pdf.embedFont(StandardFonts.HelveticaBold);
 
-  const M = 40;
-  const R = 595.28 - M; // 555.28
+  const M = 38;
+  const R = 595.28 - M;
   const W = R - M;
-  let y = 802;
+  let y = 806;
 
-  const text = (
-    s: string,
-    x: number,
-    yy: number,
-    size = 9,
-    f = font,
-    color = INK
-  ) => page.drawText(s, { x, y: yy, size, font: f, color });
-
-  const rtext = (
-    s: string,
-    xR: number,
-    yy: number,
-    size = 8,
-    f = font,
-    color = INK
-  ) =>
+  const t = (s: string, x: number, yy: number, size = 8, f = font, c = INK) =>
+    page.drawText(s, { x, y: yy, size, font: f, color: c });
+  const rt = (s: string, xR: number, yy: number, size = 8, f = font, c = INK) =>
     page.drawText(s, {
       x: xR - f.widthOfTextAtSize(s, size),
       y: yy,
       size,
       font: f,
-      color,
+      color: c,
     });
-
   const rect = (
     x: number,
     yy: number,
@@ -72,145 +77,203 @@ export async function buildFichePaiePDF(d: FichePaieData): Promise<Uint8Array> {
       ...(border ? { borderColor: border, borderWidth: bw } : {}),
     });
 
-  // ─── Titre ───
-  text("BULLETIN DE PAIE", M, y, 19, bold);
-  rect(M, y - 9, bold.widthOfTextAtSize("BULLETIN DE PAIE", 19), 3, OR);
-  // pastille période à droite
-  const perTxt = `Période : ${d.periode || "—"}`;
-  const perW = bold.widthOfTextAtSize(perTxt, 9.5) + 20;
-  rect(R - perW, y - 3, perW, 22, ORL, OR, 0.8);
-  rtext(perTxt, R - 10, y + 4, 9.5, bold, INK);
-  y -= 30;
+  const r = d.result;
 
-  // ─── Boîtes Employeur / Salarié ───
+  // ─── Titre + période ───
+  t("BULLETIN DE PAIE", M, y, 18, bold);
+  rect(M, y - 8, bold.widthOfTextAtSize("BULLETIN DE PAIE", 18), 3, OR);
+  const per = `Période : ${d.periode || "—"}`;
+  const perW = bold.widthOfTextAtSize(per, 9) + 20;
+  rect(R - perW, y - 3, perW, 21, ORL, OR, 0.8);
+  rt(per, R - 10, y + 3, 9, bold);
+  if (d.datePaiement) rt(`Paiement le ${d.datePaiement}`, R, y - 16, 7.5, font, GRIS);
+  y -= 28;
+
+  // ─── Boîtes employeur / salarié ───
   const gap = 14;
-  const boxW = (W - gap) / 2;
-  const boxH = 70;
-  const boxY = y - boxH;
-  // employeur
-  rect(M, boxY, boxW, boxH, undefined, LIGNE, 1);
-  rect(M, boxY + boxH - 16, boxW, 16, CREME);
-  text("EMPLOYEUR", M + 8, boxY + boxH - 11.5, 7.5, bold, GRIS);
-  text(d.entrepriseNom || "—", M + 8, boxY + boxH - 30, 10, bold);
-  {
-    let yy = boxY + boxH - 43;
-    for (const l of (d.entrepriseAdresse || "").match(/.{1,42}(\s|$)/g) ?? []) {
-      text(l.trim(), M + 8, yy, 8, font, GRIS);
-      yy -= 10.5;
+  const bw = (W - gap) / 2;
+  const bh = 88;
+  const by = y - bh;
+  const infoBox = (
+    x: number,
+    titre: string,
+    lignes: Array<[string, string]>
+  ) => {
+    rect(x, by, bw, bh, undefined, LIGNE, 1);
+    rect(x, by + bh - 15, bw, 15, CREME);
+    t(titre, x + 8, by + bh - 10.5, 7, bold, GRIS);
+    let yy = by + bh - 27;
+    for (const [k, v] of lignes) {
+      if (!v) continue;
+      t(k, x + 8, yy, 7, font, GRIS);
+      t(v, x + 64, yy, 7.5, k === "" ? bold : font, INK);
+      yy -= 11;
     }
-    if (d.siret) text(`SIRET : ${d.siret}`, M + 8, yy, 8, font, GRIS);
-  }
-  // salarié
-  const sx = M + boxW + gap;
-  rect(sx, boxY, boxW, boxH, undefined, LIGNE, 1);
-  rect(sx, boxY + boxH - 16, boxW, 16, CREME);
-  text("SALARIÉ", sx + 8, boxY + boxH - 11.5, 7.5, bold, GRIS);
-  text(d.salarieNom || "—", sx + 8, boxY + boxH - 30, 10, bold);
-  {
-    let yy = boxY + boxH - 43;
-    if (d.poste) {
-      text(`Poste : ${d.poste}`, sx + 8, yy, 8, font, GRIS);
-      yy -= 10.5;
-    }
-    if (d.numeroSecu)
-      text(`N° SS : ${d.numeroSecu}`, sx + 8, yy, 8, font, GRIS);
-  }
-  y = boxY - 18;
+  };
+  infoBox(M, "EMPLOYEUR", [
+    ["", d.entrepriseNom || "—"],
+    ["Adresse", d.entrepriseAdresse || "—"],
+    ["SIRET", d.siret || "—"],
+    ["Code APE", d.codeApe || "—"],
+    ["Convention", d.conventionCollective || "—"],
+  ]);
+  infoBox(M + bw + gap, "SALARIÉ", [
+    ["", d.salarieNom || "—"],
+    ["Emploi", d.poste || "—"],
+    ["Classif.", d.classification || "—"],
+    ["Entrée le", d.dateEntree || "—"],
+    ["Contrat", d.typeContrat || "—"],
+    ["N° SS", d.numeroSecu || "—"],
+  ]);
+  y = by - 16;
 
-  // ─── Rémunération brute ───
-  rect(M, y - 6, W, 24, ORL, OR, 1);
-  text("Rémunération brute", M + 10, y + 2, 11, bold);
-  rtext(`${eur(d.result.brut)} €`, R - 10, y + 2, 12, bold);
-  y -= 36;
-
-  // ─── Tableau cotisations ───
-  // colonnes (bords droits)
+  // colonnes du tableau
   const cBase = 330;
   const cTSal = 388;
   const cSal = 452;
   const cTPat = 502;
-  const cPat = R;
-  const rowH = 13;
+  const cPat = R - 6;
+  const rh = 11.5;
 
-  // bandeau d'en-tête
-  rect(M, y - 4, W, 16, INK);
-  const headY = y + 0.5;
-  text("COTISATIONS ET CONTRIBUTIONS", M + 8, headY, 7.5, bold, CREME);
-  rtext("Base", cBase, headY, 7, bold, CREME);
-  rtext("Taux sal.", cTSal, headY, 7, bold, CREME);
-  rtext("Part sal.", cSal, headY, 7, bold, CREME);
-  rtext("Taux pat.", cTPat, headY, 7, bold, CREME);
-  rtext("Part pat.", cPat - 6, headY, 7, bold, CREME);
-  y -= 16;
+  const headBand = (titre: string) => {
+    rect(M, y - 3.5, W, 15, INK);
+    t(titre, M + 8, y + 0.5, 7.5, bold, CREME);
+    rt("Base", cBase, y + 0.5, 6.8, bold, CREME);
+    rt("T. sal.", cTSal, y + 0.5, 6.8, bold, CREME);
+    rt("Part sal.", cSal, y + 0.5, 6.8, bold, CREME);
+    rt("T. pat.", cTPat, y + 0.5, 6.8, bold, CREME);
+    rt("Part pat.", cPat, y + 0.5, 6.8, bold, CREME);
+    y -= 15.5;
+  };
 
-  d.result.lignes.forEach((l, i) => {
-    if (i % 2 === 1) rect(M, y - 3.5, W, rowH, ZEBRA);
-    text(l.label, M + 8, y, 7.8, font, INK);
-    rtext(eur(l.base), cBase, y, 7.8, font, GRIS);
-    rtext(l.tauxSal ? `${l.tauxSal} %` : "—", cTSal, y, 7.8, font, GRIS);
-    rtext(l.montSal ? eur(l.montSal) : "—", cSal, y, 7.8, font, INK);
-    rtext(l.tauxPat ? `${l.tauxPat} %` : "—", cTPat, y, 7.8, font, GRIS);
-    rtext(l.montPat ? eur(l.montPat) : "—", cPat - 6, y, 7.8, font, GRIS);
-    y -= rowH;
-  });
+  // ─── Rémunération ───
+  rect(M, y - 3.5, W, 15, INK);
+  t("RÉMUNÉRATION", M + 8, y + 0.5, 7.5, bold, CREME);
+  rt("Nombre / Base", cBase, y + 0.5, 6.8, bold, CREME);
+  rt("Montant", cPat, y + 0.5, 6.8, bold, CREME);
+  y -= 15.5;
 
-  // total cotisations
-  rect(M, y - 3.5, W, rowH + 1, ORL);
-  text("TOTAL DES COTISATIONS", M + 8, y, 8, bold);
-  rtext(eur(d.result.totalSal), cSal, y, 8, bold);
-  rtext(eur(d.result.totalPat), cPat - 6, y, 8, bold, GRIS);
-  y -= rowH + 18;
+  const remLine = (label: string, detail: string, montant: number, i: number) => {
+    if (i % 2 === 1) rect(M, y - 3.5, W, rh, ZEBRA);
+    t(label, M + 8, y, 7.8, font, INK);
+    rt(detail, cBase, y, 7.8, font, GRIS);
+    rt(`${eur(montant)} €`, cPat, y, 7.8, font, INK);
+    y -= rh;
+  };
+  let ri = 0;
+  remLine(
+    "Salaire de base",
+    `${r.heuresMois.toLocaleString("fr-FR")} h × ${eur(r.tauxHoraire)} €`,
+    r.salaireBase,
+    ri++
+  );
+  if (r.heuresSup25Montant > 0)
+    remLine("Heures supplémentaires (25 %)", "", r.heuresSup25Montant, ri++);
+  if (r.heuresSup50Montant > 0)
+    remLine("Heures supplémentaires (50 %)", "", r.heuresSup50Montant, ri++);
+  if (r.primes > 0) remLine("Primes et indemnités", "", r.primes, ri++);
+  rect(M, y - 3, W, rh + 1, ORL);
+  t("SALAIRE BRUT", M + 8, y, 8.5, bold);
+  rt(`${eur(r.brut)} €`, cPat, y, 9, bold);
+  y -= rh + 12;
+
+  // ─── Cotisations ───
+  headBand("COTISATIONS ET CONTRIBUTIONS");
+  let zi = 0;
+  for (const cat of CATS) {
+    const lignes = r.lignes.filter((l) => l.categorie === cat);
+    if (!lignes.length) continue;
+    // libellé de catégorie
+    t(cat.toUpperCase(), M + 6, y, 6.8, bold, OR);
+    y -= rh;
+    let stSal = 0;
+    let stPat = 0;
+    for (const l of lignes) {
+      if (zi++ % 2 === 1) rect(M, y - 3.5, W, rh, ZEBRA);
+      t(l.label, M + 12, y, 7.5, font, INK);
+      rt(eur(l.base), cBase, y, 7.5, font, GRIS);
+      rt(l.tauxSal ? `${l.tauxSal} %` : "—", cTSal, y, 7.5, font, GRIS);
+      rt(l.montSal ? eur(l.montSal) : "—", cSal, y, 7.5, font, INK);
+      rt(l.tauxPat ? `${l.tauxPat} %` : "—", cTPat, y, 7.5, font, GRIS);
+      rt(l.montPat ? eur(l.montPat) : "—", cPat, y, 7.5, font, GRIS);
+      stSal += l.montSal;
+      stPat += l.montPat;
+      y -= rh;
+    }
+    rt(`Sous-total ${eur(Math.round(stSal * 100) / 100)}`, cSal, y + 1, 6.5, font, GRIS);
+    rt(eur(Math.round(stPat * 100) / 100), cPat, y + 1, 6.5, font, GRIS);
+    y -= 8;
+  }
+  rect(M, y - 3.5, W, rh + 1, INK);
+  t("TOTAL DES COTISATIONS", M + 8, y, 8, bold, CREME);
+  rt(eur(r.totalSal), cSal, y, 8, bold, CREME);
+  rt(eur(r.totalPat), cPat, y, 8, bold, CREME);
+  y -= rh + 14;
 
   // ─── Bloc Net ───
-  const netSocial = d.result.netAvantImpot; // approximation (sans PAS)
-  const rowsNet: Array<[string, string, boolean]> = [
-    ["Net imposable", `${eur(d.result.netImposable)} €`, false],
-    ["Montant net social", `${eur(netSocial)} €`, false],
+  const netRows: Array<[string, string]> = [
+    ["Net imposable", `${eur(r.netImposable)} €`],
+    ["Montant net social", `${eur(r.netSocial)} €`],
+    ["Net à payer avant impôt", `${eur(r.netAvantImpot)} €`],
+    [
+      `Prélèvement à la source${r.tauxPAS ? ` (${r.tauxPAS} %)` : ""}`,
+      `- ${eur(r.montantPAS)} €`,
+    ],
   ];
-  const blocH = 30 + rowsNet.length * 16 + 34;
-  rect(M, y - blocH + 16, W, blocH, undefined, OR, 1);
-
-  let ny = y;
-  for (const [label, val, _s] of rowsNet) {
-    void _s;
-    text(label, M + 12, ny, 9, font, GRIS);
-    rtext(val, R - 12, ny, 9, font, INK);
-    ny -= 16;
+  const netH = netRows.length * 13 + 40;
+  rect(M, y - netH + 13, W, netH, undefined, OR, 1);
+  let nyy = y;
+  for (const [k, v] of netRows) {
+    t(k, M + 12, nyy, 8.5, font, GRIS);
+    rt(v, R - 12, nyy, 8.5, font, INK);
+    nyy -= 13;
   }
-  // séparateur
-  ny -= 2;
-  page.drawLine({
-    start: { x: M + 12, y: ny + 8 },
-    end: { x: R - 12, y: ny + 8 },
-    color: LIGNE,
-    thickness: 0.8,
-  });
-  // bandeau NET À PAYER
-  rect(M, ny - 14, W, 26, INK);
-  text("NET À PAYER", M + 12, ny - 5, 12, bold, CREME);
-  rtext(`${eur(d.result.netAvantImpot)} €`, R - 12, ny - 6, 15, bold, OR);
-  ny -= 30;
-  // coût employeur (note discrète)
-  text("Coût total employeur", M + 12, ny, 8.5, font, GRIS);
-  rtext(`${eur(d.result.coutEmployeur)} €`, R - 12, ny, 8.5, font, GRIS);
+  nyy -= 1;
+  rect(M, nyy - 13, W, 25, INK);
+  t("NET PAYÉ", M + 12, nyy - 4.5, 12, bold, CREME);
+  rt(`${eur(r.netPaye)} €`, R - 12, nyy - 5.5, 15, bold, OR);
+  y = y - netH - 8;
 
-  // ─── Pied ───
-  text(
-    "Bulletin indicatif généré via Shift Office — shiftoffice.fr.",
+  // ─── Congés payés + Cumuls ───
+  const half = (W - gap) / 2;
+  const cby = y - 52;
+  const solde = (d.congesAcquis ?? 0) - (d.congesPris ?? 0);
+  rect(M, cby, half, 52, undefined, LIGNE, 1);
+  t("CONGÉS PAYÉS", M + 8, cby + 40, 7, bold, GRIS);
+  t(`Acquis : ${(d.congesAcquis ?? 0).toLocaleString("fr-FR")} j`, M + 8, cby + 27, 7.5);
+  t(`Pris : ${(d.congesPris ?? 0).toLocaleString("fr-FR")} j`, M + 8, cby + 16, 7.5);
+  t(`Solde : ${solde.toLocaleString("fr-FR")} j`, M + 8, cby + 5, 7.5, bold);
+
+  const cx = M + half + gap;
+  const cumulBrut = d.cumulBrut && d.cumulBrut > 0 ? d.cumulBrut : r.brut;
+  const cumulNet = d.cumulNetImposable && d.cumulNetImposable > 0 ? d.cumulNetImposable : r.netImposable;
+  rect(cx, cby, half, 52, undefined, LIGNE, 1);
+  t("CUMULS ANNUELS", cx + 8, cby + 40, 7, bold, GRIS);
+  t("Brut :", cx + 8, cby + 27, 7.5, font, GRIS);
+  rt(`${eur(cumulBrut)} €`, cx + half - 8, cby + 27, 7.5);
+  t("Net imposable :", cx + 8, cby + 16, 7.5, font, GRIS);
+  rt(`${eur(cumulNet)} €`, cx + half - 8, cby + 16, 7.5);
+  t("Coût employeur :", cx + 8, cby + 5, 7.5, font, GRIS);
+  rt(`${eur(r.coutEmployeur)} €`, cx + half - 8, cby + 5, 7.5);
+
+  // ─── Mentions légales ───
+  t(
+    "Dans votre intérêt et pour vous aider à faire valoir vos droits, conservez ce bulletin de paie sans limitation de durée.",
     M,
-    46,
-    7.5,
+    52,
+    6.8,
     font,
     GRIS
   );
-  text(
-    "Taux indicatifs à vérifier selon votre convention collective. Le « net à payer » est avant prélèvement à la source.",
+  t(
+    "Bulletin indicatif généré via Shift Office — shiftoffice.fr. Taux indicatifs à vérifier selon votre convention collective.",
     M,
-    36,
-    7.5,
+    42,
+    6.8,
     font,
     GRIS
   );
+  t("Informations : service-public.fr", M, 32, 6.8, font, OR);
 
   return pdf.save();
 }
