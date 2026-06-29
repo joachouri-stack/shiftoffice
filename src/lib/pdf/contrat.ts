@@ -59,6 +59,10 @@ export async function buildContratPDF(d: ContratData): Promise<Uint8Array> {
     line(t, 11.5, bold);
     y -= 18;
   };
+  // Numérotation automatique : les articles conditionnels (convention,
+  // indemnité CDD…) ne laissent jamais de trou dans la suite.
+  let art = 0;
+  const artHeading = (t: string) => heading(`Article ${++art} — ${t}`);
 
   const cdi = d.typeContrat !== "cdd";
 
@@ -90,13 +94,13 @@ export async function buildContratPDF(d: ContratData): Promise<Uint8Array> {
   );
   para("Il a été convenu ce qui suit :");
 
-  heading("Article 1 — Engagement et fonctions");
+  artHeading("Engagement et fonctions");
   para(
     `Le Salarié est engagé en qualité de ${d.poste || "—"}. Il exercera ses fonctions ` +
       `sous l'autorité et selon les directives de l'Employeur, et se conformera au règlement intérieur de l'entreprise.`
   );
 
-  heading("Article 2 — Durée du contrat");
+  artHeading("Durée du contrat");
   if (cdi) {
     para(
       `Le présent contrat est conclu pour une durée indéterminée à compter du ${d.dateDebut || "—"}.`
@@ -108,42 +112,76 @@ export async function buildContratPDF(d: ContratData): Promise<Uint8Array> {
     );
   }
 
-  heading("Article 3 — Période d'essai");
+  artHeading("Période d'essai");
   para(
     d.periodeEssai && d.periodeEssai !== "Aucune"
       ? `Le contrat est assorti d'une période d'essai de ${d.periodeEssai}, durant laquelle chacune des parties pourra y mettre fin dans les conditions légales.`
       : `Le contrat ne comporte pas de période d'essai.`
   );
 
-  heading("Article 4 — Lieu de travail");
+  artHeading("Lieu de travail");
   para(
     `Le Salarié exercera ses fonctions à : ${d.lieuTravail || d.entrepriseAdresse || "—"}. ` +
       `Ce lieu pourra être modifié en fonction des nécessités de l'entreprise.`
   );
 
-  heading("Article 5 — Durée du travail");
+  artHeading("Durée du travail");
   para(
     `La durée hebdomadaire de travail est fixée à ${d.heuresSemaine || 35} heures, ` +
       `répartie selon les horaires en vigueur dans l'entreprise.`
   );
 
-  heading("Article 6 — Rémunération");
+  artHeading("Rémunération");
   para(
     `En contrepartie de son travail, le Salarié percevra une rémunération brute mensuelle de ${eur(d.salaireBrut || 0)} euros, ` +
       `versée à la fin de chaque mois.`
   );
 
   if (d.conventionCollective) {
-    heading("Article 7 — Convention collective");
+    artHeading("Convention collective");
     para(
       `Les relations entre les parties sont régies par la convention collective : ${d.conventionCollective}.`
     );
   }
 
-  heading("Article 8 — Congés payés");
+  artHeading("Congés payés");
   para(
     `Le Salarié bénéficiera des congés payés conformément aux dispositions légales et conventionnelles en vigueur, ` +
       `soit 2,5 jours ouvrables par mois de travail effectif.`
+  );
+
+  artHeading("Obligations du Salarié");
+  para(
+    `Le Salarié s'engage à exécuter son travail avec loyauté et diligence, à respecter les consignes de sécurité ` +
+      `et à observer une stricte confidentialité sur l'ensemble des informations, documents et données dont il aurait ` +
+      `connaissance dans l'exercice de ses fonctions, tant pendant l'exécution du contrat qu'après sa rupture.`
+  );
+
+  // Clause propre au CDD : indemnité de fin de contrat (précarité).
+  if (!cdi) {
+    artHeading("Indemnité de fin de contrat");
+    para(
+      `Au terme du contrat, et sauf cas d'exclusion prévus par la loi (notamment refus d'un CDI, rupture anticipée ` +
+        `à l'initiative du Salarié ou faute grave), le Salarié percevra une indemnité de fin de contrat égale à 10 % ` +
+        `de la rémunération brute totale versée pendant la durée du contrat, ainsi qu'une indemnité compensatrice de ` +
+        `congés payés.`
+    );
+  }
+
+  artHeading("Rupture du contrat");
+  para(
+    cdi
+      ? `Le contrat pourra être rompu par l'une ou l'autre des parties dans le respect des dispositions légales et ` +
+          `conventionnelles applicables, notamment en matière de préavis et de procédure.`
+      : `Le contrat prendra fin de plein droit à son terme. Il ne pourra être rompu avant l'échéance que dans les cas ` +
+          `limitativement prévus par l'article L. 1243-1 du Code du travail.`
+  );
+
+  artHeading("Dispositions générales");
+  para(
+    `Pour tout ce qui n'est pas expressément prévu au présent contrat, les parties se réfèrent aux dispositions du ` +
+      `Code du travail et de la convention collective applicable. Les données personnelles du Salarié sont traitées ` +
+      `par l'Employeur pour les seuls besoins de la gestion du contrat, conformément au RGPD.`
   );
 
   // Signatures
