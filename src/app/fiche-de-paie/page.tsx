@@ -15,6 +15,7 @@ import {
   UserPlus,
 } from "lucide-react";
 import { Logo } from "@/components/brand/Logo";
+import { SiretSearch } from "@/components/SiretSearch";
 import {
   calculerFichePaie,
   brutPourNetAvantImpot,
@@ -358,6 +359,25 @@ function EntrepriseStep({ onSave }: { onSave: (e: LocalEntreprise) => void }) {
         <h3 className="text-noir font-display text-lg font-bold">Votre entreprise</h3>
       </div>
       <p className="text-gris -mt-2 text-xs">Saisie une seule fois — réutilisée pour toutes vos fiches.</p>
+      <SiretSearch
+        onSelect={(r) =>
+          setF((p) => ({
+            ...p,
+            nom: r.nom || p.nom,
+            siret: r.siret || p.siret,
+            adresse: r.adresse || p.adresse,
+            codePostal: r.codePostal || p.codePostal,
+            ville: r.ville || p.ville,
+            codeNaf: r.codeNaf || p.codeNaf,
+            convention: r.convention || p.convention,
+          }))
+        }
+      />
+      <div className="my-1 flex items-center gap-3 text-xs">
+        <span className="bg-or/20 h-px flex-1" />
+        <span className="text-gris">ou saisissez à la main</span>
+        <span className="bg-or/20 h-px flex-1" />
+      </div>
       <div className="grid gap-3 sm:grid-cols-2">
         <input className={FIELD} placeholder="Nom de l'entreprise *" value={f.nom} onChange={(e) => set("nom", e.target.value)} />
         <input className={FIELD} placeholder="SIRET" value={f.siret ?? ""} onChange={(e) => set("siret", e.target.value)} />
