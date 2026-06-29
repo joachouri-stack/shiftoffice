@@ -3,7 +3,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { ArrowLeft, ShieldCheck } from "lucide-react";
 import { Logo } from "@/components/brand/Logo";
-import { GoogleButton } from "@/components/auth/GoogleButton";
+import { GoogleLogin } from "@/components/auth/GoogleLogin";
 import { EmailPasswordForm } from "@/components/auth/EmailPasswordForm";
 import { isSupabaseEnabled } from "@/lib/supabase/config";
 import { getUser } from "@/lib/supabase/auth";
@@ -18,6 +18,7 @@ export const dynamic = "force-dynamic";
 
 export default async function ConnexionPage() {
   const enabled = isSupabaseEnabled();
+  const googleClientId = process.env.GOOGLE_CLIENT_ID ?? "";
   if (enabled) {
     const user = await getUser();
     if (user) redirect("/compte");
@@ -43,14 +44,18 @@ export default async function ConnexionPage() {
             {enabled ? (
               <>
                 <EmailPasswordForm />
-                <div className="my-5 flex items-center gap-3">
-                  <span className="bg-or/20 h-px flex-1" />
-                  <span className="text-gris text-xs font-semibold uppercase tracking-wider">
-                    ou
-                  </span>
-                  <span className="bg-or/20 h-px flex-1" />
-                </div>
-                <GoogleButton />
+                {googleClientId && (
+                  <>
+                    <div className="my-5 flex items-center gap-3">
+                      <span className="bg-or/20 h-px flex-1" />
+                      <span className="text-gris text-xs font-semibold uppercase tracking-wider">
+                        ou
+                      </span>
+                      <span className="bg-or/20 h-px flex-1" />
+                    </div>
+                    <GoogleLogin clientId={googleClientId} />
+                  </>
+                )}
               </>
             ) : (
               <div className="bg-or/10 text-or-d rounded-xl p-4 text-sm font-medium">
