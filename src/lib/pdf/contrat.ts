@@ -1,5 +1,5 @@
 import { PDFDocument, StandardFonts, rgb, type PDFPage } from "pdf-lib";
-import { INK, GRIS, OR, eur, wrap } from "./helpers";
+import { INK, GRIS, OR, CREME, eur, wrap } from "./helpers";
 
 export type ContratData = {
   entrepriseNom: string;
@@ -140,14 +140,13 @@ export async function buildContratPDF(d: ContratData): Promise<Uint8Array> {
     }
   };
 
-  // En-tête d'encadré, style éditorial : intitulé doré en capitales avec
-  // interlettrage, souligné d'un filet gris à amorce dorée. Aucun bandeau.
-  const HB = 30;
+  // En-tête d'encadré : bandeau foncé plein, intitulé clair en capitales
+  // (interlettrage), souligné d'un fin liseré doré.
+  const HB = 26;
   const cardHead = (x: number, top: number, w: number, titre: string) => {
-    tracked(titre, x + PAD, top - 17, 8.5, bold, OR, 2);
-    const sepY = top - HB;
-    hline(x, x + w, sepY, LIGNE, 0.8);
-    rect(x + PAD, sepY - 0.9, 30, 1.8, OR); // amorce dorée à gauche du filet
+    rect(x, top - HB, w, HB, INK); // bandeau foncé pleine largeur
+    rect(x, top - HB, w, 2, OR); // fin liseré doré en bas du bandeau
+    tracked(titre, x + PAD, top - 16.5, 8.5, bold, CREME, 2);
   };
 
   const col2 = M + PAD + colW + 24;
