@@ -7,11 +7,13 @@ import { ArrowLeft, CheckCircle2, Download, Loader2, XCircle } from "lucide-reac
 import { Logo } from "@/components/brand/Logo";
 import { EmailCopy } from "@/components/documents/EmailCopy";
 import { DOCUMENTS } from "@/lib/documents";
+import { localStore, type LocalFiche } from "@/lib/local/store";
 
 type Pending = {
   type: string;
   donnees: Record<string, unknown>;
   filename: string;
+  ficheMeta?: Omit<LocalFiche, "id">;
 };
 
 type Status = "loading" | "done" | "error";
@@ -68,6 +70,14 @@ function SuccessInner() {
         return;
       }
       triggerDownload(await res.blob(), pending.filename);
+      // Fiche de paie : on enregistre dans l'espace local (historique + reprise).
+      if (pending.ficheMeta) {
+        try {
+          localStore.addFiche(pending.ficheMeta);
+        } catch {
+          /* historique best-effort */
+        }
+      }
       sessionStorage.removeItem(key);
       setStatus("done");
     } catch {

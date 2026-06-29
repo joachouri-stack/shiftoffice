@@ -146,42 +146,71 @@ export default function FicheDePaieFlow() {
     if (!res || busy) return;
     setBusy(true);
     setErr("");
+    const donnees = {
+      entrepriseNom: ent?.nom ?? "",
+      entrepriseAdresse: [ent?.adresse, [ent?.codePostal, ent?.ville].filter(Boolean).join(" ")]
+        .filter(Boolean)
+        .join(", "),
+      siret: ent?.siret ?? "",
+      codeApe: ent?.codeNaf ?? "",
+      conventionCollective: ent?.convention ?? "",
+      salarieNom: sal?.nom ?? "",
+      poste: sal?.poste ?? "",
+      typeContrat: sal?.typeContrat ?? "",
+      numeroSecu: sal?.numeroSecu ?? "",
+      dateEntree: sal?.dateEntree ?? "",
+      classification: sal?.classification ?? "",
+      periode: `${mois} ${annee}`,
+      salaireBrut: String(brutEff),
+      heuresMois: heures,
+      heuresSup: String(heuresSup),
+      heuresSup50: "0",
+      primes: String(primes),
+      tauxPAS: "0",
+      congesPris: String(conges),
+      congesAcquis: "0",
+    };
+    const filename = `fiche-${(sal?.nom ?? "salarie").replace(/\s+/g, "-").toLowerCase()}-${mois.toLowerCase()}-${annee}.pdf`;
+    const ficheMeta = {
+      salarieId: sal?.id,
+      salarieNom: sal?.nom ?? "Salarié",
+      periode: `${mois} ${annee}`,
+      mois,
+      annee,
+      brut: res.brut,
+      net: res.netPaye,
+      heures,
+      heuresSup,
+      primes,
+      conges,
+      creeLe: new Date().toISOString(),
+    };
     try {
-      const donnees = {
-        entrepriseNom: ent?.nom ?? "",
-        entrepriseAdresse: [ent?.adresse, [ent?.codePostal, ent?.ville].filter(Boolean).join(" ")]
-          .filter(Boolean)
-          .join(", "),
-        siret: ent?.siret ?? "",
-        codeApe: ent?.codeNaf ?? "",
-        conventionCollective: ent?.convention ?? "",
-        salarieNom: sal?.nom ?? "",
-        poste: sal?.poste ?? "",
-        typeContrat: sal?.typeContrat ?? "",
-        numeroSecu: sal?.numeroSecu ?? "",
-        dateEntree: sal?.dateEntree ?? "",
-        classification: sal?.classification ?? "",
-        periode: `${mois} ${annee}`,
-        salaireBrut: String(brutEff),
-        heuresMois: heures,
-        heuresSup: String(heuresSup),
-        heuresSup50: "0",
-        primes: String(primes),
-        tauxPAS: "0",
-        congesPris: String(conges),
-        congesAcquis: "0",
-      };
+      // 1) Paiement : si Stripe est configuré, on passe par Checkout et la page
+      //    de succès génère le PDF après confirmation du paiement.
+      const co = await fetch("/api/checkout", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ type: "fiche-paie", slug: "fiche-paie" }),
+      });
+      const cod = (await co.json().catch(() => ({}))) as { url?: string };
+      if (cod?.url) {
+        sessionStorage.setItem(
+          "shiftoffice:pending:fiche-paie",
+          JSON.stringify({ type: "fiche-paie", donnees, filename, ficheMeta })
+        );
+        window.location.assign(cod.url);
+        return;
+      }
+
+      // 2) Stripe non configuré → génération directe.
       const r = await fetch("/api/documents/generer", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ type_document: "fiche-paie", donnees }),
       });
       if (!r.ok) {
-        setErr(
-          r.status === 402
-            ? "Paiement requis (Stripe activé) — à brancher au flux de paiement."
-            : "La génération a échoué. Réessayez."
-        );
+        setErr("La génération a échoué. Réessayez.");
         setBusy(false);
         return;
       }
@@ -189,23 +218,10 @@ export default function FicheDePaieFlow() {
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
-      a.download = `fiche-${(sal?.nom ?? "salarie").replace(/\s+/g, "-").toLowerCase()}-${mois.toLowerCase()}-${annee}.pdf`;
+      a.download = filename;
       a.click();
       URL.revokeObjectURL(url);
-      localStore.addFiche({
-        salarieId: sal?.id,
-        salarieNom: sal?.nom ?? "Salarié",
-        periode: `${mois} ${annee}`,
-        mois,
-        annee,
-        brut: res.brut,
-        net: res.netPaye,
-        heures,
-        heuresSup,
-        primes,
-        conges,
-        creeLe: new Date().toISOString(),
-      });
+      localStore.addFiche(ficheMeta);
       setDone(true);
     } catch {
       setErr("La génération a échoué. Réessayez.");
