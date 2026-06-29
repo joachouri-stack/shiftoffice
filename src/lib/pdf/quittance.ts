@@ -111,15 +111,5 @@ export async function buildQuittancePDF(d: QuittanceData): Promise<Uint8Array> {
   text("Le bailleur", M + boxW - 160, y, 11, font, GRIS);
   text(d.bailleurNom || "", M + boxW - 160, y - 16, 11, bold);
 
-  // — Pied —
-  text(
-    "Document généré via Shift Office — shiftoffice.fr",
-    M,
-    44,
-    8,
-    font,
-    rgb(0.6, 0.55, 0.48)
-  );
-
   return pdf.save();
 }

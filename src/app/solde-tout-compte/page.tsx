@@ -231,7 +231,7 @@ export default function SoldeToutCompteFlow() {
               <Field label="Indemnité de rupture / licenciement" value={indemniteRupture} onChange={setIndemniteRupture} />
               <Field label="Autres sommes" value={autresSommes} onChange={setAutresSommes} />
               <div className="border-or/30 bg-or/5 rounded-xl border p-4">
-                <Row label="Total brut du solde" value={eur(total)} strong />
+                <Row label="Total du solde" value={eur(total)} strong />
               </div>
             </div>
           )}
@@ -261,7 +261,7 @@ export default function SoldeToutCompteFlow() {
                   <Row label="Salarié" value={sal?.nom ?? "—"} pad />
                   <Row label="Motif" value={motif} pad />
                   <Row label="Date de sortie" value={dateSortie || "—"} pad />
-                  <Row label="Total brut du solde" value={eur(total)} pad strong />
+                  <Row label="Total du solde" value={eur(total)} pad strong />
                 </div>
                 {err && <p className="rounded-lg bg-red-50 px-3 py-2 text-sm font-medium text-red-700">{err}</p>}
                 <button onClick={generer} disabled={busy} className="bg-orange hover:bg-orange-d inline-flex w-full items-center justify-center gap-2 rounded-[10px] px-6 py-3.5 text-base font-bold text-white disabled:opacity-50">

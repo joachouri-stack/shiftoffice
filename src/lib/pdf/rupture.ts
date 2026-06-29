@@ -164,14 +164,5 @@ export async function buildRupturePDF(d: RuptureData): Promise<Uint8Array> {
   line(d.representantNom || "", 9.5, font, GRIS, M);
   line(d.salarieNom || "", 9.5, font, GRIS, M + W - 120);
 
-  // Pied
-  page.drawText("Document généré via Shift Office — shiftoffice.fr", {
-    x: M,
-    y: 40,
-    size: 8,
-    font,
-    color: OR,
-  });
-
   return pdf.save();
 }

@@ -120,7 +120,7 @@ export async function buildSoldeToutComptePDF(d: SoldeData): Promise<Uint8Array>
     height: rowH,
     color: INK,
   });
-  line("Nature des sommes (brut)", 10, bold, CREME, M + 10);
+  line("Nature des sommes", 10, bold, CREME, M + 10);
   rtext("Montant", rightX - 10, 10, bold, CREME);
   y -= rowH;
 
@@ -147,7 +147,7 @@ export async function buildSoldeToutComptePDF(d: SoldeData): Promise<Uint8Array>
     height: rowH,
     color: OR,
   });
-  line("TOTAL NET PERÇU", 11, bold, INK, M + 10);
+  line("TOTAL PERÇU", 11, bold, INK, M + 10);
   rtext(`${eur(total)} €`, rightX - 10, 11, bold, INK);
   y -= rowH + 18;
 
@@ -179,15 +179,6 @@ export async function buildSoldeToutComptePDF(d: SoldeData): Promise<Uint8Array>
   y -= 16;
   line(d.salarieNom || "", 9.5, font, GRIS, M);
   line(d.representantNom || "", 9.5, font, GRIS, M + W - 150);
-
-  // Pied
-  page.drawText("Document généré via Shift Office — shiftoffice.fr", {
-    x: M,
-    y: 40,
-    size: 8,
-    font,
-    color: OR,
-  });
 
   return pdf.save();
 }

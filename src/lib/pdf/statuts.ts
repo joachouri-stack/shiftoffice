@@ -73,8 +73,12 @@ export async function buildStatutsPDF(d: StatutsData): Promise<Uint8Array> {
   };
 
   const associes = d.associes.filter((a) => a.nom.trim());
+  // Le capital social est la somme des apports : on le recalcule pour garantir la
+  // cohérence du document même si la valeur transmise est absente ou erronée.
+  const totalApports = associes.reduce((s, a) => s + (a.apport || 0), 0);
+  const capital = d.capital && d.capital > 0 ? d.capital : totalApports;
   const nbTitres =
-    d.valeurTitre > 0 ? Math.round((d.capital || 0) / d.valeurTitre) : 0;
+    d.valeurTitre > 0 ? Math.round(capital / d.valeurTitre) : 0;
 
   // Titre
   line("STATUTS", 20, bold);
@@ -89,9 +93,9 @@ export async function buildStatutsPDF(d: StatutsData): Promise<Uint8Array> {
   line(`${formeLongue[d.forme]} (${d.forme})`, 11, font, GRIS);
   y -= 14;
   line(d.denomination || "—", 12, bold);
-  if (d.capital > 0) {
+  if (capital > 0) {
     y -= 14;
-    line(`Au capital de ${eur(d.capital)} euros`, 10, font, GRIS);
+    line(`Au capital de ${eur(capital)} euros`, 10, font, GRIS);
   }
   y -= 28;
 
@@ -155,13 +159,13 @@ export async function buildStatutsPDF(d: StatutsData): Promise<Uint8Array> {
     }
   }
   para(
-    `Le total des apports en numéraire s'élève à ${eur(d.capital || 0)} euros, ` +
+    `Le total des apports en numéraire s'élève à ${eur(capital)} euros, ` +
       `correspondant au capital social.`
   );
 
   heading("Article 7 — Capital social");
   para(
-    `Le capital social est fixé à la somme de ${eur(d.capital || 0)} euros. ` +
+    `Le capital social est fixé à la somme de ${eur(capital)} euros. ` +
       `Il est divisé en ${nbTitres || "—"} ${titre} de ${eur(d.valeurTitre || 0)} euros de valeur nominale chacune, ` +
       `${unipersonnelle ? "intégralement attribuées à l'associé unique" : "intégralement souscrites et réparties entre les associés proportionnellement à leurs apports"}, ` +
       `et entièrement libérées.`
@@ -265,15 +269,6 @@ export async function buildStatutsPDF(d: StatutsData): Promise<Uint8Array> {
       y -= 16;
     }
   }
-
-  // Pied
-  page.drawText("Document généré via Shift Office — shiftoffice.fr", {
-    x: M,
-    y: 40,
-    size: 8,
-    font,
-    color: OR,
-  });
 
   return pdf.save();
 }

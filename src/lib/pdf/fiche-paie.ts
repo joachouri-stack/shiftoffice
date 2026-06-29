@@ -202,8 +202,10 @@ export async function buildFichePaiePDF(d: FichePaieData): Promise<Uint8Array> {
     }
     rt(`Sous-total ${eur(Math.round(stSal * 100) / 100)}`, cSal, y + 1, 6.5, font, GRIS);
     rt(eur(Math.round(stPat * 100) / 100), cPat, y + 1, 6.5, font, GRIS);
-    y -= 8;
+    y -= 10;
   }
+  // Marge avant la bande TOTAL pour éviter que le dernier sous-total ne la touche.
+  y -= 6;
   rect(M, y - 3.5, W, rh + 1, INK);
   t("TOTAL DES COTISATIONS", M + 8, y, 8, bold, CREME);
   rt(eur(r.totalSal), cSal, y, 8, bold, CREME);
@@ -279,7 +281,7 @@ export async function buildFichePaiePDF(d: FichePaieData): Promise<Uint8Array> {
     GRIS
   );
   t(
-    "Bulletin indicatif généré via Shift Office — shiftoffice.fr. Taux indicatifs à vérifier selon votre convention collective.",
+    "Bulletin indicatif. Taux indicatifs à vérifier selon votre convention collective.",
     M,
     42,
     6.8,

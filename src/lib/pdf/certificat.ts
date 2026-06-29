@@ -93,15 +93,6 @@ export async function buildCertificatPDF(
   text(d.representantQualite || "Le représentant", M + W - 200, y, 11, font, GRIS);
   text(d.representantNom || "", M + W - 200, y - 16, 11, bold);
 
-  // Pied
-  text(
-    "Document généré via Shift Office — shiftoffice.fr",
-    M,
-    44,
-    8,
-    font,
-    OR
-  );
 
   return pdf.save();
 }
