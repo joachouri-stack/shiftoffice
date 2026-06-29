@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { ArrowLeft, ShieldCheck } from "lucide-react";
 import { Logo } from "@/components/brand/Logo";
 import { GoogleButton } from "@/components/auth/GoogleButton";
+import { EmailPasswordForm } from "@/components/auth/EmailPasswordForm";
 import { isSupabaseEnabled } from "@/lib/supabase/config";
 import { getUser } from "@/lib/supabase/auth";
 
@@ -40,7 +41,17 @@ export default async function ConnexionPage() {
 
           <div className="mt-6">
             {enabled ? (
-              <GoogleButton />
+              <>
+                <EmailPasswordForm />
+                <div className="my-5 flex items-center gap-3">
+                  <span className="bg-or/20 h-px flex-1" />
+                  <span className="text-gris text-xs font-semibold uppercase tracking-wider">
+                    ou
+                  </span>
+                  <span className="bg-or/20 h-px flex-1" />
+                </div>
+                <GoogleButton />
+              </>
             ) : (
               <div className="bg-or/10 text-or-d rounded-xl p-4 text-sm font-medium">
                 La connexion sera disponible très prochainement. En attendant,
@@ -52,8 +63,7 @@ export default async function ConnexionPage() {
           <div className="text-gris mt-6 flex items-start gap-2 text-xs leading-relaxed">
             <ShieldCheck size={16} className="text-vert mt-0.5 shrink-0" />
             <span>
-              Connexion sécurisée via Google. Nous ne stockons aucun mot de
-              passe. Voir notre{" "}
+              Vos données sont protégées. Voir notre{" "}
               <Link href="/confidentialite" className="text-orange font-semibold">
                 politique de confidentialité
               </Link>
