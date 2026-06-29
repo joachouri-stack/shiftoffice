@@ -16,7 +16,7 @@ import { Logo } from "@/components/brand/Logo";
 import { EmailCopy } from "@/components/documents/EmailCopy";
 import { ModeRapide } from "@/components/documents/ModeRapide";
 import { DOCUMENTS, formatPrice } from "@/lib/documents";
-import { calculerFichePaie } from "@/lib/paie/calcul";
+import { calculerFichePaie, brutPourNetAvantImpot } from "@/lib/paie/calcul";
 
 /**
  * Pré-remplissage « Mode rapide » : la valeur extraite par l'IA est partagée
@@ -513,7 +513,9 @@ function FichePaieForm() {
     numeroSecu: "",
     periode: moisCourant(),
     datePaiement: aujourdhui(),
+    modeSaisie: "brut",
     salaireBrut: "",
+    salaireNet: "",
     heuresMois: "151.67",
     tauxHoraire: "",
     heuresSup: "0",
@@ -534,19 +536,22 @@ function FichePaieForm() {
   usePrefill(setF);
 
   const n = (s: string) => parseFloat(s.replace(",", ".")) || 0;
+  const enNet = f.modeSaisie === "net";
+  const brutEff = enNet ? brutPourNetAvantImpot(n(f.salaireNet)) : n(f.salaireBrut);
   const res = useMemo(
     () =>
       calculerFichePaie({
-        salaireBrut: n(f.salaireBrut),
+        salaireBrut: brutEff,
         heuresMois: n(f.heuresMois),
         tauxHoraire: n(f.tauxHoraire),
-        heuresSup: n(f.heuresSup),
-        heuresSup50: n(f.heuresSup50),
-        primes: n(f.primes),
+        heuresSup: enNet ? 0 : n(f.heuresSup),
+        heuresSup50: enNet ? 0 : n(f.heuresSup50),
+        primes: enNet ? 0 : n(f.primes),
         tauxPAS: n(f.tauxPAS),
       }),
     [
-      f.salaireBrut,
+      brutEff,
+      enNet,
       f.heuresMois,
       f.tauxHoraire,
       f.heuresSup,
@@ -557,14 +562,29 @@ function FichePaieForm() {
   );
 
   const valid =
-    f.entrepriseNom.trim() && f.salarieNom.trim() && n(f.salaireBrut) > 0;
+    f.entrepriseNom.trim() &&
+    f.salarieNom.trim() &&
+    (enNet ? n(f.salaireNet) > 0 : n(f.salaireBrut) > 0);
 
   async function generate() {
     if (!valid || loading) return;
     setLoading(true);
     setError("");
     try {
-      const ok = await submitPaidDoc("fiche-paie", f, "fiche-de-paie.pdf");
+      const donnees = enNet
+        ? {
+            ...f,
+            salaireBrut: String(brutEff),
+            heuresSup: "0",
+            heuresSup50: "0",
+            primes: "0",
+          }
+        : f;
+      const ok = await submitPaidDoc(
+        "fiche-paie",
+        donnees,
+        "fiche-de-paie.pdf"
+      );
       if (!ok) throw new Error("génération");
     } catch {
       setError("La génération a échoué. Réessayez.");
@@ -620,17 +640,62 @@ function FichePaieForm() {
           </div>
 
           <div>
-            <p className="text-noir mb-3 text-sm font-bold">Rémunération</p>
-            <div className="grid gap-3 sm:grid-cols-3">
-              <Input label="Salaire brut (€)" value={f.salaireBrut} onChange={(v) => set("salaireBrut", v)} placeholder="2200" inputMode="decimal" />
-              <Input label="Heures / mois" value={f.heuresMois} onChange={(v) => set("heuresMois", v)} placeholder="151.67" inputMode="decimal" />
-              <Input label="Taux horaire (auto)" value={f.tauxHoraire} onChange={(v) => set("tauxHoraire", v)} placeholder="auto" inputMode="decimal" />
+            <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+              <p className="text-noir text-sm font-bold">Rémunération</p>
+              <div className="border-or/30 inline-flex rounded-lg border p-0.5">
+                {[
+                  ["brut", "Je saisis le Brut"],
+                  ["net", "Je saisis le Net"],
+                ].map(([val, label]) => (
+                  <button
+                    key={val}
+                    type="button"
+                    onClick={() => set("modeSaisie", val)}
+                    className={`rounded-md px-3 py-1.5 text-xs font-bold transition-colors ${
+                      f.modeSaisie === val
+                        ? "bg-or text-white"
+                        : "text-gris hover:text-noir"
+                    }`}
+                  >
+                    {label}
+                  </button>
+                ))}
+              </div>
             </div>
-            <div className="mt-3 grid gap-3 sm:grid-cols-3">
-              <Input label="Heures sup. 25%" value={f.heuresSup} onChange={(v) => set("heuresSup", v)} placeholder="0" inputMode="decimal" />
-              <Input label="Heures sup. 50%" value={f.heuresSup50} onChange={(v) => set("heuresSup50", v)} placeholder="0" inputMode="decimal" />
-              <Input label="Primes (€)" value={f.primes} onChange={(v) => set("primes", v)} placeholder="0" inputMode="decimal" />
-            </div>
+
+            {enNet ? (
+              <>
+                <div className="grid gap-3 sm:grid-cols-3">
+                  <Input label="Net à payer souhaité (€)" value={f.salaireNet} onChange={(v) => set("salaireNet", v)} placeholder="1700" inputMode="decimal" />
+                  <Input label="Heures / mois" value={f.heuresMois} onChange={(v) => set("heuresMois", v)} placeholder="151.67" inputMode="decimal" />
+                  <label className="block">
+                    <span className="text-noir mb-1.5 block text-sm font-medium">
+                      Brut calculé
+                    </span>
+                    <div className="border-or/30 bg-creme/60 text-noir flex h-11 items-center rounded-lg border px-3.5 text-sm font-bold">
+                      {brutEff.toLocaleString("fr-FR", { minimumFractionDigits: 2 })} €
+                    </div>
+                  </label>
+                </div>
+                <p className="text-gris mt-2 text-xs">
+                  Le brut est calculé pour atteindre ce net à payer (avant
+                  impôt). Heures sup. et primes désactivées en mode Net.
+                </p>
+              </>
+            ) : (
+              <>
+                <div className="grid gap-3 sm:grid-cols-3">
+                  <Input label="Salaire brut (€)" value={f.salaireBrut} onChange={(v) => set("salaireBrut", v)} placeholder="2200" inputMode="decimal" />
+                  <Input label="Heures / mois" value={f.heuresMois} onChange={(v) => set("heuresMois", v)} placeholder="151.67" inputMode="decimal" />
+                  <Input label="Taux horaire (auto)" value={f.tauxHoraire} onChange={(v) => set("tauxHoraire", v)} placeholder="auto" inputMode="decimal" />
+                </div>
+                <div className="mt-3 grid gap-3 sm:grid-cols-3">
+                  <Input label="Heures sup. 25%" value={f.heuresSup} onChange={(v) => set("heuresSup", v)} placeholder="0" inputMode="decimal" />
+                  <Input label="Heures sup. 50%" value={f.heuresSup50} onChange={(v) => set("heuresSup50", v)} placeholder="0" inputMode="decimal" />
+                  <Input label="Primes (€)" value={f.primes} onChange={(v) => set("primes", v)} placeholder="0" inputMode="decimal" />
+                </div>
+              </>
+            )}
           </div>
 
           <div>

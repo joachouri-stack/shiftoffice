@@ -84,6 +84,24 @@ const DEFS: Def[] = [
 
 const r2 = (n: number) => Math.round(n * 100) / 100;
 
+/**
+ * Calcul inverse : retrouve le salaire brut correspondant à un net à payer
+ * (avant impôt) cible, par dichotomie. Le net étant croissant avec le brut,
+ * la recherche converge sûrement.
+ */
+export function brutPourNetAvantImpot(netCible: number): number {
+  if (netCible <= 0) return 0;
+  let lo = netCible;
+  let hi = netCible * 2;
+  for (let i = 0; i < 60; i++) {
+    const mid = (lo + hi) / 2;
+    const net = calculerFichePaie({ salaireBrut: mid }).netAvantImpot;
+    if (net < netCible) lo = mid;
+    else hi = mid;
+  }
+  return r2((lo + hi) / 2);
+}
+
 export function calculerFichePaie(input: FichePaieInput): FichePaieResult {
   const salaireBase = Math.max(0, input.salaireBrut || 0);
   const heuresMois = input.heuresMois && input.heuresMois > 0 ? input.heuresMois : 151.67;
