@@ -89,30 +89,30 @@ export async function buildContratPDF(d: ContratData): Promise<Uint8Array> {
 
   const cdi = d.typeContrat !== "cdd";
 
-  // ════════════════ PAGE 1 — Letterhead ════════════════
+  // ════════════════ PAGE 1 ════════════════
   newPage();
   // Bande dorée pleine largeur en tête
   page.drawRectangle({ x: 0, y: 835.89, width: PW, height: 6, color: OR });
-  // Wordmark de marque
-  t("[Shift]", M, 808, 13, bold, INK);
-  t("Office", M + bold.widthOfTextAtSize("[Shift] ", 13), 808, 13, font, GRIS);
-  rt("DOCUMENT CONTRACTUEL", M + W, 810, 7.5, bold, GRIS);
-  hline(M, M + W, 798, LIGNE, 0.8);
 
-  // ─── Titre ───
-  y = 766;
-  t("CONTRAT DE TRAVAIL", M, y, 9, bold, OR);
-  const typ = cdi ? "CDI" : "CDD";
-  const typW = bold.widthOfTextAtSize(typ, 10) + 22;
-  rect(M + W - typW, y - 6, typW, 23, ORL, OR, 1);
-  rt(typ, M + W - 11, y + 1, 10, bold, INK);
+  // ─── Titre (centré) ───
+  const CX = PW / 2;
+  const ligne2 = cdi ? "À DURÉE INDÉTERMINÉE" : "À DURÉE DÉTERMINÉE";
+  y = 782;
+  tc("CONTRAT DE TRAVAIL", CX, y, 23, bold, INK);
   y -= 28;
-  const titre = cdi ? "À durée indéterminée" : "À durée déterminée";
-  t(titre, M, y, 23, bold, INK);
-  rect(M, y - 9, bold.widthOfTextAtSize(titre, 23), 3.5, OR);
-  y -= 18;
-  rt(`Établi à ${d.ville || "—"}, le ${d.date || "—"}`, M + W, y, 8.5, font, GRIS);
-  y -= 26;
+  tc(ligne2, CX, y, 23, bold, INK);
+  y -= 16;
+  rect(CX - 45, y, 90, 3, OR); // filet doré centré
+  y -= 24;
+  // Pastille de type, centrée sous le titre
+  const typ = cdi ? "CDI" : "CDD";
+  const typW = bold.widthOfTextAtSize(typ, 11) + 28;
+  rect(CX - typW / 2, y - 6, typW, 23, ORL, OR, 1);
+  tc(typ, CX, y + 1, 11, bold, INK);
+  y -= 24;
+  // Date, centrée sous la pastille
+  tc(`Établi à ${d.ville || "—"}, le ${d.date || "—"}`, CX, y, 9, font, GRIS);
+  y -= 30;
 
   // ─── Parties (empilées, niveaux distincts) ───
   const PAD = 16;
@@ -378,15 +378,8 @@ export async function buildContratPDF(d: ContratData): Promise<Uint8Array> {
   const n = pages.length;
   pages.forEach((p, i) => {
     p.drawLine({ start: { x: M, y: 58 }, end: { x: M + W, y: 58 }, thickness: 0.6, color: LIGNE });
-    p.drawText("Document généré via Shift Office — shiftoffice.fr", {
-      x: M,
-      y: 45,
-      size: 7.5,
-      font,
-      color: OR,
-    });
     const lbl = cdi ? "Contrat à durée indéterminée" : "Contrat à durée déterminée";
-    p.drawText(lbl, { x: PW / 2 - font.widthOfTextAtSize(lbl, 7.5) / 2, y: 45, size: 7.5, font, color: GRIS });
+    p.drawText(lbl, { x: M, y: 45, size: 7.5, font, color: GRIS });
     const pg = `Page ${i + 1} / ${n}`;
     p.drawText(pg, { x: M + W - font.widthOfTextAtSize(pg, 7.5), y: 45, size: 7.5, font, color: GRIS });
   });
