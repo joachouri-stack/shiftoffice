@@ -1,5 +1,7 @@
 import { PDFDocument, StandardFonts, rgb, type PDFPage } from "pdf-lib";
+import fontkit from "@pdf-lib/fontkit";
 import { eur, wrap } from "./helpers";
+import { EB_GARAMOND_B64 } from "./fonts/eb-garamond";
 
 export type ContratData = {
   entrepriseNom: string;
@@ -46,10 +48,14 @@ const BOTTOM = 60;
 
 export async function buildContratPDF(d: ContratData): Promise<Uint8Array> {
   const pdf = await PDFDocument.create();
+  pdf.registerFontkit(fontkit);
   const sans = await pdf.embedFont(StandardFonts.Helvetica);
   const sansB = await pdf.embedFont(StandardFonts.HelveticaBold);
-  const serifB = await pdf.embedFont(StandardFonts.TimesRomanBold);
   const serifI = await pdf.embedFont(StandardFonts.TimesRomanItalic);
+  // Police de titre EB Garamond embarquée (rendu élégant, fidèle au modèle).
+  const titleFont = await pdf.embedFont(Buffer.from(EB_GARAMOND_B64, "base64"), {
+    subset: true,
+  });
 
   const pages: PDFPage[] = [];
   let page!: PDFPage;
@@ -107,13 +113,13 @@ export async function buildContratPDF(d: ContratData): Promise<Uint8Array> {
   y = PH;
 
   // ── Bandeau titre (navy, pleine largeur, centré) ──
-  const bandH = 92;
+  const bandH = 100;
   rect(0, PH - bandH, PW, bandH, NAVY);
   rect(0, PH - bandH, PW, 3, GOLD); // liseré doré en bas du bandeau
   const cx = PW / 2;
-  tc("CONTRAT DE TRAVAIL", cx, PH - 36, 20, serifB, WHITE);
-  tc(cdi ? "À DURÉE INDÉTERMINÉE" : "À DURÉE DÉTERMINÉE", cx, PH - 58, 20, serifB, WHITE);
-  trackedC(cdi ? "CDI" : "CDD", cx, PH - 78, 11, sansB, GOLD, 2.5);
+  tc("CONTRAT DE TRAVAIL", cx, PH - 40, 24, titleFont, WHITE);
+  tc(cdi ? "À DURÉE INDÉTERMINÉE" : "À DURÉE DÉTERMINÉE", cx, PH - 66, 24, titleFont, WHITE);
+  trackedC(cdi ? "CDI" : "CDD", cx, PH - 86, 10.5, sansB, GOLD, 2.5);
   y = PH - bandH;
 
   // Données de synthèse, rendues dans l'encadré « L'essentiel » sous les parties.
@@ -340,7 +346,7 @@ export async function buildContratPDF(d: ContratData): Promise<Uint8Array> {
   });
 
   // ════════════════ Signatures ════════════════
-  const sigBlocH = 96;
+  const sigBlocH = 132;
   const needed = 18 + 18 + sigBlocH + 30;
   if (y - needed < BOTTOM) newPage();
   // titre section avec soulignement doré
