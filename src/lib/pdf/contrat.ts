@@ -1,5 +1,5 @@
-import { PDFDocument, StandardFonts, type PDFPage } from "pdf-lib";
-import { INK, GRIS, OR, eur, wrap } from "./helpers";
+import { PDFDocument, StandardFonts, rgb, type PDFPage } from "pdf-lib";
+import { INK, GRIS, OR, CREME, eur, wrap } from "./helpers";
 
 export type ContratData = {
   entrepriseNom: string;
@@ -24,75 +24,169 @@ export type ContratData = {
 };
 
 const A4: [number, number] = [595.28, 841.89];
-const M = 56;
+const M = 52;
 const W = A4[0] - M * 2;
-const TOP = 792;
+const TOP = 800;
+const BOTTOM = 70;
+const LIGNE = rgb(0.86, 0.83, 0.77);
+const ORL = rgb(0.96, 0.92, 0.82);
 
 export async function buildContratPDF(d: ContratData): Promise<Uint8Array> {
   const pdf = await PDFDocument.create();
   const font = await pdf.embedFont(StandardFonts.Helvetica);
   const bold = await pdf.embedFont(StandardFonts.HelveticaBold);
 
-  let page: PDFPage = pdf.addPage(A4);
+  const pages: PDFPage[] = [];
+  let page!: PDFPage;
   let y = TOP;
 
+  const newPage = () => {
+    page = pdf.addPage(A4);
+    pages.push(page);
+    y = TOP;
+  };
+  newPage();
+
+  // ── primitives ──
+  const t = (
+    s: string,
+    x: number,
+    yy: number,
+    size = 10.5,
+    f = font,
+    c = INK
+  ) => page.drawText(s, { x, y: yy, size, font: f, color: c });
+  const rt = (
+    s: string,
+    xR: number,
+    yy: number,
+    size = 10.5,
+    f = font,
+    c = INK
+  ) => page.drawText(s, { x: xR - f.widthOfTextAtSize(s, size), y: yy, size, font: f, color: c });
+  const rect = (
+    x: number,
+    yy: number,
+    w: number,
+    h: number,
+    fill?: ReturnType<typeof rgb>,
+    border?: ReturnType<typeof rgb>,
+    bw = 0.8
+  ) =>
+    page.drawRectangle({
+      x,
+      y: yy,
+      width: w,
+      height: h,
+      ...(fill ? { color: fill } : {}),
+      ...(border ? { borderColor: border, borderWidth: bw } : {}),
+    });
+
   const ensure = (space: number) => {
-    if (y - space < 64) {
-      page = pdf.addPage(A4);
-      y = TOP;
-    }
+    if (y - space < BOTTOM) newPage();
   };
-  const line = (s: string, size = 10.5, f = font, color = INK, x = M) => {
-    page.drawText(s, { x, y, size, font: f, color });
-  };
-  const para = (s: string, size = 10.5, f = font, color = INK) => {
+  const para = (s: string, size = 10, f = font, color = INK) => {
     for (const l of wrap(s, f, size, W)) {
       ensure(16);
-      line(l, size, f, color);
+      t(l, M, y, size, f, color);
       y -= size + 4.5;
     }
     y -= 6;
   };
-  const heading = (t: string) => {
-    ensure(30);
-    y -= 6;
-    line(t, 11.5, bold);
-    y -= 18;
-  };
-  // Numérotation automatique : les articles conditionnels (convention,
-  // indemnité CDD…) ne laissent jamais de trou dans la suite.
-  let art = 0;
-  const artHeading = (t: string) => heading(`Article ${++art} — ${t}`);
 
   const cdi = d.typeContrat !== "cdd";
 
-  // Titre
-  const titre = cdi
-    ? "CONTRAT DE TRAVAIL À DURÉE INDÉTERMINÉE"
-    : "CONTRAT DE TRAVAIL À DURÉE DÉTERMINÉE";
-  line(titre, 15, bold);
-  page.drawRectangle({
-    x: M,
-    y: y - 9,
-    width: bold.widthOfTextAtSize(titre, 15),
-    height: 3,
-    color: OR,
-  });
-  y -= 34;
+  // ─── En-tête : titre + pastille type ───
+  t("CONTRAT DE TRAVAIL", M, y, 8, bold, OR);
+  const typ = cdi ? "CDI" : "CDD";
+  const typW = bold.widthOfTextAtSize(typ, 9) + 18;
+  rect(M + W - typW, y - 4, typW, 19, ORL, OR, 0.8);
+  rt(typ, M + W - 9, y + 1.5, 9, bold, INK);
+  y -= 22;
+  const titre = cdi ? "À durée indéterminée" : "À durée déterminée";
+  t(titre, M, y, 19, bold, INK);
+  rect(M, y - 8, bold.widthOfTextAtSize(titre, 19), 3, OR);
+  y -= 20;
+  rect(M, y, W, 0.8, LIGNE);
+  rt(
+    `Établi à ${d.ville || "—"}, le ${d.date || "—"}`,
+    M + W,
+    y - 12,
+    8.5,
+    font,
+    GRIS
+  );
+  y -= 28;
 
-  // Parties
-  para("Entre les soussignés :", 10.5, bold);
+  // ─── Boîtes Employeur / Salarié ───
+  const gap = 16;
+  const bw = (W - gap) / 2;
+  const PAD = 11;
+  const innerW = bw - PAD * 2;
+
+  type L = { s: string; b: boolean; sz: number };
+  const buildLines = (items: Array<{ s: string; b?: boolean }>): L[] => {
+    const out: L[] = [];
+    for (const it of items) {
+      const sz = it.b ? 10 : 8.7;
+      const f = it.b ? bold : font;
+      for (const l of wrap(it.s, f, sz, innerW)) out.push({ s: l, b: !!it.b, sz });
+    }
+    return out;
+  };
+
+  const empLines = buildLines([
+    { s: d.entrepriseNom || "L'entreprise", b: true },
+    ...(d.siret ? [{ s: `SIRET ${d.siret}` }] : []),
+    { s: `Siège : ${d.entrepriseAdresse || "—"}` },
+    {
+      s: `Représentée par ${d.representantNom || "—"}, en qualité de ${d.representantQualite || "représentant"}`,
+    },
+  ]);
+  const salLines = buildLines([
+    { s: d.salarieNom || "Le/la salarié(e)", b: true },
+    { s: `Demeurant : ${d.salarieAdresse || "—"}` },
+    { s: `Engagé(e) en qualité de ${d.poste || "—"}` },
+  ]);
+
+  const HEADER_H = 17;
+  const lineH = 12.5;
+  const boxH =
+    HEADER_H + 10 + Math.max(empLines.length, salLines.length) * lineH + 6;
+
+  const drawParty = (x: number, titreBox: string, lines: L[]) => {
+    rect(x, y - boxH, bw, boxH, undefined, LIGNE, 1);
+    rect(x, y - HEADER_H, bw, HEADER_H, CREME);
+    rect(x, y - HEADER_H, 3, HEADER_H, OR);
+    t(titreBox, x + PAD, y - 12, 7.5, bold, GRIS);
+    let yy = y - HEADER_H - 13;
+    for (const ln of lines) {
+      t(ln.s, x + PAD, yy, ln.sz, ln.b ? bold : font, ln.b ? INK : GRIS);
+      yy -= lineH;
+    }
+  };
+  drawParty(M, "EMPLOYEUR", empLines);
+  drawParty(M + bw + gap, "SALARIÉ", salLines);
+  y -= boxH + 16;
+
   para(
-    `${d.entrepriseNom || "L'entreprise"}${d.siret ? `, SIRET ${d.siret}` : ""}, ` +
-      `dont le siège social est situé ${d.entrepriseAdresse || "—"}, ` +
-      `représentée par ${d.representantNom || "—"} en qualité de ${d.representantQualite || "représentant"}, ` +
-      `ci-après dénommée « l'Employeur », d'une part,`
+    "Il a été convenu ce qui suit entre les parties désignées ci-dessus :",
+    10,
+    bold
   );
-  para(
-    `Et ${d.salarieNom || "le/la salarié(e)"}, demeurant ${d.salarieAdresse || "—"}, ` +
-      `ci-après dénommé(e) « le Salarié », d'autre part,`
-  );
-  para("Il a été convenu ce qui suit :");
+
+  // ─── Articles ───
+  let art = 0;
+  const artHeading = (titreArt: string) => {
+    ensure(40);
+    y -= 8;
+    t(`ARTICLE ${++art}`, M, y, 7.5, bold, OR);
+    y -= 13;
+    t(titreArt, M, y, 11.5, bold, INK);
+    y -= 5;
+    rect(M, y, W, 0.6, LIGNE);
+    y -= 13;
+  };
 
   artHeading("Engagement et fonctions");
   para(
@@ -184,26 +278,56 @@ export async function buildContratPDF(d: ContratData): Promise<Uint8Array> {
       `par l'Employeur pour les seuls besoins de la gestion du contrat, conformément au RGPD.`
   );
 
-  // Signatures
-  ensure(90);
-  y -= 10;
-  para(
-    `Fait à ${d.ville || "—"}, le ${d.date || "—"}, en double exemplaire.`
-  );
-  y -= 16;
-  line("L'Employeur", 10.5, bold, INK, M);
-  line("Le Salarié", 10.5, bold, INK, M + W - 120);
-  y -= 14;
-  line(d.representantNom || "", 9.5, font, GRIS, M);
-  line(d.salarieNom || "", 9.5, font, GRIS, M + W - 120);
+  // ─── Signatures ───
+  ensure(110);
+  y -= 6;
+  para(`Fait à ${d.ville || "—"}, le ${d.date || "—"}, en double exemplaire.`, 10);
+  y -= 4;
 
-  // Pied (sur la dernière page)
-  page.drawText("Document généré via Shift Office — shiftoffice.fr", {
-    x: M,
-    y: 40,
-    size: 8,
-    font,
-    color: OR,
+  const sigH = 70;
+  const sigBox = (x: number, role: string, name: string) => {
+    rect(x, y - sigH, bw, sigH, undefined, LIGNE, 1);
+    rect(x, y - HEADER_H, bw, HEADER_H, CREME);
+    rect(x, y - HEADER_H, 3, HEADER_H, OR);
+    t(role, x + PAD, y - 12, 7.5, bold, GRIS);
+    t(name || "—", x + PAD, y - HEADER_H - 14, 10, bold, INK);
+    t(
+      "Signature, précédée de « Lu et approuvé »",
+      x + PAD,
+      y - sigH + 9,
+      7,
+      font,
+      GRIS
+    );
+  };
+  sigBox(M, "POUR L'EMPLOYEUR", d.representantNom);
+  sigBox(M + bw + gap, "LE SALARIÉ", d.salarieNom);
+  y -= sigH;
+
+  // ─── Pied de page (sur toutes les pages) ───
+  const n = pages.length;
+  pages.forEach((p, i) => {
+    p.drawLine({
+      start: { x: M, y: 56 },
+      end: { x: M + W, y: 56 },
+      thickness: 0.6,
+      color: LIGNE,
+    });
+    p.drawText("Document généré via Shift Office — shiftoffice.fr", {
+      x: M,
+      y: 44,
+      size: 7.5,
+      font,
+      color: OR,
+    });
+    const pg = `Page ${i + 1} / ${n}`;
+    p.drawText(pg, {
+      x: M + W - font.widthOfTextAtSize(pg, 7.5),
+      y: 44,
+      size: 7.5,
+      font,
+      color: GRIS,
+    });
   });
 
   return pdf.save();
