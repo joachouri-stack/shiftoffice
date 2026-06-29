@@ -24,12 +24,14 @@ export type ContratData = {
 };
 
 const A4: [number, number] = [595.28, 841.89];
-const M = 52;
-const W = A4[0] - M * 2;
-const TOP = 800;
-const BOTTOM = 70;
+const PW = A4[0];
+const M = 50;
+const W = PW - M * 2;
+const TOPC = 792; // haut de contenu des pages courantes
+const BOTTOM = 78;
 const LIGNE = rgb(0.86, 0.83, 0.77);
 const ORL = rgb(0.96, 0.92, 0.82);
+const BLANC = rgb(1, 1, 1);
 
 export async function buildContratPDF(d: ContratData): Promise<Uint8Array> {
   const pdf = await PDFDocument.create();
@@ -38,32 +40,21 @@ export async function buildContratPDF(d: ContratData): Promise<Uint8Array> {
 
   const pages: PDFPage[] = [];
   let page!: PDFPage;
-  let y = TOP;
+  let y = TOPC;
 
   const newPage = () => {
     page = pdf.addPage(A4);
     pages.push(page);
-    y = TOP;
+    y = TOPC;
   };
-  newPage();
 
-  // ── primitives ──
-  const t = (
-    s: string,
-    x: number,
-    yy: number,
-    size = 10.5,
-    f = font,
-    c = INK
-  ) => page.drawText(s, { x, y: yy, size, font: f, color: c });
-  const rt = (
-    s: string,
-    xR: number,
-    yy: number,
-    size = 10.5,
-    f = font,
-    c = INK
-  ) => page.drawText(s, { x: xR - f.widthOfTextAtSize(s, size), y: yy, size, font: f, color: c });
+  // ── primitives (résolvent toujours sur `page` courant) ──
+  const t = (s: string, x: number, yy: number, size = 10.5, f = font, c = INK) =>
+    page.drawText(s, { x, y: yy, size, font: f, color: c });
+  const rt = (s: string, xR: number, yy: number, size = 10.5, f = font, c = INK) =>
+    page.drawText(s, { x: xR - f.widthOfTextAtSize(s, size), y: yy, size, font: f, color: c });
+  const tc = (s: string, cx: number, yy: number, size = 10.5, f = font, c = INK) =>
+    page.drawText(s, { x: cx - f.widthOfTextAtSize(s, size) / 2, y: yy, size, font: f, color: c });
   const rect = (
     x: number,
     yy: number,
@@ -81,184 +72,261 @@ export async function buildContratPDF(d: ContratData): Promise<Uint8Array> {
       ...(fill ? { color: fill } : {}),
       ...(border ? { borderColor: border, borderWidth: bw } : {}),
     });
+  const hline = (x1: number, x2: number, yy: number, c = LIGNE, th = 0.6) =>
+    page.drawLine({ start: { x: x1, y: yy }, end: { x: x2, y: yy }, thickness: th, color: c });
 
   const ensure = (space: number) => {
     if (y - space < BOTTOM) newPage();
   };
-  const para = (s: string, size = 10, f = font, color = INK) => {
+  const para = (s: string, size = 10, f = font, color = INK, lead = 4.8) => {
     for (const l of wrap(s, f, size, W)) {
       ensure(16);
       t(l, M, y, size, f, color);
-      y -= size + 4.5;
+      y -= size + lead;
     }
     y -= 6;
   };
 
   const cdi = d.typeContrat !== "cdd";
 
-  // ─── En-tête : titre + pastille type ───
-  t("CONTRAT DE TRAVAIL", M, y, 8, bold, OR);
+  // ════════════════ PAGE 1 — Letterhead ════════════════
+  newPage();
+  // Bande dorée pleine largeur en tête
+  page.drawRectangle({ x: 0, y: 835.89, width: PW, height: 6, color: OR });
+  // Wordmark de marque
+  t("[Shift]", M, 808, 13, bold, INK);
+  t("Office", M + bold.widthOfTextAtSize("[Shift] ", 13), 808, 13, font, GRIS);
+  rt("DOCUMENT CONTRACTUEL", M + W, 810, 7.5, bold, GRIS);
+  hline(M, M + W, 798, LIGNE, 0.8);
+
+  // ─── Titre ───
+  y = 766;
+  t("CONTRAT DE TRAVAIL", M, y, 9, bold, OR);
   const typ = cdi ? "CDI" : "CDD";
-  const typW = bold.widthOfTextAtSize(typ, 9) + 18;
-  rect(M + W - typW, y - 4, typW, 19, ORL, OR, 0.8);
-  rt(typ, M + W - 9, y + 1.5, 9, bold, INK);
-  y -= 22;
+  const typW = bold.widthOfTextAtSize(typ, 10) + 22;
+  rect(M + W - typW, y - 6, typW, 23, ORL, OR, 1);
+  rt(typ, M + W - 11, y + 1, 10, bold, INK);
+  y -= 28;
   const titre = cdi ? "À durée indéterminée" : "À durée déterminée";
-  t(titre, M, y, 19, bold, INK);
-  rect(M, y - 8, bold.widthOfTextAtSize(titre, 19), 3, OR);
-  y -= 20;
-  rect(M, y, W, 0.8, LIGNE);
-  rt(
-    `Établi à ${d.ville || "—"}, le ${d.date || "—"}`,
-    M + W,
-    y - 12,
-    8.5,
+  t(titre, M, y, 23, bold, INK);
+  rect(M, y - 9, bold.widthOfTextAtSize(titre, 23), 3.5, OR);
+  y -= 18;
+  rt(`Établi à ${d.ville || "—"}, le ${d.date || "—"}`, M + W, y, 8.5, font, GRIS);
+  y -= 26;
+
+  // ─── Parties (empilées, niveaux distincts) ───
+  const PAD = 16;
+  const colW = (W - PAD * 2 - 24) / 2;
+
+  // Un « champ » = label gris en capitales + valeur en gras (max 2 lignes).
+  const field = (x: number, w: number, topY: number, label: string, value: string) => {
+    t(label, x, topY, 6.8, bold, GRIS);
+    let yy = topY - 12;
+    for (const l of wrap(value || "—", font, 10, w).slice(0, 2)) {
+      t(l, x, yy, 10, bold, INK);
+      yy -= 12;
+    }
+  };
+
+  // En-tête de bloc partie ; `dark` = bandeau foncé (employeur, mis en avant).
+  const partyHeader = (titreBloc: string, tag: string, dark: boolean) => {
+    const hh = 22;
+    if (dark) {
+      rect(M, y - hh, W, hh, INK);
+      rect(M, y - hh, 4, hh, OR);
+      t(titreBloc, M + PAD, y - 15, 9, bold, BLANC);
+      rt(tag, M + W - PAD, y - 15, 7.5, bold, OR);
+    } else {
+      rect(M, y - hh, W, hh, CREME);
+      rect(M, y - hh, 4, hh, OR);
+      t(titreBloc, M + PAD, y - 15, 9, bold, INK);
+      rt(tag, M + W - PAD, y - 15, 7.5, bold, GRIS);
+    }
+    return hh;
+  };
+
+  // EMPLOYEUR — bloc mis en avant (bandeau foncé), 2 lignes de champs
+  const empBoxH = 22 + 14 + 30 + 30 + 8;
+  rect(M, y - empBoxH, W, empBoxH, undefined, LIGNE, 1);
+  partyHeader("L'EMPLOYEUR", "PARTIE 1", true);
+  let fy = y - 22 - 16;
+  field(M + PAD, colW, fy, "DÉNOMINATION", d.entrepriseNom || "L'entreprise");
+  field(M + PAD + colW + 24, colW, fy, "SIRET", d.siret || "—");
+  fy -= 30;
+  field(M + PAD, colW, fy, "SIÈGE SOCIAL", d.entrepriseAdresse || "—");
+  field(
+    M + PAD + colW + 24,
+    colW,
+    fy,
+    "REPRÉSENTÉE PAR",
+    `${d.representantNom || "—"}${d.representantQualite ? `, ${d.representantQualite}` : ""}`
+  );
+  y -= empBoxH;
+
+  // Connecteur « ET »
+  y -= 4;
+  hline(M + W / 2 - 64, M + W / 2 - 18, y - 3, LIGNE);
+  hline(M + W / 2 + 18, M + W / 2 + 64, y - 3, LIGNE);
+  tc("ET", M + W / 2, y - 6, 8.5, bold, OR);
+  y -= 18;
+
+  // SALARIÉ — bloc secondaire (bandeau crème)
+  const salBoxH = 22 + 14 + 30 + 8;
+  rect(M, y - salBoxH, W, salBoxH, undefined, LIGNE, 1);
+  partyHeader("LE SALARIÉ", "PARTIE 2", false);
+  fy = y - 22 - 16;
+  field(M + PAD, colW, fy, "NOM ET PRÉNOM", d.salarieNom || "Le/la salarié(e)");
+  field(M + PAD + colW + 24, colW, fy, "ADRESSE", d.salarieAdresse || "—");
+  y -= salBoxH;
+
+  // ─── Encadré « L'essentiel du contrat » ───
+  y -= 22;
+  const recap: Array<[string, string]> = [
+    ["POSTE OCCUPÉ", d.poste || "—"],
+    ["TYPE DE CONTRAT", cdi ? "CDI" : "CDD"],
+    ["PÉRIODE D'ESSAI", d.periodeEssai && d.periodeEssai !== "Aucune" ? d.periodeEssai : "Aucune"],
+    ["DATE DE DÉBUT", d.dateDebut || "—"],
+    [cdi ? "ÉCHÉANCE" : "DATE DE FIN", cdi ? "Indéterminée" : d.dateFin || "—"],
+    ["TEMPS DE TRAVAIL", `${d.heuresSemaine || 35} h / semaine`],
+    ["RÉMUNÉRATION BRUTE", `${eur(d.salaireBrut || 0)} € / mois`],
+    ["CONVENTION", d.conventionCollective || "—"],
+    ["CONGÉS PAYÉS", "2,5 j / mois"],
+  ];
+  const rcCols = 3;
+  const rcRows = Math.ceil(recap.length / rcCols);
+  const rcHead = 22;
+  const rcRowH = 32;
+  const rcH = rcHead + 8 + rcRows * rcRowH;
+  rect(M, y - rcH, W, rcH, undefined, OR, 1);
+  rect(M, y - rcHead, W, rcHead, ORL);
+  rect(M, y - rcHead, 4, rcHead, OR);
+  t("L'ESSENTIEL DU CONTRAT", M + PAD, y - 15, 9, bold, INK);
+  const rcColW = (W - PAD * 2) / rcCols;
+  recap.forEach((cell, i) => {
+    const r = Math.floor(i / rcCols);
+    const c = i % rcCols;
+    const cx = M + PAD + c * rcColW;
+    const cy = y - rcHead - 18 - r * rcRowH;
+    t(cell[0], cx, cy, 6.5, bold, GRIS);
+    for (const l of wrap(cell[1], bold, 10, rcColW - 12).slice(0, 1))
+      t(l, cx, cy - 13, 10.5, bold, INK);
+  });
+  // séparateurs de colonnes
+  for (let c = 1; c < rcCols; c++)
+    hline(M + PAD - 6 + c * rcColW, M + PAD - 6 + c * rcColW, y - rcHead - 6, LIGNE);
+  y -= rcH + 22;
+
+  // ─── Préambule ───
+  para(
+    "Les parties désignées ci-dessus, après s'être présentées et avoir échangé sur les conditions de la collaboration " +
+      "envisagée, ont arrêté d'un commun accord les dispositions qui suivent, lesquelles forment l'intégralité de leur " +
+      "engagement.",
+    10,
     font,
     GRIS
   );
-  y -= 28;
+  para("Il a été convenu et arrêté ce qui suit :", 10.5, bold);
 
-  // ─── Boîtes Employeur / Salarié ───
-  const gap = 16;
-  const bw = (W - gap) / 2;
-  const PAD = 11;
-  const innerW = bw - PAD * 2;
-
-  type L = { s: string; b: boolean; sz: number };
-  const buildLines = (items: Array<{ s: string; b?: boolean }>): L[] => {
-    const out: L[] = [];
-    for (const it of items) {
-      const sz = it.b ? 10 : 8.7;
-      const f = it.b ? bold : font;
-      for (const l of wrap(it.s, f, sz, innerW)) out.push({ s: l, b: !!it.b, sz });
-    }
-    return out;
-  };
-
-  const empLines = buildLines([
-    { s: d.entrepriseNom || "L'entreprise", b: true },
-    ...(d.siret ? [{ s: `SIRET ${d.siret}` }] : []),
-    { s: `Siège : ${d.entrepriseAdresse || "—"}` },
-    {
-      s: `Représentée par ${d.representantNom || "—"}, en qualité de ${d.representantQualite || "représentant"}`,
-    },
-  ]);
-  const salLines = buildLines([
-    { s: d.salarieNom || "Le/la salarié(e)", b: true },
-    { s: `Demeurant : ${d.salarieAdresse || "—"}` },
-    { s: `Engagé(e) en qualité de ${d.poste || "—"}` },
-  ]);
-
-  const HEADER_H = 17;
-  const lineH = 12.5;
-  const boxH =
-    HEADER_H + 10 + Math.max(empLines.length, salLines.length) * lineH + 6;
-
-  const drawParty = (x: number, titreBox: string, lines: L[]) => {
-    rect(x, y - boxH, bw, boxH, undefined, LIGNE, 1);
-    rect(x, y - HEADER_H, bw, HEADER_H, CREME);
-    rect(x, y - HEADER_H, 3, HEADER_H, OR);
-    t(titreBox, x + PAD, y - 12, 7.5, bold, GRIS);
-    let yy = y - HEADER_H - 13;
-    for (const ln of lines) {
-      t(ln.s, x + PAD, yy, ln.sz, ln.b ? bold : font, ln.b ? INK : GRIS);
-      yy -= lineH;
-    }
-  };
-  drawParty(M, "EMPLOYEUR", empLines);
-  drawParty(M + bw + gap, "SALARIÉ", salLines);
-  y -= boxH + 16;
-
-  para(
-    "Il a été convenu ce qui suit entre les parties désignées ci-dessus :",
-    10,
-    bold
-  );
-
-  // ─── Articles ───
+  // ════════════════ Articles ════════════════
   let art = 0;
   const artHeading = (titreArt: string) => {
-    ensure(40);
-    y -= 8;
+    ensure(46);
+    y -= 12;
     t(`ARTICLE ${++art}`, M, y, 7.5, bold, OR);
-    y -= 13;
-    t(titreArt, M, y, 11.5, bold, INK);
-    y -= 5;
-    rect(M, y, W, 0.6, LIGNE);
-    y -= 13;
+    rt(titreArt.toUpperCase(), M + W, y, 7, bold, GRIS);
+    y -= 15;
+    t(titreArt, M, y, 12.5, bold, INK);
+    y -= 6;
+    hline(M, M + W, y, OR, 1);
+    y -= 15;
   };
 
   artHeading("Engagement et fonctions");
   para(
-    `Le Salarié est engagé en qualité de ${d.poste || "—"}. Il exercera ses fonctions ` +
-      `sous l'autorité et selon les directives de l'Employeur, et se conformera au règlement intérieur de l'entreprise.`
+    `Le Salarié est engagé en qualité de ${d.poste || "—"}. Il exercera ses fonctions sous l'autorité et selon les ` +
+      `directives de l'Employeur, à qui il rendra compte de son activité. Il s'engage à consacrer tout le soin nécessaire ` +
+      `à l'accomplissement de ses missions et à se conformer au règlement intérieur de l'entreprise.`
   );
 
   artHeading("Durée du contrat");
   if (cdi) {
     para(
-      `Le présent contrat est conclu pour une durée indéterminée à compter du ${d.dateDebut || "—"}.`
+      `Le présent contrat est conclu pour une durée indéterminée à compter du ${d.dateDebut || "—"}. Il ne deviendra ` +
+        `définitif qu'à l'issue de la période d'essai éventuellement prévue à l'article suivant.`
     );
   } else {
     para(
-      `Le présent contrat est conclu pour une durée déterminée, du ${d.dateDebut || "—"} au ${d.dateFin || "—"}, ` +
-        `pour le motif suivant : ${d.motifCdd || "accroissement temporaire d'activité"}.`
+      `Le présent contrat est conclu pour une durée déterminée, du ${d.dateDebut || "—"} au ${d.dateFin || "—"}, pour le ` +
+        `motif suivant : ${d.motifCdd || "accroissement temporaire d'activité"}. Il prendra fin de plein droit à son terme, ` +
+        `sans formalité particulière.`
     );
   }
 
   artHeading("Période d'essai");
   para(
     d.periodeEssai && d.periodeEssai !== "Aucune"
-      ? `Le contrat est assorti d'une période d'essai de ${d.periodeEssai}, durant laquelle chacune des parties pourra y mettre fin dans les conditions légales.`
+      ? `Le contrat est assorti d'une période d'essai de ${d.periodeEssai}, durant laquelle chacune des parties pourra y ` +
+          `mettre fin librement, sans indemnité, sous réserve du respect du délai de prévenance légal.`
       : `Le contrat ne comporte pas de période d'essai.`
   );
 
   artHeading("Lieu de travail");
   para(
-    `Le Salarié exercera ses fonctions à : ${d.lieuTravail || d.entrepriseAdresse || "—"}. ` +
-      `Ce lieu pourra être modifié en fonction des nécessités de l'entreprise.`
+    `Le Salarié exercera principalement ses fonctions à : ${d.lieuTravail || d.entrepriseAdresse || "—"}. Cette mention ` +
+      `n'a pas valeur contractuelle ; le lieu de travail pourra être modifié au sein du même secteur géographique en ` +
+      `fonction des nécessités de l'entreprise.`
   );
 
-  artHeading("Durée du travail");
+  artHeading("Durée et organisation du travail");
   para(
-    `La durée hebdomadaire de travail est fixée à ${d.heuresSemaine || 35} heures, ` +
-      `répartie selon les horaires en vigueur dans l'entreprise.`
+    `La durée hebdomadaire de travail est fixée à ${d.heuresSemaine || 35} heures, réparties selon les horaires en ` +
+      `vigueur dans l'entreprise. Le Salarié pourra être amené à effectuer des heures supplémentaires à la demande de ` +
+      `l'Employeur, rémunérées ou récupérées dans les conditions légales et conventionnelles.`
   );
 
   artHeading("Rémunération");
   para(
-    `En contrepartie de son travail, le Salarié percevra une rémunération brute mensuelle de ${eur(d.salaireBrut || 0)} euros, ` +
-      `versée à la fin de chaque mois.`
+    `En contrepartie de son travail, le Salarié percevra une rémunération brute mensuelle de ${eur(d.salaireBrut || 0)} ` +
+      `euros, versée à la fin de chaque mois et correspondant à la durée de travail définie ci-dessus. Cette rémunération ` +
+      `donnera lieu à l'établissement d'un bulletin de paie.`
   );
 
   if (d.conventionCollective) {
     artHeading("Convention collective");
     para(
-      `Les relations entre les parties sont régies par la convention collective : ${d.conventionCollective}.`
+      `Les relations entre les parties sont régies par la convention collective : ${d.conventionCollective}, dont le ` +
+        `Salarié déclare avoir été informé et pouvoir prendre connaissance auprès de l'Employeur.`
     );
   }
 
   artHeading("Congés payés");
   para(
-    `Le Salarié bénéficiera des congés payés conformément aux dispositions légales et conventionnelles en vigueur, ` +
-      `soit 2,5 jours ouvrables par mois de travail effectif.`
+    `Le Salarié bénéficiera des congés payés conformément aux dispositions légales et conventionnelles en vigueur, soit ` +
+      `2,5 jours ouvrables par mois de travail effectif. Les dates de congés seront fixées en accord avec l'Employeur, ` +
+      `selon les nécessités du service.`
+  );
+
+  artHeading("Protection sociale et prévoyance");
+  para(
+    `Le Salarié sera affilié aux régimes de retraite complémentaire et de prévoyance dont relève l'entreprise, ainsi ` +
+      `qu'au régime de complémentaire santé collective lorsqu'il existe, dans les conditions prévues par les accords ` +
+      `applicables.`
   );
 
   artHeading("Obligations du Salarié");
   para(
-    `Le Salarié s'engage à exécuter son travail avec loyauté et diligence, à respecter les consignes de sécurité ` +
-      `et à observer une stricte confidentialité sur l'ensemble des informations, documents et données dont il aurait ` +
+    `Le Salarié s'engage à exécuter son travail avec loyauté et diligence, à respecter les consignes de sécurité et à ` +
+      `observer une stricte confidentialité sur l'ensemble des informations, documents et données dont il aurait ` +
       `connaissance dans l'exercice de ses fonctions, tant pendant l'exécution du contrat qu'après sa rupture.`
   );
 
-  // Clause propre au CDD : indemnité de fin de contrat (précarité).
   if (!cdi) {
     artHeading("Indemnité de fin de contrat");
     para(
-      `Au terme du contrat, et sauf cas d'exclusion prévus par la loi (notamment refus d'un CDI, rupture anticipée ` +
-        `à l'initiative du Salarié ou faute grave), le Salarié percevra une indemnité de fin de contrat égale à 10 % ` +
-        `de la rémunération brute totale versée pendant la durée du contrat, ainsi qu'une indemnité compensatrice de ` +
-        `congés payés.`
+      `Au terme du contrat, et sauf cas d'exclusion prévus par la loi (notamment refus d'un CDI à conditions équivalentes, ` +
+        `rupture anticipée à l'initiative du Salarié ou faute grave), le Salarié percevra une indemnité de fin de contrat ` +
+        `égale à 10 % de la rémunération brute totale versée pendant la durée du contrat, ainsi qu'une indemnité ` +
+        `compensatrice de congés payés.`
     );
   }
 
@@ -266,68 +334,61 @@ export async function buildContratPDF(d: ContratData): Promise<Uint8Array> {
   para(
     cdi
       ? `Le contrat pourra être rompu par l'une ou l'autre des parties dans le respect des dispositions légales et ` +
-          `conventionnelles applicables, notamment en matière de préavis et de procédure.`
-      : `Le contrat prendra fin de plein droit à son terme. Il ne pourra être rompu avant l'échéance que dans les cas ` +
-          `limitativement prévus par l'article L. 1243-1 du Code du travail.`
+          `conventionnelles applicables, notamment en matière de préavis, de motif et de procédure.`
+      : `Le contrat ne pourra être rompu avant l'échéance de son terme que dans les cas limitativement prévus par ` +
+          `l'article L. 1243-1 du Code du travail (accord des parties, faute grave, force majeure, inaptitude ou embauche ` +
+          `en CDI).`
   );
 
   artHeading("Dispositions générales");
   para(
-    `Pour tout ce qui n'est pas expressément prévu au présent contrat, les parties se réfèrent aux dispositions du ` +
-      `Code du travail et de la convention collective applicable. Les données personnelles du Salarié sont traitées ` +
-      `par l'Employeur pour les seuls besoins de la gestion du contrat, conformément au RGPD.`
+    `Pour tout ce qui n'est pas expressément prévu au présent contrat, les parties se réfèrent aux dispositions du Code ` +
+      `du travail et de la convention collective applicable. Les données personnelles du Salarié sont traitées par ` +
+      `l'Employeur pour les seuls besoins de la gestion de la relation de travail, conformément au Règlement général sur ` +
+      `la protection des données (RGPD), et conservées pendant la durée légale applicable.`
   );
 
-  // ─── Signatures ───
-  ensure(110);
-  y -= 6;
-  para(`Fait à ${d.ville || "—"}, le ${d.date || "—"}, en double exemplaire.`, 10);
-  y -= 4;
+  // ════════════════ Signatures ════════════════
+  ensure(150);
+  y -= 8;
+  para(
+    `Fait à ${d.ville || "—"}, le ${d.date || "—"}, en deux exemplaires originaux, dont un remis à chaque partie.`,
+    10
+  );
+  y -= 10;
 
-  const sigH = 70;
+  const sigGap = 30;
+  const sigW = (W - sigGap) / 2;
+  const sigH = 96;
   const sigBox = (x: number, role: string, name: string) => {
-    rect(x, y - sigH, bw, sigH, undefined, LIGNE, 1);
-    rect(x, y - HEADER_H, bw, HEADER_H, CREME);
-    rect(x, y - HEADER_H, 3, HEADER_H, OR);
-    t(role, x + PAD, y - 12, 7.5, bold, GRIS);
-    t(name || "—", x + PAD, y - HEADER_H - 14, 10, bold, INK);
-    t(
-      "Signature, précédée de « Lu et approuvé »",
-      x + PAD,
-      y - sigH + 9,
-      7,
-      font,
-      GRIS
-    );
+    rect(x, y - sigH, sigW, sigH, undefined, LIGNE, 1);
+    rect(x, y - 22, sigW, 22, CREME);
+    rect(x, y - 22, 4, 22, OR);
+    t(role, x + 14, y - 15, 8, bold, GRIS);
+    t(name || "—", x + 14, y - 40, 10.5, bold, INK);
+    t("« Lu et approuvé »", x + 14, y - 56, 8, font, GRIS);
+    hline(x + 14, x + sigW - 14, y - sigH + 22, LIGNE, 0.6);
+    t("Signature", x + 14, y - sigH + 9, 7, font, GRIS);
   };
   sigBox(M, "POUR L'EMPLOYEUR", d.representantNom);
-  sigBox(M + bw + gap, "LE SALARIÉ", d.salarieNom);
+  sigBox(M + sigW + sigGap, "LE SALARIÉ", d.salarieNom);
   y -= sigH;
 
-  // ─── Pied de page (sur toutes les pages) ───
+  // ─── Pied de page sur toutes les pages ───
   const n = pages.length;
   pages.forEach((p, i) => {
-    p.drawLine({
-      start: { x: M, y: 56 },
-      end: { x: M + W, y: 56 },
-      thickness: 0.6,
-      color: LIGNE,
-    });
+    p.drawLine({ start: { x: M, y: 58 }, end: { x: M + W, y: 58 }, thickness: 0.6, color: LIGNE });
     p.drawText("Document généré via Shift Office — shiftoffice.fr", {
       x: M,
-      y: 44,
+      y: 45,
       size: 7.5,
       font,
       color: OR,
     });
+    const lbl = cdi ? "Contrat à durée indéterminée" : "Contrat à durée déterminée";
+    p.drawText(lbl, { x: PW / 2 - font.widthOfTextAtSize(lbl, 7.5) / 2, y: 45, size: 7.5, font, color: GRIS });
     const pg = `Page ${i + 1} / ${n}`;
-    p.drawText(pg, {
-      x: M + W - font.widthOfTextAtSize(pg, 7.5),
-      y: 44,
-      size: 7.5,
-      font,
-      color: GRIS,
-    });
+    p.drawText(pg, { x: M + W - font.widthOfTextAtSize(pg, 7.5), y: 45, size: 7.5, font, color: GRIS });
   });
 
   return pdf.save();
