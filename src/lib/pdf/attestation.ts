@@ -50,11 +50,12 @@ export async function buildAttestationPDF(
 
   // — Titre —
   y -= 26;
-  text("ATTESTATION D'EMPLOI", M, y, 20, bold);
+  const titre = "ATTESTATION EMPLOYEUR";
+  text(titre, M, y, 20, bold);
   page.drawRectangle({
     x: M,
     y: y - 8,
-    width: bold.widthOfTextAtSize("ATTESTATION D'EMPLOI", 20),
+    width: bold.widthOfTextAtSize(titre, 20),
     height: 3,
     color: OR,
   });
