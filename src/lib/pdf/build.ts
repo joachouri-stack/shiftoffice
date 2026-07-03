@@ -9,6 +9,7 @@ import { buildStatutsPDF, type Associe, type StatutsData } from "./statuts";
 import { buildQuittancePDF } from "./quittance";
 import { buildAttestationPDF } from "./attestation";
 import { buildNoteFraisPDF, type DepenseLigne } from "./note-de-frais";
+import { buildAvenantPDF, type AvenantModif } from "./avenant";
 
 export type BuildResult = { pdf: Uint8Array; filename: string };
 
@@ -260,6 +261,33 @@ export async function buildDocument(
         date: S(d.date),
       });
       return { pdf, filename: "note-de-frais.pdf" };
+    }
+
+    case "avenant-contrat": {
+      const modifications: AvenantModif[] = Array.isArray(d.modifications)
+        ? (d.modifications as Array<Record<string, unknown>>).map((m) => ({
+            intitule: S(m.intitule),
+            ancien: S(m.ancien),
+            nouveau: S(m.nouveau),
+          }))
+        : [];
+      const pdf = await buildAvenantPDF({
+        entrepriseNom: S(d.entrepriseNom),
+        entrepriseAdresse: S(d.entrepriseAdresse),
+        siret: S(d.siret),
+        representantNom: S(d.representantNom),
+        representantQualite: S(d.representantQualite),
+        salarieNom: S(d.salarieNom),
+        salarieAdresse: S(d.salarieAdresse),
+        poste: S(d.poste),
+        dateContratInitial: S(d.dateContratInitial),
+        typeModif: S(d.typeModif),
+        dateEffet: S(d.dateEffet),
+        modifications,
+        ville: S(d.ville),
+        date: S(d.date),
+      });
+      return { pdf, filename: "avenant-contrat.pdf" };
     }
 
     default:

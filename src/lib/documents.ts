@@ -85,6 +85,15 @@ export const DOCUMENTS: DocItem[] = [
     free: false,
   },
   {
+    slug: "avenant-contrat",
+    title: "Avenant au contrat",
+    badge: "Nouveau",
+    price: 5,
+    desc: "Modification du contrat : salaire, poste, horaires, prolongation CDD.",
+    tags: ["Salaire", "Poste", "Temps partiel", "Clauses 2026"],
+    free: false,
+  },
+  {
     slug: "quittance-loyer",
     title: "Quittance de loyer",
     badge: "Gratuit",
