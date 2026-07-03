@@ -52,10 +52,13 @@ export async function buildAttestationPDF(
   y -= 26;
   const titre = "ATTESTATION EMPLOYEUR";
   text(titre, M, y, 20, bold);
+  // Le trait épouse la largeur du titre. Petite marge de sécurité (+3 pt) pour
+  // qu'il couvre toujours le titre en entier, même si la visionneuse PDF
+  // substitue une police dont les glyphes sont légèrement plus larges.
   page.drawRectangle({
     x: M,
     y: y - 8,
-    width: bold.widthOfTextAtSize(titre, 20),
+    width: bold.widthOfTextAtSize(titre, 20) + 3,
     height: 3,
     color: OR,
   });
