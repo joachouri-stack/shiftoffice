@@ -8,6 +8,7 @@ import { buildBailCommercialPDF } from "./bail-commercial";
 import { buildStatutsPDF, type Associe, type StatutsData } from "./statuts";
 import { buildQuittancePDF } from "./quittance";
 import { buildAttestationPDF } from "./attestation";
+import { buildNoteFraisPDF, type DepenseLigne } from "./note-de-frais";
 
 export type BuildResult = { pdf: Uint8Array; filename: string };
 
@@ -236,6 +237,29 @@ export async function buildDocument(
         date: S(d.date),
       });
       return { pdf, filename: "attestation-employeur.pdf" };
+    }
+
+    case "note-de-frais": {
+      const lignes: DepenseLigne[] = Array.isArray(d.lignes)
+        ? (d.lignes as Array<Record<string, unknown>>).map((l) => ({
+            date: S(l.date),
+            nature: S(l.nature),
+            montantTTC: num(l.montantTTC),
+            tauxTVA: num(l.tauxTVA),
+          }))
+        : [];
+      const pdf = await buildNoteFraisPDF({
+        entrepriseNom: S(d.entrepriseNom),
+        entrepriseAdresse: S(d.entrepriseAdresse),
+        siret: S(d.siret),
+        demandeurNom: S(d.demandeurNom),
+        demandeurQualite: S(d.demandeurQualite),
+        periode: S(d.periode),
+        lignes,
+        ville: S(d.ville),
+        date: S(d.date),
+      });
+      return { pdf, filename: "note-de-frais.pdf" };
     }
 
     default:

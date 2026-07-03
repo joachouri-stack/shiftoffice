@@ -76,6 +76,15 @@ export const DOCUMENTS: DocItem[] = [
     free: false,
   },
   {
+    slug: "note-de-frais",
+    title: "Note de frais",
+    badge: "Nouveau",
+    price: 3,
+    desc: "Relevé de dépenses professionnelles avec calcul TVA automatique.",
+    tags: ["Calcul TVA auto", "Toutes catégories", "Conforme 2026"],
+    free: false,
+  },
+  {
     slug: "quittance-loyer",
     title: "Quittance de loyer",
     badge: "Gratuit",
