@@ -94,6 +94,15 @@ export const DOCUMENTS: DocItem[] = [
     free: false,
   },
   {
+    slug: "lettre-licenciement",
+    title: "Lettre de licenciement",
+    badge: "Légal",
+    price: 12,
+    desc: "Lettre officielle avec calcul des indemnités et vérification des délais légaux 2026.",
+    tags: ["Indemnités calculées", "Délais légaux", "Faute grave", "Licenciement éco"],
+    free: false,
+  },
+  {
     slug: "quittance-loyer",
     title: "Quittance de loyer",
     badge: "Gratuit",

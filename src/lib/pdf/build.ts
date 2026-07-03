@@ -10,6 +10,14 @@ import { buildQuittancePDF } from "./quittance";
 import { buildAttestationPDF } from "./attestation";
 import { buildNoteFraisPDF, type DepenseLigne } from "./note-de-frais";
 import { buildAvenantPDF, type AvenantModif } from "./avenant";
+import { buildLettreLicenciementPDF } from "./licenciement";
+import {
+  calculerAnciennete,
+  calculerPreavis,
+  calculerIndemnite,
+  LIBELLE_TYPE,
+  type TypeLicenciement,
+} from "@/lib/paie/licenciement";
 
 export type BuildResult = { pdf: Uint8Array; filename: string };
 
@@ -288,6 +296,45 @@ export async function buildDocument(
         date: S(d.date),
       });
       return { pdf, filename: "avenant-contrat.pdf" };
+    }
+
+    case "lettre-licenciement": {
+      const types: TypeLicenciement[] = ["cause-reelle", "faute-grave", "faute-lourde", "economique"];
+      const typeKey = types.includes(d.typeLicenciement as TypeLicenciement)
+        ? (d.typeLicenciement as TypeLicenciement)
+        : "cause-reelle";
+      const dateEmbauche = S(d.dateEmbauche);
+      const salaireBrut = num(d.salaireBrut);
+      const anc = calculerAnciennete(dateEmbauche);
+      const ind = calculerIndemnite(dateEmbauche, salaireBrut, typeKey);
+      const ancLabel =
+        anc.totalMois > 0
+          ? [anc.annees ? `${anc.annees} an${anc.annees > 1 ? "s" : ""}` : "", anc.mois ? `${anc.mois} mois` : ""]
+              .filter(Boolean)
+              .join(" et ")
+          : "moins d'un mois";
+      const pdf = await buildLettreLicenciementPDF({
+        entrepriseNom: S(d.entrepriseNom),
+        entrepriseAdresse: S(d.entrepriseAdresse),
+        siret: S(d.siret),
+        representantNom: S(d.representantNom),
+        representantQualite: S(d.representantQualite),
+        salarieNom: S(d.salarieNom),
+        salarieAdresse: S(d.salarieAdresse),
+        poste: S(d.poste),
+        typeKey,
+        typeLibelle: LIBELLE_TYPE[typeKey],
+        motifs: S(d.motifs),
+        dateEntretien: S(d.dateEntretien),
+        dateEnvoi: S(d.dateEnvoi),
+        preavis: calculerPreavis(anc, typeKey),
+        indemniteEligible: ind.eligible,
+        indemnite: ind.indemnite,
+        ancienneteLabel: ancLabel,
+        ville: S(d.ville),
+        date: S(d.date),
+      });
+      return { pdf, filename: "lettre-licenciement.pdf" };
     }
 
     default:

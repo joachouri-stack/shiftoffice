@@ -92,7 +92,9 @@ function DocCard({ doc }: { doc: DocItem }) {
                                 ? "/note-de-frais"
                                 : doc.slug === "avenant-contrat"
                                   ? "/avenant-contrat"
-                                  : `/generer/${doc.slug}`
+                                  : doc.slug === "lettre-licenciement"
+                                    ? "/lettre-licenciement"
+                                    : `/generer/${doc.slug}`
           }
           className="bg-orange hover:bg-orange-d inline-flex items-center gap-1.5 rounded-[10px] px-4 py-2.5 text-sm font-bold text-white transition-colors"
         >
