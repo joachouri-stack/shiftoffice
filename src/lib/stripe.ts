@@ -30,8 +30,9 @@ export function isStripeEnabled(): boolean {
  * configuré. À activer pour tester, à retirer pour le lancement.
  */
 export function isPaiementLibre(): boolean {
-  const v = process.env.PAIEMENT_LIBRE ?? process.env.NEXT_PUBLIC_PAIEMENT_LIBRE;
-  return v === "1" || v === "true";
+  const raw = process.env.PAIEMENT_LIBRE ?? process.env.NEXT_PUBLIC_PAIEMENT_LIBRE ?? "";
+  const v = raw.trim().toLowerCase();
+  return v === "1" || v === "true" || v === "yes" || v === "on";
 }
 
 /** Le paiement est-il réellement exigé (Stripe actif et mode libre désactivé) ? */
