@@ -1,6 +1,6 @@
 import {
   getStripe,
-  isStripeEnabled,
+  paiementActif,
   priceForSlug,
   titleForSlug,
 } from "@/lib/stripe";
@@ -38,8 +38,9 @@ export async function POST(req: Request) {
   const slug = body.slug ?? body.type ?? "";
   const type = body.type ?? slug;
 
-  // Stripe non configuré → le client générera directement le document.
-  if (!isStripeEnabled()) {
+  // Paiement inactif (Stripe absent ou mode « test gratuit » PAIEMENT_LIBRE) →
+  // le client générera directement le document, sans passer par Stripe.
+  if (!paiementActif()) {
     return Response.json({ paymentDisabled: true });
   }
 

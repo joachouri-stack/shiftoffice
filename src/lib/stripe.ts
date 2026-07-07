@@ -24,6 +24,21 @@ export function isStripeEnabled(): boolean {
   return Boolean(process.env.STRIPE_SECRET_KEY);
 }
 
+/**
+ * Mode « test gratuit » : quand `PAIEMENT_LIBRE` vaut 1/true, le paiement est
+ * neutralisé et tous les documents se génèrent directement, même si Stripe est
+ * configuré. À activer pour tester, à retirer pour le lancement.
+ */
+export function isPaiementLibre(): boolean {
+  const v = process.env.PAIEMENT_LIBRE ?? process.env.NEXT_PUBLIC_PAIEMENT_LIBRE;
+  return v === "1" || v === "true";
+}
+
+/** Le paiement est-il réellement exigé (Stripe actif et mode libre désactivé) ? */
+export function paiementActif(): boolean {
+  return isStripeEnabled() && !isPaiementLibre();
+}
+
 /** Prix (en euros) d'un document payant, d'après le catalogue. */
 export function priceForSlug(slug: string): number | null {
   const doc = DOCUMENTS.find((d) => d.slug === slug);
