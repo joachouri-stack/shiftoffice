@@ -111,6 +111,14 @@ export async function buildBailCommercialPDF(
     total -= tr;
     tracked(s, cxx - total / 2, yy, size, f, c, tr);
   };
+  // Tronque un libellé (gras) trop large avec « … ».
+  const clipB = (s: string, size: number, maxW: number): string => {
+    if (sansB.widthOfTextAtSize(s, size) <= maxW) return s;
+    let out = s;
+    while (out.length > 1 && sansB.widthOfTextAtSize(out + "…", size) > maxW)
+      out = out.slice(0, -1);
+    return out.trimEnd() + "…";
+  };
 
   const precaire = d.typeBail === "precaire";
   const mensuel = (d.loyerAnnuel || 0) / 12;
@@ -179,7 +187,7 @@ export async function buildBailCommercialPDF(
     rect(x, y - 23, colW, 20, headerBg);
     tracked(label, x + ipad, y - 17, 9, sansB, headerColor, 1.5);
     let by = y - 23 - 18;
-    t(name, x + ipad, by, 11.5, sansB, NAVY);
+    t(clipB(name, 11.5, innerW), x + ipad, by, 11.5, sansB, NAVY);
     by -= 16;
     for (const [lbl, val] of items) {
       const lblW = sansB.widthOfTextAtSize(`${lbl} `, 9);
@@ -446,7 +454,7 @@ export async function buildBailCommercialPDF(
     rect(x, y - sigBlocH, sigW, sigBlocH, G100, G300, 1);
     rect(x, y - 20, sigW, 20, NAVY);
     tracked(label, x + ipad, y - 14, 9, sansB, WHITE, 1.5);
-    t(name || "—", x + ipad, y - 38, 10.5, sansB, TEXT);
+    t(clipB(name || "—", 10.5, sigW - 24), x + ipad, y - 38, 10.5, sansB, TEXT);
     t(role, x + ipad, y - 51, 8.5, sans, G500);
     hline(x + ipad, x + sigW - ipad, y - sigBlocH + 24, NAVY, 0.8);
     t("Lu et approuvé — Bon pour accord", x + ipad, y - sigBlocH + 11, 8, serifI, G500);

@@ -128,9 +128,28 @@ export async function buildStatutsPDF(d: StatutsData): Promise<Uint8Array> {
   rect(0, PH - bandH, PW, bandH, NAVY);
   rect(0, PH - bandH, PW, 3, GOLD);
   const cx = PW / 2;
+  // Adapte taille et interlettrage pour qu'un libellé long tienne dans le
+  // bandeau, puis tronque avec « … » en dernier recours.
+  const fitTracked = (s: string, yy: number, size: number, tr: number, maxW: number, color = WHITE) => {
+    const width = (txt: string, sz: number, sp: number) => {
+      let w = 0;
+      for (const ch of txt) w += sansB.widthOfTextAtSize(ch, sz) + sp;
+      return w - sp;
+    };
+    let sz = size;
+    let sp = tr;
+    while (width(s, sz, sp) > maxW && (sz > 7.5 || sp > 0.4)) {
+      if (sp > 0.4) sp = Math.max(0.4, sp - 0.4);
+      else sz -= 0.5;
+    }
+    let out = s;
+    while (out.length > 1 && width(out + "…", sz, sp) > maxW) out = out.slice(0, -1);
+    if (out !== s) out = out.trimEnd() + "…";
+    trackedC(out, cx, yy, sz, sansB, color, sp);
+  };
   trackedC("STATUTS", cx, PH - 42, 22, sansB, WHITE, 4.5);
-  trackedC((d.denomination || "—").toUpperCase(), cx, PH - 65, 11, sansB, WHITE, 2);
-  trackedC(formeLongue[d.forme].toUpperCase(), cx, PH - 84, 8.5, sansB, GOLD, 1.6);
+  fitTracked((d.denomination || "—").toUpperCase(), PH - 65, 11, 2, W - 20);
+  fitTracked(formeLongue[d.forme].toUpperCase(), PH - 84, 8.5, 1.6, W - 20, GOLD);
   y = PH - bandH - 22;
 
   // ── L'essentiel de la société ──
@@ -408,7 +427,7 @@ export async function buildStatutsPDF(d: StatutsData): Promise<Uint8Array> {
     rect(x, y - sigBlocH, sigW, sigBlocH, G100, G300, 1);
     rect(x, y - 20, sigW, 20, NAVY);
     tracked(label, x + 12, y - 14, 8.5, sansB, WHITE, 1.2);
-    t(name || "—", x + 12, y - 38, 10.5, sansB, TEXT);
+    t(clipLine(name || "—", 10.5, sigW - 24), x + 12, y - 38, 10.5, sansB, TEXT);
     hline(x + 12, x + sigW - 12, y - sigBlocH + 24, NAVY, 0.8);
     t("Lu et approuvé — Bon pour accord", x + 12, y - sigBlocH + 11, 8, serifI, G500);
   };
@@ -444,7 +463,13 @@ export async function buildStatutsPDF(d: StatutsData): Promise<Uint8Array> {
       font: sans,
       color: G500,
     });
-    p.drawText(`Statuts — ${d.denomination || d.forme}`, { x: M, y: 30, size: 8, font: sans, color: G500 });
+    p.drawText(clipLine(`Statuts — ${d.denomination || d.forme}`, 8, W - 70), {
+      x: M,
+      y: 30,
+      size: 8,
+      font: sans,
+      color: G500,
+    });
   });
 
   return pdf.save();
