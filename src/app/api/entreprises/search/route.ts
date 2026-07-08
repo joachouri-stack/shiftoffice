@@ -62,17 +62,29 @@ export async function GET(req: Request) {
     if (!r.ok) return Response.json([]);
     const data = (await r.json()) as { results?: ApiResult[] };
 
+    const escapeReg = (v: string) => v.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
     const out = (data.results ?? []).map((e) => {
       const s = e.siege ?? {};
       const naf = e.activite_principale ?? "";
+      const cp = s.code_postal || "";
+      const commune = s.libelle_commune || s.commune || "";
+      // Adresse = la rue seule : le code postal et la ville sont renvoyés à
+      // part, et les formulaires les recomposent (sinon ils seraient doublés).
+      const rue = [s.numero_voie, s.type_voie, s.libelle_voie]
+        .filter(Boolean)
+        .join(" ");
+      let adresse = rue || s.adresse || "";
+      if (!rue && cp && commune) {
+        adresse = adresse
+          .replace(new RegExp(`[,\\s]*${escapeReg(cp)}\\s+${escapeReg(commune)}\\s*$`, "i"), "")
+          .trim();
+      }
       return {
         nom: e.nom_complet || e.nom_raison_sociale || "",
         siret: s.siret || "",
-        adresse:
-          s.adresse ||
-          [s.numero_voie, s.type_voie, s.libelle_voie].filter(Boolean).join(" "),
-        codePostal: s.code_postal || "",
-        ville: s.libelle_commune || s.commune || "",
+        adresse,
+        codePostal: cp,
+        ville: commune,
         codeNaf: naf,
         convention: CONVENTIONS_NAF[naf] || "",
       };

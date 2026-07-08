@@ -24,6 +24,7 @@ import {
   type LocalEntreprise,
   type LocalSalarie,
 } from "@/lib/local/store";
+import { adresseComplete } from "@/lib/adresse";
 
 const MOIS = [
   "Janvier", "Février", "Mars", "Avril", "Mai", "Juin",
@@ -143,9 +144,7 @@ export default function FicheDePaieFlow() {
     setErr("");
     const donnees = {
       entrepriseNom: ent?.nom ?? "",
-      entrepriseAdresse: [ent?.adresse, [ent?.codePostal, ent?.ville].filter(Boolean).join(" ")]
-        .filter(Boolean)
-        .join(", "),
+      entrepriseAdresse: adresseComplete(ent?.adresse, ent?.codePostal, ent?.ville),
       siret: ent?.siret ?? "",
       codeApe: ent?.codeNaf ?? "",
       conventionCollective: ent?.convention ?? "",

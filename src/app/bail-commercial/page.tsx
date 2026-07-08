@@ -7,6 +7,7 @@ import { Logo } from "@/components/brand/Logo";
 import { EmailCopy } from "@/components/documents/EmailCopy";
 import { EntrepriseStep, Row, ProgressBar, FIELD } from "@/components/flow/Steps";
 import { localStore, type LocalEntreprise } from "@/lib/local/store";
+import { adresseComplete } from "@/lib/adresse";
 
 const LABELS: Record<string, string> = {
   entreprise: "Le bailleur",
@@ -76,9 +77,7 @@ export default function BailCommercialFlow() {
     setErr("");
     const donnees = {
       bailleurNom: ent?.nom ?? "",
-      bailleurAdresse: [ent?.adresse, [ent?.codePostal, ent?.ville].filter(Boolean).join(" ")]
-        .filter(Boolean)
-        .join(", "),
+      bailleurAdresse: adresseComplete(ent?.adresse, ent?.codePostal, ent?.ville),
       bailleurQualite: ent?.representantQualite || "Propriétaire",
       preneurNom,
       preneurAdresse,

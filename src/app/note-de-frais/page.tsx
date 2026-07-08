@@ -7,6 +7,7 @@ import { Logo } from "@/components/brand/Logo";
 import { EmailCopy } from "@/components/documents/EmailCopy";
 import { EntrepriseStep, Row, ProgressBar, FIELD } from "@/components/flow/Steps";
 import { localStore, type LocalEntreprise } from "@/lib/local/store";
+import { adresseComplete } from "@/lib/adresse";
 
 const LABELS: Record<string, string> = {
   entreprise: "Votre entreprise",
@@ -101,9 +102,7 @@ export default function NoteFraisFlow() {
     setErr("");
     const donnees = {
       entrepriseNom: ent?.nom ?? "",
-      entrepriseAdresse: [ent?.adresse, [ent?.codePostal, ent?.ville].filter(Boolean).join(" ")]
-        .filter(Boolean)
-        .join(", "),
+      entrepriseAdresse: adresseComplete(ent?.adresse, ent?.codePostal, ent?.ville),
       siret: ent?.siret ?? "",
       demandeurNom,
       demandeurQualite: qualite,

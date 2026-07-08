@@ -7,6 +7,7 @@ import { Logo } from "@/components/brand/Logo";
 import { EmailCopy } from "@/components/documents/EmailCopy";
 import { EntrepriseStep, SalarieStep, Row, ProgressBar, FIELD } from "@/components/flow/Steps";
 import { localStore, type LocalEntreprise, type LocalSalarie } from "@/lib/local/store";
+import { adresseComplete } from "@/lib/adresse";
 
 const LABELS: Record<string, string> = {
   entreprise: "Votre entreprise",
@@ -68,7 +69,7 @@ export default function ContratTravailFlow() {
     const e = localStore.getEntreprise();
     setEnt(e);
     if (e?.convention) setConvention(e.convention);
-    if (e?.adresse) setLieuTravail([e.adresse, [e.codePostal, e.ville].filter(Boolean).join(" ")].filter(Boolean).join(", "));
+    if (e?.adresse) setLieuTravail(adresseComplete(e.adresse, e.codePostal, e.ville));
     const id = new URLSearchParams(window.location.search).get("s");
     const found = id ? localStore.getSalaries().find((x) => x.id === id) : null;
     if (found) loadSalarie(found);
@@ -106,9 +107,7 @@ export default function ContratTravailFlow() {
     setErr("");
     const donnees = {
       entrepriseNom: ent?.nom ?? "",
-      entrepriseAdresse: [ent?.adresse, [ent?.codePostal, ent?.ville].filter(Boolean).join(" ")]
-        .filter(Boolean)
-        .join(", "),
+      entrepriseAdresse: adresseComplete(ent?.adresse, ent?.codePostal, ent?.ville),
       siret: ent?.siret ?? "",
       representantNom: ent?.representantNom ?? "",
       representantQualite: ent?.representantQualite ?? "",

@@ -17,6 +17,7 @@ import {
   type LocalEntreprise,
   type LocalSalarie,
 } from "@/lib/local/store";
+import { adresseComplete } from "@/lib/adresse";
 
 const LABELS: Record<string, string> = {
   entreprise: "Votre entreprise",
@@ -101,9 +102,7 @@ export default function SoldeToutCompteFlow() {
     setErr("");
     const donnees = {
       entrepriseNom: ent?.nom ?? "",
-      entrepriseAdresse: [ent?.adresse, [ent?.codePostal, ent?.ville].filter(Boolean).join(" ")]
-        .filter(Boolean)
-        .join(", "),
+      entrepriseAdresse: adresseComplete(ent?.adresse, ent?.codePostal, ent?.ville),
       siret: ent?.siret ?? "",
       representantNom: ent?.representantNom ?? "",
       representantQualite: ent?.representantQualite ?? "",

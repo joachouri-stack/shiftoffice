@@ -7,6 +7,7 @@ import { Logo } from "@/components/brand/Logo";
 import { EmailCopy } from "@/components/documents/EmailCopy";
 import { EntrepriseStep, SalarieStep, Row, ProgressBar, FIELD } from "@/components/flow/Steps";
 import { localStore, type LocalEntreprise, type LocalSalarie } from "@/lib/local/store";
+import { adresseComplete } from "@/lib/adresse";
 import { SMIC_MENSUEL } from "@/lib/paie/calcul";
 
 const LABELS: Record<string, string> = {
@@ -152,7 +153,7 @@ export default function AvenantFlow() {
     setErr("");
     const donnees = {
       entrepriseNom: ent?.nom ?? "",
-      entrepriseAdresse: [ent?.adresse, [ent?.codePostal, ent?.ville].filter(Boolean).join(" ")].filter(Boolean).join(", "),
+      entrepriseAdresse: adresseComplete(ent?.adresse, ent?.codePostal, ent?.ville),
       siret: ent?.siret ?? "",
       representantNom: ent?.representantNom ?? "",
       representantQualite: ent?.representantQualite ?? "",

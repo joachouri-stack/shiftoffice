@@ -94,6 +94,14 @@ export async function buildFichePaiePDF(d: FichePaieData): Promise<Uint8Array> {
   const bw = (W - gap) / 2;
   const bh = 88;
   const by = y - bh;
+  // Tronque une valeur trop longue pour qu'elle reste dans son encadré.
+  const clip = (s: string, size: number, maxW: number, f = font) => {
+    if (f.widthOfTextAtSize(s, size) <= maxW) return s;
+    let out = s;
+    while (out.length > 1 && f.widthOfTextAtSize(out + "…", size) > maxW)
+      out = out.slice(0, -1);
+    return out.trimEnd() + "…";
+  };
   const infoBox = (
     x: number,
     titre: string,
@@ -105,8 +113,9 @@ export async function buildFichePaiePDF(d: FichePaieData): Promise<Uint8Array> {
     let yy = by + bh - 27;
     for (const [k, v] of lignes) {
       if (!v) continue;
+      const f = k === "" ? bold : font;
       t(k, x + 8, yy, 7, font, GRIS);
-      t(v, x + 64, yy, 7.5, k === "" ? bold : font, INK);
+      t(clip(v, 7.5, bw - 64 - 8, f), x + 64, yy, 7.5, f, INK);
       yy -= 11;
     }
   };
