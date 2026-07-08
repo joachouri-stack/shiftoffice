@@ -76,7 +76,7 @@ export async function buildSoldeToutComptePDF(d: SoldeData): Promise<Uint8Array>
   page.drawRectangle({
     x: M,
     y: y - 9,
-    width: bold.widthOfTextAtSize("REÇU POUR SOLDE DE TOUT COMPTE", 17),
+    width: bold.widthOfTextAtSize("REÇU POUR SOLDE DE TOUT COMPTE", 17) + 3,
     height: 3,
     color: OR,
   });

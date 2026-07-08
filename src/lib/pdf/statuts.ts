@@ -85,7 +85,7 @@ export async function buildStatutsPDF(d: StatutsData): Promise<Uint8Array> {
   page.drawRectangle({
     x: M,
     y: y - 9,
-    width: bold.widthOfTextAtSize("STATUTS", 20),
+    width: bold.widthOfTextAtSize("STATUTS", 20) + 3,
     height: 3,
     color: OR,
   });

@@ -50,7 +50,7 @@ export async function buildQuittancePDF(d: QuittanceData): Promise<Uint8Array> {
   page.drawRectangle({
     x: M,
     y: y - 8,
-    width: bold.widthOfTextAtSize(titre, 20),
+    width: bold.widthOfTextAtSize(titre, 20) + 3,
     height: 3,
     color: OR,
   });

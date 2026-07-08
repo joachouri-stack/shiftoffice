@@ -73,7 +73,7 @@ export async function buildBailCommercialPDF(
   page.drawRectangle({
     x: M,
     y: y - 9,
-    width: bold.widthOfTextAtSize("BAIL COMMERCIAL", 17),
+    width: bold.widthOfTextAtSize("BAIL COMMERCIAL", 17) + 3,
     height: 3,
     color: OR,
   });

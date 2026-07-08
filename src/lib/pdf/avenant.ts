@@ -80,7 +80,7 @@ export async function buildAvenantPDF(d: AvenantData): Promise<Uint8Array> {
   page.drawRectangle({
     x: M,
     y: y - 9,
-    width: bold.widthOfTextAtSize("AVENANT AU CONTRAT DE TRAVAIL", 17),
+    width: bold.widthOfTextAtSize("AVENANT AU CONTRAT DE TRAVAIL", 17) + 3,
     height: 3,
     color: OR,
   });

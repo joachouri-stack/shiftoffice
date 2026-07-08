@@ -79,7 +79,7 @@ export async function buildNoteFraisPDF(d: NoteFraisData): Promise<Uint8Array> {
   page.drawRectangle({
     x: M,
     y: y - 9,
-    width: bold.widthOfTextAtSize("NOTE DE FRAIS", 20),
+    width: bold.widthOfTextAtSize("NOTE DE FRAIS", 20) + 3,
     height: 3,
     color: OR,
   });

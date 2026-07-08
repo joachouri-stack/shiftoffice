@@ -81,7 +81,7 @@ export async function buildFichePaiePDF(d: FichePaieData): Promise<Uint8Array> {
 
   // ─── Titre + période ───
   t("BULLETIN DE PAIE", M, y, 18, bold);
-  rect(M, y - 8, bold.widthOfTextAtSize("BULLETIN DE PAIE", 18), 3, OR);
+  rect(M, y - 8, bold.widthOfTextAtSize("BULLETIN DE PAIE", 18) + 3, 3, OR);
   const per = `Période : ${d.periode || "—"}`;
   const perW = bold.widthOfTextAtSize(per, 9) + 20;
   rect(R - perW, y - 3, perW, 21, ORL, OR, 0.8);
