@@ -167,10 +167,18 @@ export async function buildDocument(
     }
 
     case "bail-commercial": {
+      const materiel = Array.isArray(d.materiel)
+        ? (d.materiel as Array<Record<string, unknown>>).map((m) => ({
+            designation: S(m.designation),
+            etat: S(m.etat),
+          }))
+        : [];
       const pdf = await buildBailCommercialPDF({
+        typeBail: d.typeBail === "precaire" ? "precaire" : "commercial",
         bailleurNom: S(d.bailleurNom),
         bailleurAdresse: S(d.bailleurAdresse),
         bailleurQualite: S(d.bailleurQualite),
+        bailleurSiret: S(d.bailleurSiret),
         preneurNom: S(d.preneurNom),
         preneurAdresse: S(d.preneurAdresse),
         preneurRcs: S(d.preneurRcs),
@@ -178,8 +186,11 @@ export async function buildDocument(
         descriptionLocal: S(d.descriptionLocal),
         surface: S(d.surface),
         destination: S(d.destination),
+        materiel,
         loyerAnnuel: num(d.loyerAnnuel),
         depotGarantie: num(d.depotGarantie),
+        pasDePorte: num(d.pasDePorte),
+        pasDePorteNature: d.pasDePorteNature === "indemnite" ? "indemnite" : "supplement",
         charges: S(d.charges),
         indiceRevision: S(d.indiceRevision),
         dateDebut: S(d.dateDebut),

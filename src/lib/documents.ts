@@ -51,10 +51,10 @@ export const DOCUMENTS: DocItem[] = [
   {
     slug: "bail-commercial",
     title: "Bail commercial",
-    badge: "Bail 3-6-9",
+    badge: "3-6-9 / précaire",
     price: 9,
-    desc: "Bail commercial complet : durée 3-6-9, clauses et révision du loyer.",
-    tags: ["Durée 3-6-9", "Dépôt de garantie", "Révision"],
+    desc: "Bail 3-6-9 ou bail précaire : clauses complètes, matériel inclus, pas-de-porte.",
+    tags: ["3-6-9 ou précaire", "Pas-de-porte", "Matériel inventorié", "Révision ILC"],
     free: false,
   },
   {

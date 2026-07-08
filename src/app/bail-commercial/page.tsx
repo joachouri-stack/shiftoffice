@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { ArrowLeft, ArrowRight, Check, Download, Loader2 } from "lucide-react";
+import { AlertTriangle, ArrowLeft, ArrowRight, Check, Download, Loader2, Plus, Trash2 } from "lucide-react";
 import { Logo } from "@/components/brand/Logo";
 import { EmailCopy } from "@/components/documents/EmailCopy";
 import { EntrepriseStep, Row, ProgressBar, FIELD } from "@/components/flow/Steps";
@@ -12,12 +12,20 @@ import { adresseComplete } from "@/lib/adresse";
 
 const LABELS: Record<string, string> = {
   entreprise: "Le bailleur",
+  type: "Type de bail",
   preneur: "Le preneur",
-  local: "Le local",
-  loyer: "Loyer & charges",
+  local: "Le local & le matériel",
+  loyer: "Conditions financières",
   duree: "Durée du bail",
   verification: "Vérification",
 };
+
+const INDICES = [
+  "ILC (Indice des loyers commerciaux)",
+  "ILAT (Indice des loyers des activités tertiaires)",
+];
+
+type Materiel = { designation: string; etat: string };
 
 const eur = (n: number) =>
   n.toLocaleString("fr-FR", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + " €";
@@ -33,6 +41,8 @@ export default function BailCommercialFlow() {
   const [steps, setSteps] = useState<string[]>([]);
   const [i, setI] = useState(0);
 
+  const [typeBail, setTypeBail] = useState<"commercial" | "precaire">("commercial");
+
   const [preneurNom, setPreneurNom] = useState("");
   const [preneurAdresse, setPreneurAdresse] = useState("");
   const [preneurRcs, setPreneurRcs] = useState("");
@@ -41,14 +51,19 @@ export default function BailCommercialFlow() {
   const [descriptionLocal, setDescriptionLocal] = useState("");
   const [surface, setSurface] = useState("");
   const [destination, setDestination] = useState("");
+  const [equipe, setEquipe] = useState(false);
+  const [materiel, setMateriel] = useState<Materiel[]>([{ designation: "", etat: "bon état" }]);
 
   const [loyerAnnuel, setLoyerAnnuel] = useState("");
   const [depotGarantie, setDepotGarantie] = useState("");
+  const [pasDePorte, setPasDePorte] = useState("");
+  const [pasDePorteNature, setPasDePorteNature] = useState<"supplement" | "indemnite">("supplement");
   const [charges, setCharges] = useState("");
 
   const [dateDebut, setDateDebut] = useState(todayFr());
-  const [duree, setDuree] = useState("9 ans (3-6-9)");
-  const [indiceRevision, setIndiceRevision] = useState("ILC (Indice des loyers commerciaux)");
+  const [dureeAnnees, setDureeAnnees] = useState("9");
+  const [dureeMois, setDureeMois] = useState("24");
+  const [indiceRevision, setIndiceRevision] = useState(INDICES[0]);
 
   const [busy, setBusy] = useState(false);
   const [done, setDone] = useState(false);
@@ -60,7 +75,7 @@ export default function BailCommercialFlow() {
     setEnt(e);
     const list: string[] = [];
     if (!e) list.push("entreprise");
-    list.push("preneur", "local", "loyer", "duree", "verification");
+    list.push("type", "preneur", "local", "loyer", "duree", "verification");
     setSteps(list);
     setReady(true);
   }, []);
@@ -71,15 +86,24 @@ export default function BailCommercialFlow() {
   const key = steps[i] ?? "verification";
   const goNext = () => setI((v) => Math.min(steps.length - 1, v + 1));
   const goBack = () => setI((v) => Math.max(0, v - 1));
+  const setMat = (idx: number, k: keyof Materiel, v: string) =>
+    setMateriel((p) => p.map((m, j) => (j === idx ? { ...m, [k]: v } : m)));
+
+  const precaire = typeBail === "precaire";
+  const duree = precaire ? `${n(dureeMois) || "—"} mois` : `${n(dureeAnnees) || 9} ans`;
+  const dureeIllegale = precaire && n(dureeMois) > 36;
+  const mensuel = n(loyerAnnuel) / 12;
 
   async function generer() {
-    if (busy) return;
+    if (busy || dureeIllegale) return;
     setBusy(true);
     setErr("");
     const donnees = {
+      typeBail,
       bailleurNom: ent?.nom ?? "",
       bailleurAdresse: adresseComplete(ent?.adresse, ent?.codePostal, ent?.ville),
       bailleurQualite: ent?.representantQualite || "Propriétaire",
+      bailleurSiret: ent?.siret ?? "",
       preneurNom,
       preneurAdresse,
       preneurRcs,
@@ -87,8 +111,11 @@ export default function BailCommercialFlow() {
       descriptionLocal,
       surface,
       destination,
+      materiel: equipe ? materiel.filter((m) => m.designation.trim()) : [],
       loyerAnnuel: String(n(loyerAnnuel)),
       depotGarantie: String(n(depotGarantie)),
+      pasDePorte: String(n(pasDePorte)),
+      pasDePorteNature,
       charges,
       indiceRevision,
       dateDebut,
@@ -96,11 +123,11 @@ export default function BailCommercialFlow() {
       ville: ent?.ville ?? "",
       date: todayFr(),
     };
-    const filename = `bail-commercial-${(preneurNom || "preneur").replace(/\s+/g, "-").toLowerCase()}.pdf`;
+    const filename = `bail-${precaire ? "precaire" : "commercial"}-${(preneurNom || "preneur").replace(/\s+/g, "-").toLowerCase()}.pdf`;
     const docMeta = {
       type: "bail-commercial",
-      titre: "Bail commercial",
-      libelle: preneurNom || "Preneur",
+      titre: precaire ? "Bail précaire" : "Bail commercial",
+      libelle: [preneurNom || "Preneur", duree].join(" · "),
       montant: n(loyerAnnuel),
       refaireHref: "/bail-commercial",
       creeLe: new Date().toISOString(),
@@ -175,11 +202,40 @@ export default function BailCommercialFlow() {
             <EntrepriseStep onSave={(e) => { localStore.setEntreprise(e); setEnt(e); goNext(); }} />
           )}
 
+          {key === "type" && (
+            <div className="space-y-3">
+              <L>Quel type de bail ?</L>
+              <button
+                type="button"
+                onClick={() => setTypeBail("commercial")}
+                className={`w-full rounded-xl border px-4 py-3.5 text-left transition-colors ${typeBail === "commercial" ? "border-noir bg-noir text-white" : "border-or/30 hover:border-or"}`}
+              >
+                <span className="block text-sm font-bold">Bail commercial (3-6-9)</span>
+                <span className={`mt-0.5 block text-xs ${typeBail === "commercial" ? "text-white/70" : "text-gris"}`}>
+                  9 ans, résiliable tous les 3 ans. Le preneur a droit au renouvellement
+                  et à l&apos;indemnité d&apos;éviction. Le cadre classique d&apos;un commerce.
+                </span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setTypeBail("precaire")}
+                className={`w-full rounded-xl border px-4 py-3.5 text-left transition-colors ${typeBail === "precaire" ? "border-noir bg-noir text-white" : "border-or/30 hover:border-or"}`}
+              >
+                <span className="block text-sm font-bold">Bail précaire / dérogatoire (≤ 3 ans)</span>
+                <span className={`mt-0.5 block text-xs ${typeBail === "precaire" ? "text-white/70" : "text-gris"}`}>
+                  Courte durée (art. L. 145-5) : 3 ans maximum, sans droit au
+                  renouvellement ni indemnité d&apos;éviction. Idéal pour tester une
+                  activité ou un emplacement.
+                </span>
+              </button>
+            </div>
+          )}
+
           {key === "preneur" && (
             <div className="space-y-4">
               <h3 className="text-noir font-display text-lg font-bold">Le preneur (locataire)</h3>
               <input className={FIELD} placeholder="Nom / dénomination du preneur" value={preneurNom} onChange={(e) => setPreneurNom(e.target.value)} />
-              <input className={FIELD} placeholder="Adresse du preneur" value={preneurAdresse} onChange={(e) => setPreneurAdresse(e.target.value)} />
+              <input className={FIELD} placeholder="Adresse ou siège du preneur" value={preneurAdresse} onChange={(e) => setPreneurAdresse(e.target.value)} />
               <input className={FIELD} placeholder="RCS / SIRET du preneur" value={preneurRcs} onChange={(e) => setPreneurRcs(e.target.value)} />
             </div>
           )}
@@ -187,29 +243,111 @@ export default function BailCommercialFlow() {
           {key === "local" && (
             <div className="space-y-4">
               <div><L>Adresse du local</L><input className={FIELD} value={adresseLocal} onChange={(e) => setAdresseLocal(e.target.value)} placeholder="10 rue du Commerce, 84100 Orange" /></div>
-              <div><L>Description</L><input className={FIELD} value={descriptionLocal} onChange={(e) => setDescriptionLocal(e.target.value)} placeholder="Local commercial en rez-de-chaussée" /></div>
+              <div><L>Description</L><input className={FIELD} value={descriptionLocal} onChange={(e) => setDescriptionLocal(e.target.value)} placeholder="Local commercial en rez-de-chaussée, réserve, vitrine" /></div>
               <div className="grid gap-3 sm:grid-cols-2">
-                <div><L>Surface (m²)</L><input className={FIELD} value={surface} onChange={(e) => setSurface(e.target.value)} placeholder="80" /></div>
-                <div><L>Destination</L><input className={FIELD} value={destination} onChange={(e) => setDestination(e.target.value)} placeholder="Commerce de détail" /></div>
+                <div><L>Surface (m²)</L><input className={FIELD} inputMode="decimal" value={surface} onChange={(e) => setSurface(e.target.value)} placeholder="80" /></div>
+                <div><L>Activité autorisée (destination)</L><input className={FIELD} value={destination} onChange={(e) => setDestination(e.target.value)} placeholder="Commerce de détail" /></div>
+              </div>
+
+              <div className="border-or/20 rounded-xl border p-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-noir text-sm font-semibold">Local loué équipé ?</p>
+                    <p className="text-gris text-xs">Le matériel mis à disposition sera inventorié dans le bail.</p>
+                  </div>
+                  <div className="bg-creme inline-flex rounded-lg p-1">
+                    {([false, true] as const).map((v) => (
+                      <button key={String(v)} type="button" onClick={() => setEquipe(v)} className={`rounded-md px-4 py-1.5 text-sm font-bold transition-colors ${equipe === v ? "bg-noir text-white" : "text-gris"}`}>
+                        {v ? "Oui" : "Non"}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {equipe && (
+                  <div className="mt-4 space-y-2.5">
+                    {materiel.map((m, idx) => (
+                      <div key={idx} className="flex items-center gap-2">
+                        <input className={FIELD} placeholder="Désignation (ex. Four professionnel)" value={m.designation} onChange={(e) => setMat(idx, "designation", e.target.value)} />
+                        <input className={`${FIELD} max-w-[130px]`} placeholder="État" value={m.etat} onChange={(e) => setMat(idx, "etat", e.target.value)} />
+                        {materiel.length > 1 && (
+                          <button type="button" onClick={() => setMateriel((p) => p.filter((_, j) => j !== idx))} className="text-gris hover:text-red-600 shrink-0"><Trash2 size={15} /></button>
+                        )}
+                      </div>
+                    ))}
+                    <button type="button" onClick={() => setMateriel((p) => [...p, { designation: "", etat: "bon état" }])} className="border-or/30 text-or-d hover:bg-or/5 inline-flex w-full items-center justify-center gap-2 rounded-[10px] border border-dashed px-4 py-2 text-sm font-bold">
+                      <Plus size={15} /> Ajouter un équipement
+                    </button>
+                  </div>
+                )}
               </div>
             </div>
           )}
 
           {key === "loyer" && (
             <div className="space-y-4">
-              <div><L>Loyer annuel (€)</L><input className={FIELD} inputMode="decimal" value={loyerAnnuel} onChange={(e) => setLoyerAnnuel(e.target.value)} placeholder="12000" /></div>
+              <div>
+                <L>Loyer annuel HT hors charges (€)</L>
+                <input className={FIELD} inputMode="decimal" value={loyerAnnuel} onChange={(e) => setLoyerAnnuel(e.target.value)} placeholder="12000" />
+                {mensuel > 0 && <p className="text-gris mt-1.5 text-xs">Soit <strong className="text-noir">{eur(mensuel)}</strong> par mois.</p>}
+              </div>
               <div className="grid gap-3 sm:grid-cols-2">
                 <div><L>Dépôt de garantie (€)</L><input className={FIELD} inputMode="decimal" value={depotGarantie} onChange={(e) => setDepotGarantie(e.target.value)} placeholder="3000" /></div>
-                <div><L>Charges</L><input className={FIELD} value={charges} onChange={(e) => setCharges(e.target.value)} placeholder="Récupérables selon décret" /></div>
+                <div><L>Charges (précision libre)</L><input className={FIELD} value={charges} onChange={(e) => setCharges(e.target.value)} placeholder="Provision mensuelle de 80 €." /></div>
+              </div>
+
+              <div className="border-or/20 rounded-xl border p-4">
+                <L>Pas-de-porte (droit d&apos;entrée) — optionnel</L>
+                <input className={FIELD} inputMode="decimal" value={pasDePorte} onChange={(e) => setPasDePorte(e.target.value)} placeholder="0 si aucun" />
+                {n(pasDePorte) > 0 && (
+                  <div className="mt-3">
+                    <p className="text-gris mb-1.5 text-xs">Nature juridique de la somme (incidence fiscale) :</p>
+                    <div className="flex flex-wrap gap-2">
+                      <button type="button" onClick={() => setPasDePorteNature("supplement")} className={`rounded-full px-3.5 py-1.5 text-xs font-semibold ${pasDePorteNature === "supplement" ? "bg-noir text-white" : "bg-creme text-gris"}`}>
+                        Supplément de loyer
+                      </button>
+                      <button type="button" onClick={() => setPasDePorteNature("indemnite")} className={`rounded-full px-3.5 py-1.5 text-xs font-semibold ${pasDePorteNature === "indemnite" ? "bg-noir text-white" : "bg-creme text-gris"}`}>
+                        Indemnité définitive
+                      </button>
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
           )}
 
           {key === "duree" && (
             <div className="space-y-4">
-              <div><L>Date de début</L><input className={FIELD} value={dateDebut} onChange={(e) => setDateDebut(formatDateInput(e.target.value, dateDebut))} /></div>
-              <div><L>Durée</L><input className={FIELD} value={duree} onChange={(e) => setDuree(e.target.value)} /></div>
-              <div><L>Indice de révision</L><input className={FIELD} value={indiceRevision} onChange={(e) => setIndiceRevision(e.target.value)} /></div>
+              <div><L>Date de prise d&apos;effet</L><input className={FIELD} value={dateDebut} onChange={(e) => setDateDebut(formatDateInput(e.target.value, dateDebut))} /></div>
+              {precaire ? (
+                <div>
+                  <L>Durée (mois — 36 maximum)</L>
+                  <input className={FIELD} inputMode="numeric" value={dureeMois} onChange={(e) => setDureeMois(e.target.value)} placeholder="24" />
+                  {dureeIllegale && (
+                    <div className="mt-2 flex items-start gap-2 rounded-lg bg-red-50 px-3 py-2 text-sm font-medium text-red-700">
+                      <AlertTriangle size={16} className="mt-0.5 shrink-0" />
+                      <span>Un bail dérogatoire ne peut pas dépasser 3 ans (36 mois), renouvellements compris — art. L. 145-5 du Code de commerce.</span>
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <div>
+                  <L>Durée (années)</L>
+                  <input className={FIELD} inputMode="numeric" value={dureeAnnees} onChange={(e) => setDureeAnnees(e.target.value)} />
+                  <p className="text-gris mt-1.5 text-xs">9 ans est la durée légale minimale du bail commercial, résiliable par le preneur tous les 3 ans.</p>
+                </div>
+              )}
+              <div>
+                <L>Indice de révision</L>
+                <div className="flex flex-wrap gap-2">
+                  {INDICES.map((ind) => (
+                    <button key={ind} type="button" onClick={() => setIndiceRevision(ind)} className={`rounded-full px-3.5 py-1.5 text-xs font-semibold ${indiceRevision === ind ? "bg-noir text-white" : "bg-creme text-gris"}`}>
+                      {ind.split(" ")[0]}
+                    </button>
+                  ))}
+                </div>
+                <p className="text-gris mt-1.5 text-xs">ILC pour un commerce, ILAT pour des bureaux / activités tertiaires.</p>
+              </div>
             </div>
           )}
 
@@ -226,16 +364,26 @@ export default function BailCommercialFlow() {
               <div className="space-y-4">
                 <h3 className="text-noir font-display text-lg font-bold">Récapitulatif</h3>
                 <div className="divide-or/10 divide-y">
+                  <Row label="Type de bail" value={precaire ? "Bail précaire (L. 145-5)" : "Bail commercial 3-6-9"} pad strong />
                   <Row label="Bailleur" value={ent?.nom ?? "—"} pad />
                   <Row label="Preneur" value={preneurNom || "—"} pad />
                   <Row label="Local" value={adresseLocal || "—"} pad />
+                  <Row label="Matériel inclus" value={equipe ? `${materiel.filter((m) => m.designation.trim()).length} équipement(s)` : "Non"} pad />
                   <Row label="Durée" value={duree} pad />
-                  <Row label="Loyer annuel" value={eur(n(loyerAnnuel))} pad strong />
+                  <Row label="Loyer annuel HT" value={eur(n(loyerAnnuel))} pad />
+                  {n(pasDePorte) > 0 && <Row label="Pas-de-porte" value={eur(n(pasDePorte))} pad />}
+                  <Row label="Dépôt de garantie" value={n(depotGarantie) > 0 ? eur(n(depotGarantie)) : "Aucun"} pad />
                 </div>
+                {dureeIllegale && (
+                  <div className="flex items-start gap-2 rounded-lg bg-red-50 px-3 py-2 text-sm font-medium text-red-700">
+                    <AlertTriangle size={16} className="mt-0.5 shrink-0" />
+                    <span>Durée illégale pour un bail précaire : 36 mois maximum.</span>
+                  </div>
+                )}
                 {err && <p className="rounded-lg bg-red-50 px-3 py-2 text-sm font-medium text-red-700">{err}</p>}
-                <button onClick={generer} disabled={busy} className="bg-orange hover:bg-orange-d inline-flex w-full items-center justify-center gap-2 rounded-[10px] px-6 py-3.5 text-base font-bold text-white disabled:opacity-50">
+                <button onClick={generer} disabled={busy || dureeIllegale} className="bg-orange hover:bg-orange-d inline-flex w-full items-center justify-center gap-2 rounded-[10px] px-6 py-3.5 text-base font-bold text-white disabled:opacity-50">
                   {busy ? <Loader2 size={18} className="animate-spin" /> : <Download size={18} />}
-                  Générer le bail commercial
+                  {dureeIllegale ? "Corrigez la durée pour générer" : `Générer le ${precaire ? "bail précaire" : "bail commercial"}`}
                 </button>
               </div>
             )
