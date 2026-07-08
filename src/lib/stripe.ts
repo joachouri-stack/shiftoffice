@@ -10,18 +10,29 @@ import { DOCUMENTS } from "@/lib/documents";
  */
 
 let cached: Stripe | null = null;
+let cachedKey = "";
+
+/**
+ * Nettoie la clé collée dans l'environnement : espaces, retours à la ligne,
+ * `=` en trop (saisie « KEY==sk_… ») et guillemets d'encadrement sont des
+ * erreurs de copier-coller fréquentes qui invalident la clé.
+ */
+function cleanKey(raw: string | undefined): string {
+  return (raw ?? "").trim().replace(/^[='"]+/, "").replace(/['"]+$/, "");
+}
 
 export function getStripe(): Stripe | null {
-  const key = process.env.STRIPE_SECRET_KEY;
+  const key = cleanKey(process.env.STRIPE_SECRET_KEY);
   if (!key) return null;
-  if (!cached) {
+  if (!cached || cachedKey !== key) {
     cached = new Stripe(key);
+    cachedKey = key;
   }
   return cached;
 }
 
 export function isStripeEnabled(): boolean {
-  return Boolean(process.env.STRIPE_SECRET_KEY);
+  return Boolean(cleanKey(process.env.STRIPE_SECRET_KEY));
 }
 
 /**
