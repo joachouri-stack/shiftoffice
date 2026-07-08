@@ -140,6 +140,8 @@ export function EntrepriseStep({ onSave }: { onSave: (e: LocalEntreprise) => voi
             nom: r.nom || p.nom, siret: r.siret || p.siret, adresse: r.adresse || p.adresse,
             codePostal: r.codePostal || p.codePostal, ville: r.ville || p.ville,
             codeNaf: r.codeNaf || p.codeNaf, convention: r.convention || p.convention,
+            representantNom: r.representantNom || p.representantNom,
+            representantQualite: r.representantQualite || p.representantQualite,
           }))
         }
       />

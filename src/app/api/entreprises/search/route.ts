@@ -45,7 +45,21 @@ type ApiResult = {
     commune?: string;
   };
   activite_principale?: string;
+  dirigeants?: Array<{
+    type_dirigeant?: string;
+    nom?: string;
+    prenoms?: string;
+    qualite?: string;
+    denomination?: string;
+  }>;
 };
+
+/** « JOHANE ACHOURI » → « Johane Achouri ». */
+function titre(s: string): string {
+  return s
+    .toLowerCase()
+    .replace(/(^|[\s\-'])(\p{L})/gu, (m, sep, c) => sep + c.toUpperCase());
+}
 
 export async function GET(req: Request) {
   const q = new URL(req.url).searchParams.get("q")?.trim() ?? "";
@@ -79,6 +93,16 @@ export async function GET(req: Request) {
           .replace(new RegExp(`[,\\s]*${escapeReg(cp)}\\s+${escapeReg(commune)}\\s*$`, "i"), "")
           .trim();
       }
+      // Dirigeant principal (gérant / président) : première personne physique.
+      const dir = (e.dirigeants ?? []).find(
+        (x) => x.nom && x.type_dirigeant !== "personne morale"
+      );
+      const representantNom = dir
+        ? titre([dir.prenoms?.split(",")[0], dir.nom].filter(Boolean).join(" "))
+        : "";
+      const representantQualite = dir?.qualite
+        ? titre(dir.qualite.split(",")[0].trim())
+        : "";
       return {
         nom: e.nom_complet || e.nom_raison_sociale || "",
         siret: s.siret || "",
@@ -87,6 +111,8 @@ export async function GET(req: Request) {
         ville: commune,
         codeNaf: naf,
         convention: CONVENTIONS_NAF[naf] || "",
+        representantNom,
+        representantQualite,
       };
     });
     return Response.json(out);

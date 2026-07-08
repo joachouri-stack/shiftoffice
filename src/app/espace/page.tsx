@@ -17,6 +17,7 @@ import {
   FileText,
 } from "lucide-react";
 import { Logo } from "@/components/brand/Logo";
+import { SiretSearch } from "@/components/SiretSearch";
 import {
   localStore,
   MAX_ENTREPRISES,
@@ -498,6 +499,27 @@ function EntrepriseForm({
       <p className="text-gris -mt-1 text-xs">
         Saisie une seule fois — réutilisée pour toutes vos fiches.
       </p>
+      <SiretSearch
+        onSelect={(r) =>
+          setF((p) => ({
+            ...p,
+            nom: r.nom || p.nom,
+            siret: r.siret || p.siret,
+            adresse: r.adresse || p.adresse,
+            codePostal: r.codePostal || p.codePostal,
+            ville: r.ville || p.ville,
+            codeNaf: r.codeNaf || p.codeNaf,
+            convention: r.convention || p.convention,
+            representantNom: r.representantNom || p.representantNom,
+            representantQualite: r.representantQualite || p.representantQualite,
+          }))
+        }
+      />
+      <div className="my-1 flex items-center gap-3 text-xs">
+        <span className="bg-or/20 h-px flex-1" />
+        <span className="text-gris">ou saisissez à la main</span>
+        <span className="bg-or/20 h-px flex-1" />
+      </div>
       <div className="grid gap-3 sm:grid-cols-2">
         <input
           className={FIELD}
