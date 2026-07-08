@@ -97,7 +97,7 @@ export async function buildSoldeToutComptePDF(d: SoldeData): Promise<Uint8Array>
     ["Salaire et accessoires dus", d.salaireDu],
     ["Indemnité compensatrice de congés payés", d.indemniteConges],
     ["Indemnité compensatrice de préavis", d.indemnitePreavis],
-    ["Indemnité de rupture (licenciement / fin de CDD)", d.indemniteRupture],
+    ["Indemnité de rupture", d.indemniteRupture],
     ["Autres sommes", d.autresSommes],
   ].filter(([, v]) => (v as number) > 0) as Array<[string, number]>;
 
