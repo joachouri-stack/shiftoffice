@@ -19,7 +19,9 @@ import {
 import { Logo } from "@/components/brand/Logo";
 import {
   localStore,
+  MAX_ENTREPRISES,
   type LocalEntreprise,
+  type LocalEntrepriseItem,
   type LocalSalarie,
   type LocalBien,
   type LocalDoc,
@@ -33,20 +35,27 @@ const NAV = [
   { label: "Mes documents", icon: FileClock, href: "#fiches" },
   { label: "Mes salariés", icon: Users, href: "#salaries" },
   { label: "Mes locations", icon: KeyRound, href: "#biens" },
-  { label: "Mon entreprise", icon: Building2, href: "#entreprise" },
+  { label: "Mes entreprises", icon: Building2, href: "#entreprise" },
 ];
 
 export default function EspaceLocalPage() {
-  const [ent, setEnt] = useState<LocalEntreprise | null>(null);
+  const [ents, setEnts] = useState<LocalEntrepriseItem[]>([]);
+  const [activeId, setActiveId] = useState<string | null>(null);
   const [salaries, setSalaries] = useState<LocalSalarie[]>([]);
   const [biens, setBiens] = useState<LocalBien[]>([]);
   const [documents, setDocuments] = useState<LocalDoc[]>([]);
-  const [editEnt, setEditEnt] = useState(false);
+  const [editingEnt, setEditingEnt] = useState<string | null>(null);
+  const [addingEnt, setAddingEnt] = useState(false);
   const [editingSal, setEditingSal] = useState<string | null>(null);
   const [ready, setReady] = useState(false);
 
+  const refreshEnts = () => {
+    setEnts(localStore.getEntreprises());
+    setActiveId(localStore.getEntrepriseActiveId());
+  };
+
   useEffect(() => {
-    setEnt(localStore.getEntreprise());
+    refreshEnts();
     setSalaries(localStore.getSalaries());
     setBiens(localStore.getBiens());
     setDocuments(localStore.getDocuments());
@@ -122,58 +131,134 @@ export default function EspaceLocalPage() {
             </button>
           </div>
 
-          {/* Entreprise */}
+          {/* Entreprises */}
           <section id="entreprise" className="border-or/20 scroll-mt-8 rounded-2xl border bg-white p-6">
             <div className="mb-4 flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <Building2 size={18} className="text-or-d" />
                 <h2 className="font-display text-noir text-lg font-bold">
-                  Mon entreprise
+                  Mes entreprises
                 </h2>
+                <span className="bg-or/10 text-or-d ml-1 rounded-full px-2 py-0.5 text-xs font-bold">
+                  {ents.length}/{MAX_ENTREPRISES}
+                </span>
               </div>
-              {ent && !editEnt && (
+              {!addingEnt && ents.length < MAX_ENTREPRISES && (
                 <button
-                  onClick={() => setEditEnt(true)}
-                  className="text-gris hover:text-or-d inline-flex items-center gap-1.5 text-sm font-semibold"
+                  onClick={() => { setAddingEnt(true); setEditingEnt(null); }}
+                  className="bg-noir inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-bold text-white"
                 >
-                  <Pencil size={14} />
-                  Modifier
+                  <Plus size={14} />
+                  Ajouter
                 </button>
               )}
             </div>
 
-            {ent && !editEnt ? (
-              <div className="bg-creme/60 flex items-center gap-4 rounded-xl p-4">
-                <div className="bg-or/15 text-or-d grid h-12 w-12 shrink-0 place-items-center rounded-xl">
-                  <Building2 size={22} />
-                </div>
-                <div className="min-w-0">
-                  <p className="text-noir truncate text-base font-bold">
-                    {ent.nom}
-                  </p>
-                  <p className="text-gris truncate text-sm">
-                    {[
-                      ent.ville && ent.codePostal
-                        ? `${ent.codePostal} ${ent.ville}`
-                        : ent.ville,
-                      ent.siret ? `SIRET ${ent.siret}` : null,
-                      ent.convention,
-                    ]
-                      .filter(Boolean)
-                      .join(" · ")}
-                  </p>
-                </div>
-              </div>
-            ) : (
+            {ents.length > 1 && (
+              <p className="text-gris -mt-2 mb-3 text-xs">
+                L&apos;entreprise <strong className="text-noir">active</strong>{" "}
+                est celle utilisée pour vos documents — cliquez sur une
+                entreprise pour l&apos;activer.
+              </p>
+            )}
+
+            {ents.length > 0 && (
+              <ul className="divide-or/10 mb-4 divide-y">
+                {ents.map((e) => (
+                  <li key={e.id} className="py-3">
+                    {editingEnt === e.id ? (
+                      <EntrepriseForm
+                        initial={e}
+                        onSave={(val) => {
+                          localStore.updateEntreprise(e.id, val);
+                          refreshEnts();
+                          setEditingEnt(null);
+                        }}
+                        onCancel={() => setEditingEnt(null)}
+                      />
+                    ) : (
+                      <div className="flex items-center justify-between gap-4">
+                        <button
+                          onClick={() => {
+                            localStore.setEntrepriseActive(e.id);
+                            refreshEnts();
+                          }}
+                          className="flex min-w-0 flex-1 items-center gap-3 text-left"
+                        >
+                          <div
+                            className={`grid h-10 w-10 shrink-0 place-items-center rounded-xl ${
+                              e.id === activeId
+                                ? "bg-or text-white"
+                                : "bg-or/15 text-or-d"
+                            }`}
+                          >
+                            <Building2 size={18} />
+                          </div>
+                          <div className="min-w-0">
+                            <p className="text-noir flex items-center gap-2 truncate text-sm font-bold">
+                              <span className="truncate">{e.nom}</span>
+                              {e.id === activeId && (
+                                <span className="bg-vert-l text-vert shrink-0 rounded-full px-2 py-0.5 text-[0.65rem] font-bold">
+                                  Active
+                                </span>
+                              )}
+                            </p>
+                            <p className="text-gris truncate text-xs">
+                              {[
+                                e.ville && e.codePostal
+                                  ? `${e.codePostal} ${e.ville}`
+                                  : e.ville,
+                                e.siret ? `SIRET ${e.siret}` : null,
+                                e.convention,
+                              ]
+                                .filter(Boolean)
+                                .join(" · ") || "—"}
+                            </p>
+                          </div>
+                        </button>
+                        <div className="flex items-center gap-1">
+                          <button
+                            onClick={() => { setEditingEnt(e.id); setAddingEnt(false); }}
+                            aria-label={`Modifier ${e.nom}`}
+                            className="text-gris hover:bg-or/10 hover:text-or-d grid h-8 w-8 place-items-center rounded-lg transition-colors"
+                          >
+                            <Pencil size={14} />
+                          </button>
+                          <button
+                            onClick={() => {
+                              localStore.removeEntreprise(e.id);
+                              refreshEnts();
+                            }}
+                            aria-label={`Supprimer ${e.nom}`}
+                            className="text-gris hover:bg-red-50 hover:text-red-600 grid h-8 w-8 place-items-center rounded-lg transition-colors"
+                          >
+                            <Trash2 size={15} />
+                          </button>
+                        </div>
+                      </div>
+                    )}
+                  </li>
+                ))}
+              </ul>
+            )}
+
+            {(addingEnt || ents.length === 0) && (
               <EntrepriseForm
-                initial={ent}
+                initial={null}
                 onSave={(e) => {
-                  localStore.setEntreprise(e);
-                  setEnt(e);
-                  setEditEnt(false);
+                  localStore.addEntreprise(e);
+                  refreshEnts();
+                  setAddingEnt(false);
                 }}
-                onCancel={ent ? () => setEditEnt(false) : undefined}
+                onCancel={ents.length > 0 ? () => setAddingEnt(false) : undefined}
               />
+            )}
+
+            {ents.length >= MAX_ENTREPRISES && (
+              <p className="text-gris mt-2 text-xs">
+                Limite de {MAX_ENTREPRISES} entreprises atteinte — supprimez-en
+                une pour en ajouter une nouvelle.
+              </p>
             )}
           </section>
 

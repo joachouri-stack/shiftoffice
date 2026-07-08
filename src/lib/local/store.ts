@@ -20,6 +20,12 @@ export type LocalEntreprise = {
   representantQualite?: string;
 };
 
+// Entreprise identifiée dans la liste multi-entreprises de l'espace.
+export type LocalEntrepriseItem = LocalEntreprise & { id: string };
+
+/** Nombre maximal d'entreprises dans l'espace local. */
+export const MAX_ENTREPRISES = 10;
+
 export type LocalSalarie = {
   id: string;
   nom: string;
@@ -76,7 +82,9 @@ export type LocalDoc = {
 };
 
 const K = {
-  entreprise: "so.entreprise",
+  entreprise: "so.entreprise", // héritage : entreprise unique (migrée vers la liste)
+  entreprises: "so.entreprises",
+  entrepriseActive: "so.entrepriseActive",
   salaries: "so.salaries",
   fiches: "so.fiches",
   biens: "so.biens",
@@ -109,9 +117,82 @@ function uid(): string {
   return "id-" + Math.random().toString(36).slice(2, 10);
 }
 
+/**
+ * Liste des entreprises, avec migration automatique de l'ancienne entreprise
+ * unique (clé « so.entreprise ») vers la liste au premier accès.
+ */
+function readEntreprises(): LocalEntrepriseItem[] {
+  const list = read<LocalEntrepriseItem[]>(K.entreprises, []);
+  if (list.length > 0) return list;
+  const legacy = read<LocalEntreprise | null>(K.entreprise, null);
+  if (legacy && legacy.nom) {
+    const item = { ...legacy, id: uid() };
+    write(K.entreprises, [item]);
+    write(K.entrepriseActive, item.id);
+    return [item];
+  }
+  return [];
+}
+
+function activeEntrepriseId(list: LocalEntrepriseItem[]): string | null {
+  if (!list.length) return null;
+  const id = read<string | null>(K.entrepriseActive, null);
+  return list.some((e) => e.id === id) ? id : list[0].id;
+}
+
 export const localStore = {
-  getEntreprise: () => read<LocalEntreprise | null>(K.entreprise, null),
-  setEntreprise: (e: LocalEntreprise | null) => write(K.entreprise, e),
+  /** Entreprise active (celle utilisée par les documents). */
+  getEntreprise: (): LocalEntreprise | null => {
+    const list = readEntreprises();
+    const id = activeEntrepriseId(list);
+    return list.find((e) => e.id === id) ?? null;
+  },
+  /** Met à jour l'entreprise active (ou crée la première). */
+  setEntreprise: (e: LocalEntreprise | null) => {
+    write(K.entreprise, e); // héritage, conservé pour compat
+    if (!e) return;
+    const list = readEntreprises();
+    const id = activeEntrepriseId(list);
+    if (id) {
+      write(
+        K.entreprises,
+        list.map((x) => (x.id === id ? { ...x, ...e } : x))
+      );
+    } else {
+      const item = { ...e, id: uid() };
+      write(K.entreprises, [item]);
+      write(K.entrepriseActive, item.id);
+    }
+  },
+
+  getEntreprises: (): LocalEntrepriseItem[] => readEntreprises(),
+  getEntrepriseActiveId: (): string | null =>
+    activeEntrepriseId(readEntreprises()),
+  setEntrepriseActive: (id: string) => {
+    const list = readEntreprises();
+    if (list.some((e) => e.id === id)) write(K.entrepriseActive, id);
+  },
+  /** Ajoute une entreprise (max MAX_ENTREPRISES). Renvoie null si plafond atteint. */
+  addEntreprise: (e: LocalEntreprise): LocalEntrepriseItem | null => {
+    const list = readEntreprises();
+    if (list.length >= MAX_ENTREPRISES) return null;
+    const item = { ...e, id: uid() };
+    write(K.entreprises, [...list, item]);
+    write(K.entrepriseActive, item.id); // la nouvelle devient l'active
+    return item;
+  },
+  updateEntreprise: (id: string, patch: Partial<LocalEntreprise>) => {
+    write(
+      K.entreprises,
+      readEntreprises().map((e) => (e.id === id ? { ...e, ...patch } : e))
+    );
+  },
+  removeEntreprise: (id: string) => {
+    const rest = readEntreprises().filter((e) => e.id !== id);
+    write(K.entreprises, rest);
+    const active = read<string | null>(K.entrepriseActive, null);
+    if (active === id) write(K.entrepriseActive, rest[0]?.id ?? null);
+  },
 
   getSalaries: () => read<LocalSalarie[]>(K.salaries, []),
   addSalarie: (s: Omit<LocalSalarie, "id">) => {
@@ -173,8 +254,14 @@ export const localStore = {
 
   clearAll: () => {
     if (!isBrowser()) return;
-    [K.entreprise, K.salaries, K.fiches, K.biens, K.documents].forEach((k) =>
-      window.localStorage.removeItem(k)
-    );
+    [
+      K.entreprise,
+      K.entreprises,
+      K.entrepriseActive,
+      K.salaries,
+      K.fiches,
+      K.biens,
+      K.documents,
+    ].forEach((k) => window.localStorage.removeItem(k));
   },
 };
