@@ -549,7 +549,7 @@ function EntrepriseForm({
         />
         <input
           className={FIELD}
-          placeholder="Convention collective"
+          placeholder="Convention collective (optionnel)"
           value={f.convention ?? ""}
           onChange={(e) => set("convention", e.target.value)}
         />

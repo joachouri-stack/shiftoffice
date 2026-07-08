@@ -158,8 +158,13 @@ export function EntrepriseStep({ onSave }: { onSave: (e: LocalEntreprise) => voi
       <div className="grid gap-3 sm:grid-cols-3">
         <input className={FIELD} placeholder="Code postal" value={f.codePostal ?? ""} onChange={(e) => set("codePostal", e.target.value)} />
         <input className={FIELD} placeholder="Ville" value={f.ville ?? ""} onChange={(e) => set("ville", e.target.value)} />
-        <input className={FIELD} placeholder="Convention" value={f.convention ?? ""} onChange={(e) => set("convention", e.target.value)} />
+        <input className={FIELD} placeholder="Convention (optionnel)" value={f.convention ?? ""} onChange={(e) => set("convention", e.target.value)} />
       </div>
+      <p className="text-gris text-xs">
+        La convention collective se remplit automatiquement via la recherche
+        ci-dessus. Vous ne la connaissez pas&nbsp;? Laissez vide — elle figure
+        sur une ancienne fiche de paie ou sur le contrat de travail.
+      </p>
       <div className="grid gap-3 sm:grid-cols-2">
         <input className={FIELD} placeholder="Représentant (ex. Jean Martin)" value={f.representantNom ?? ""} onChange={(e) => set("representantNom", e.target.value)} />
         <input className={FIELD} placeholder="Qualité (Gérant…)" value={f.representantQualite ?? ""} onChange={(e) => set("representantQualite", e.target.value)} />
@@ -245,8 +250,12 @@ export function SalarieStep({ onSelect }: { onSelect: (s: LocalSalarie) => void 
           <option value="CDI">CDI</option>
           <option value="CDD">CDD</option>
         </select>
-        <input className={FIELD} placeholder="Classification" value={f.classification} onChange={(e) => set("classification", e.target.value)} />
+        <input className={FIELD} placeholder="Classification (optionnel)" value={f.classification} onChange={(e) => set("classification", e.target.value)} />
       </div>
+      <p className="text-gris text-xs">
+        La classification (ex. «&nbsp;Employé Niveau II&nbsp;») figure sur le
+        contrat de travail — laissez vide si vous ne la connaissez pas.
+      </p>
       <div className="flex items-center justify-between">
         {existing.length > 0 ? (
           <button type="button" onClick={() => setCreating(false)} className="text-gris hover:text-noir text-sm font-semibold">

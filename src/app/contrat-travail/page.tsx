@@ -278,8 +278,11 @@ export default function ContratTravailFlow() {
                   <input className={FIELD} inputMode="decimal" value={heuresSemaine} onChange={(e) => setHeuresSemaine(e.target.value)} />
                 </div>
                 <div>
-                  <label className="text-noir mb-1.5 block text-sm font-semibold">Convention collective</label>
-                  <input className={FIELD} value={convention} onChange={(e) => setConvention(e.target.value)} />
+                  <label className="text-noir mb-1.5 block text-sm font-semibold">
+                    Convention collective{" "}
+                    <span className="text-gris font-normal">(optionnel)</span>
+                  </label>
+                  <input className={FIELD} placeholder="Laissez vide si inconnue" value={convention} onChange={(e) => setConvention(e.target.value)} />
                 </div>
               </div>
               <div>
