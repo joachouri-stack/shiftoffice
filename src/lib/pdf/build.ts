@@ -46,7 +46,11 @@ export async function buildDocument(
         heuresSup: num(d.heuresSup),
         heuresSup50: num(d.heuresSup50),
         primes: num(d.primes),
-        tauxPAS: num(d.tauxPAS),
+        // Champ vide → barème légal (taux neutre) appliqué automatiquement.
+        tauxPAS:
+          d.tauxPAS === undefined || d.tauxPAS === null || S(d.tauxPAS).trim() === ""
+            ? undefined
+            : num(d.tauxPAS),
       });
       const pdf = await buildFichePaiePDF({
         entrepriseNom: S(d.entrepriseNom),

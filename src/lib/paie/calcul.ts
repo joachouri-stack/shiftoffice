@@ -52,6 +52,8 @@ export type FichePaieResult = {
   netSocial: number;
   tauxPAS: number;
   montantPAS: number;
+  /** true si le taux appliqué provient de la grille légale (taux neutre). */
+  pasAuto: boolean;
   netPaye: number;
   reductionGenerale: number;
   coutEmployeur: number;
@@ -64,6 +66,42 @@ const PMSS = 4005;
 // SMIC mensuel brut au 1ᵉʳ janvier 2026 (35 h) — sert de référence à la RGDU
 // et aux contrôles d'anomalies du formulaire.
 export const SMIC_MENSUEL = 1823.03;
+
+/**
+ * Grille du taux neutre (taux non personnalisé) du prélèvement à la source —
+ * art. 204 H du CGI, base mensuelle métropole en vigueur. C'est le barème que
+ * l'employeur doit appliquer quand le taux personnalisé du salarié n'est pas
+ * connu. Chaque entrée : [plafond de net imposable mensuel, taux en %].
+ */
+const GRILLE_TAUX_NEUTRE: Array<[number, number]> = [
+  [1620, 0],
+  [1683, 0.5],
+  [1791, 1.3],
+  [1911, 2.1],
+  [2042, 2.9],
+  [2151, 3.5],
+  [2294, 4.1],
+  [2714, 5.3],
+  [3107, 7.5],
+  [3539, 9.9],
+  [3983, 11.9],
+  [4648, 13.8],
+  [5574, 15.8],
+  [6974, 17.9],
+  [8711, 20],
+  [12091, 24],
+  [16376, 28],
+  [25706, 33],
+  [55062, 38],
+];
+
+/** Taux neutre applicable pour un net imposable mensuel donné. */
+export function tauxNeutre(netImposableMensuel: number): number {
+  for (const [plafond, taux] of GRILLE_TAUX_NEUTRE) {
+    if (netImposableMensuel <= plafond) return taux;
+  }
+  return 43;
+}
 
 // Paramètres 2026 de la Réduction Générale Dégressive Unique (RGDU),
 // employeurs de moins de 50 salariés (FNAL à 0,10 %).
@@ -170,7 +208,9 @@ export function calculerFichePaie(input: FichePaieInput): FichePaieResult {
   );
   const netImposable = r2(brut - deductibles);
   const netSocial = netAvantImpot;
-  const tauxPAS = Math.max(0, input.tauxPAS || 0);
+  // Taux non fourni → grille légale du taux neutre ; fourni (même 0) → respecté.
+  const pasAuto = input.tauxPAS === undefined;
+  const tauxPAS = pasAuto ? tauxNeutre(netImposable) : Math.max(0, input.tauxPAS || 0);
   const montantPAS = r2((netImposable * tauxPAS) / 100);
   const netPaye = r2(netAvantImpot - montantPAS);
   const reductionGenerale = calculerReductionGenerale(brut);
@@ -192,6 +232,7 @@ export function calculerFichePaie(input: FichePaieInput): FichePaieResult {
     netSocial,
     tauxPAS,
     montantPAS,
+    pasAuto,
     netPaye,
     reductionGenerale,
     coutEmployeur,

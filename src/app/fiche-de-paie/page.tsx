@@ -57,6 +57,8 @@ export default function FicheDePaieFlow() {
   const [heures, setHeures] = useState("151.67");
   const [heuresSup, setHeuresSup] = useState(0);
   const [primes, setPrimes] = useState(0);
+  // Taux de prélèvement à la source : vide → barème légal (taux neutre).
+  const [tauxPAS, setTauxPAS] = useState("");
 
   // Période
   const [mois, setMois] = useState(MOIS[now.getMonth()]);
@@ -127,9 +129,16 @@ export default function FicheDePaieFlow() {
   const res = useMemo(
     () =>
       brutEff > 0
-        ? calculerFichePaie({ salaireBrut: brutEff, heuresMois: n(heures), heuresSup, primes })
+        ? calculerFichePaie({
+            salaireBrut: brutEff,
+            heuresMois: n(heures),
+            heuresSup,
+            primes,
+            tauxPAS: tauxPAS.trim() === "" ? undefined : n(tauxPAS),
+          })
         : null,
-    [brutEff, heures, heuresSup, primes]
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [brutEff, heures, heuresSup, primes, tauxPAS]
   );
 
   if (!ready) return null;
@@ -160,7 +169,7 @@ export default function FicheDePaieFlow() {
       heuresSup: String(heuresSup),
       heuresSup50: "0",
       primes: String(primes),
-      tauxPAS: "0",
+      tauxPAS: tauxPAS.trim(), // vide → barème légal appliqué côté serveur
       congesPris: String(conges),
       congesAcquis: "0",
     };
@@ -324,6 +333,29 @@ export default function FicheDePaieFlow() {
               </div>
               <Chips label="Heures supplémentaires (25 %)" value={heuresSup} options={[0, 2, 5, 10]} fmt={(v) => (v === 0 ? "Aucune" : `${v} h`)} onChange={setHeuresSup} allowCustom />
               <Chips label="Prime ce mois" value={primes} options={[0, 50, 100, 200]} fmt={(v) => (v === 0 ? "Aucune" : `${v} €`)} onChange={setPrimes} allowCustom />
+              <div>
+                <label className="text-noir mb-1.5 block text-sm font-semibold">
+                  Taux de prélèvement à la source{" "}
+                  <span className="text-gris font-normal">(optionnel)</span>
+                </label>
+                <input
+                  className={FIELD}
+                  inputMode="decimal"
+                  placeholder="Laissez vide : barème légal automatique"
+                  value={tauxPAS}
+                  onChange={(e) => setTauxPAS(e.target.value)}
+                />
+                <p className="text-gris mt-1.5 text-xs">
+                  Le taux du salarié figure sur son avis d&apos;imposition ou une
+                  ancienne fiche de paie. Sans taux, la loi impose la grille du
+                  taux neutre — appliquée automatiquement
+                  {res && res.pasAuto ? (
+                    <> : <strong className="text-noir">{res.tauxPAS.toLocaleString("fr-FR")} %</strong> pour ce salaire.</>
+                  ) : (
+                    "."
+                  )}
+                </p>
+              </div>
               {res && (
                 <div className="border-or/30 bg-or/5 rounded-xl border p-4">
                   <p className="text-or-d mb-2 inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-wide">

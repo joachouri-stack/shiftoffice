@@ -236,7 +236,7 @@ export async function buildFichePaiePDF(d: FichePaieData): Promise<Uint8Array> {
     ["Montant net social", `${eur(r.netSocial)} €`],
     ["Net à payer avant impôt", `${eur(r.netAvantImpot)} €`],
     [
-      `Prélèvement à la source${r.tauxPAS ? ` (${r.tauxPAS} %)` : ""}`,
+      `Prélèvement à la source${r.tauxPAS ? ` (${r.tauxPAS.toLocaleString("fr-FR")} %${r.pasAuto ? ", barème" : ""})` : r.pasAuto ? " (barème, 0 %)" : ""}`,
       `- ${eur(r.montantPAS)} €`,
     ],
   ];
