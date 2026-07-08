@@ -8,6 +8,7 @@ import { EmailCopy } from "@/components/documents/EmailCopy";
 import { EntrepriseStep, SalarieStep, Row, ProgressBar, FIELD } from "@/components/flow/Steps";
 import { localStore, type LocalEntreprise, type LocalSalarie } from "@/lib/local/store";
 import { adresseComplete } from "@/lib/adresse";
+import { formatDateInput } from "@/lib/dates";
 import { SMIC_MENSUEL } from "@/lib/paie/calcul";
 
 const LABELS: Record<string, string> = {
@@ -251,7 +252,7 @@ export default function AvenantFlow() {
                   <button onClick={() => setSal(null)} className="text-or-d ml-2 text-xs font-semibold hover:underline">changer</button>
                 </div>
                 <div><L>Date du contrat de travail initial</L>
-                  <input className={FIELD} placeholder="01/03/2024" value={dateContratInitial} onChange={(e) => setDateContratInitial(e.target.value)} />
+                  <input className={FIELD} placeholder="01/03/2024" value={dateContratInitial} onChange={(e) => setDateContratInitial(formatDateInput(e.target.value, dateContratInitial))} />
                 </div>
               </div>
             )
@@ -314,8 +315,8 @@ export default function AvenantFlow() {
               {typeModif === "Prolongation CDD" && (
                 <>
                   <div className="grid gap-3 sm:grid-cols-2">
-                    <div><L>Date de fin initiale</L><input className={FIELD} value={dateFinInitiale} onChange={(e) => setDateFinInitiale(e.target.value)} /></div>
-                    <div><L>Nouvelle date de fin</L><input className={FIELD} value={nouvelleDateFin} onChange={(e) => setNouvelleDateFin(e.target.value)} /></div>
+                    <div><L>Date de fin initiale</L><input className={FIELD} value={dateFinInitiale} onChange={(e) => setDateFinInitiale(formatDateInput(e.target.value, dateFinInitiale))} /></div>
+                    <div><L>Nouvelle date de fin</L><input className={FIELD} value={nouvelleDateFin} onChange={(e) => setNouvelleDateFin(formatDateInput(e.target.value, nouvelleDateFin))} /></div>
                   </div>
                   <div><L>Motif de la prolongation</L><input className={FIELD} value={motifProlongation} onChange={(e) => setMotifProlongation(e.target.value)} /></div>
                 </>
@@ -331,7 +332,7 @@ export default function AvenantFlow() {
                 </>
               )}
 
-              <div><L>Date d'effet de la modification</L><input className={FIELD} placeholder="01/08/2026" value={dateEffet} onChange={(e) => setDateEffet(e.target.value)} /></div>
+              <div><L>Date d'effet de la modification</L><input className={FIELD} placeholder="01/08/2026" value={dateEffet} onChange={(e) => setDateEffet(formatDateInput(e.target.value, dateEffet))} /></div>
 
               {alertes.map((a, idx) => (
                 <div key={idx} className={`flex items-start gap-2 rounded-lg px-3 py-2 text-sm font-medium ${a.level === "error" ? "bg-red-50 text-red-700" : "bg-amber-50 text-amber-800"}`}>

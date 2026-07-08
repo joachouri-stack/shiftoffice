@@ -7,6 +7,7 @@ import { Logo } from "@/components/brand/Logo";
 import { EmailCopy } from "@/components/documents/EmailCopy";
 import { EntrepriseStep, SalarieStep, Row, ProgressBar, FIELD } from "@/components/flow/Steps";
 import { localStore, type LocalEntreprise, type LocalSalarie } from "@/lib/local/store";
+import { formatDateInput } from "@/lib/dates";
 import { adresseComplete } from "@/lib/adresse";
 
 const LABELS: Record<string, string> = {
@@ -163,11 +164,11 @@ export default function CertificatTravailFlow() {
             <div className="grid gap-3 sm:grid-cols-2">
               <div>
                 <label className="text-noir mb-1.5 block text-sm font-semibold">Date d'entrée</label>
-                <input className={FIELD} placeholder="01/03/2024" value={dateDebut} onChange={(e) => setDateDebut(e.target.value)} />
+                <input className={FIELD} placeholder="01/03/2024" value={dateDebut} onChange={(e) => setDateDebut(formatDateInput(e.target.value, dateDebut))} />
               </div>
               <div>
                 <label className="text-noir mb-1.5 block text-sm font-semibold">Date de sortie</label>
-                <input className={FIELD} placeholder="31/08/2026" value={dateFin} onChange={(e) => setDateFin(e.target.value)} />
+                <input className={FIELD} placeholder="31/08/2026" value={dateFin} onChange={(e) => setDateFin(formatDateInput(e.target.value, dateFin))} />
               </div>
             </div>
           )}

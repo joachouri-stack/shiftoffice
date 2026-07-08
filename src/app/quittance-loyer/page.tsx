@@ -6,6 +6,7 @@ import { ArrowLeft, ArrowRight, Check, Download, Loader2, Home as HomeIcon, Plus
 import { Logo } from "@/components/brand/Logo";
 import { EmailCopy } from "@/components/documents/EmailCopy";
 import { Row, ProgressBar, FIELD } from "@/components/flow/Steps";
+import { formatDateInput } from "@/lib/dates";
 import { localStore, type LocalBien } from "@/lib/local/store";
 
 const MOIS = [
@@ -153,7 +154,7 @@ export default function QuittanceLoyerFlow() {
               </div>
               <div>
                 <label className="text-noir mb-1.5 block text-sm font-semibold">Date de paiement</label>
-                <input className={FIELD} value={datePaiement} onChange={(e) => setDatePaiement(e.target.value)} />
+                <input className={FIELD} value={datePaiement} onChange={(e) => setDatePaiement(formatDateInput(e.target.value, datePaiement))} />
               </div>
               <div className="border-or/30 bg-or/5 rounded-xl border p-4">
                 <Row label="Loyer + charges" value={eur(total)} strong />

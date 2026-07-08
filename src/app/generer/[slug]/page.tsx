@@ -16,6 +16,7 @@ import { Logo } from "@/components/brand/Logo";
 import { EmailCopy } from "@/components/documents/EmailCopy";
 import { ModeRapide } from "@/components/documents/ModeRapide";
 import { DOCUMENTS, formatPrice } from "@/lib/documents";
+import { formatDateInput } from "@/lib/dates";
 import { calculerFichePaie, brutPourNetAvantImpot } from "@/lib/paie/calcul";
 
 /**
@@ -271,7 +272,7 @@ function QuittanceForm() {
           <div className="grid gap-3 sm:grid-cols-3">
             <Input label="Loyer (€)" value={f.loyer} onChange={(v) => set("loyer", v)} placeholder="700" inputMode="decimal" />
             <Input label="Charges (€)" value={f.charges} onChange={(v) => set("charges", v)} placeholder="50" inputMode="decimal" />
-            <Input label="Date de paiement" value={f.datePaiement} onChange={(v) => set("datePaiement", v)} placeholder="28/06/2026" />
+            <Input date label="Date de paiement" value={f.datePaiement} onChange={(v) => set("datePaiement", v)} placeholder="28/06/2026" />
           </div>
           <p className="text-gris mt-3 text-sm">
             Total quittancé :{" "}
@@ -469,7 +470,7 @@ function AttestationForm() {
                 ))}
               </div>
             </div>
-            <Input label="Date d'embauche" value={f.dateEmbauche} onChange={(v) => set("dateEmbauche", v)} placeholder="01/03/2024" />
+            <Input date label="Date d'embauche" value={f.dateEmbauche} onChange={(v) => set("dateEmbauche", v)} placeholder="01/03/2024" />
           </div>
         </div>
 
@@ -629,13 +630,13 @@ function FichePaieForm() {
             </div>
             <div className="mt-3 grid gap-3 sm:grid-cols-3">
               <Input label="Classification (optionnel)" value={f.classification} onChange={(v) => set("classification", v)} placeholder="Niveau II, coef. 210" />
-              <Input label="Date d'entrée (optionnel)" value={f.dateEntree} onChange={(v) => set("dateEntree", v)} placeholder="01/03/2023" />
+              <Input date label="Date d'entrée (optionnel)" value={f.dateEntree} onChange={(v) => set("dateEntree", v)} placeholder="01/03/2023" />
               <Input label="Type de contrat" value={f.typeContrat} onChange={(v) => set("typeContrat", v)} placeholder="CDI" />
             </div>
             <div className="mt-3 grid gap-3 sm:grid-cols-3">
               <Input label="N° de sécurité sociale" value={f.numeroSecu} onChange={(v) => set("numeroSecu", v)} placeholder="1 85 03 69…" />
               <Input label="Période" value={f.periode} onChange={(v) => set("periode", v)} placeholder="Ex. Juin 2026" />
-              <Input label="Date de paiement" value={f.datePaiement} onChange={(v) => set("datePaiement", v)} placeholder="30/06/2026" />
+              <Input date label="Date de paiement" value={f.datePaiement} onChange={(v) => set("datePaiement", v)} placeholder="30/06/2026" />
             </div>
           </div>
 
@@ -869,12 +870,12 @@ function CertificatForm() {
             <Input label="Poste occupé" value={f.poste} onChange={(v) => set("poste", v)} placeholder="Ex. Assistante administrative" />
           </div>
           <div className="mt-3 grid gap-3 sm:grid-cols-2">
-            <Input label="Date d'entrée" value={f.dateDebut} onChange={(v) => set("dateDebut", v)} placeholder="01/03/2023" />
-            <Input label="Date de sortie" value={f.dateFin} onChange={(v) => set("dateFin", v)} placeholder="30/06/2026" />
+            <Input date label="Date d'entrée" value={f.dateDebut} onChange={(v) => set("dateDebut", v)} placeholder="01/03/2023" />
+            <Input date label="Date de sortie" value={f.dateFin} onChange={(v) => set("dateFin", v)} placeholder="30/06/2026" />
           </div>
           <div className="mt-3 grid gap-3 sm:grid-cols-2">
             <Input label="Ville (signature)" value={f.ville} onChange={(v) => set("ville", v)} placeholder="Lyon" />
-            <Input label="Date de délivrance" value={f.date} onChange={(v) => set("date", v)} placeholder="28/06/2026" />
+            <Input date label="Date de délivrance" value={f.date} onChange={(v) => set("date", v)} placeholder="28/06/2026" />
           </div>
         </div>
 
@@ -1023,7 +1024,7 @@ function ContratForm() {
             <Input label="Adresse du salarié" value={f.salarieAdresse} onChange={(v) => set("salarieAdresse", v)} placeholder="3 rue des Fleurs, 69003 Lyon" />
           </div>
           <div className="mt-3 grid gap-3 sm:grid-cols-3">
-            <Input label="Date de naissance" value={f.salarieDateNaissance} onChange={(v) => set("salarieDateNaissance", v)} placeholder="12/05/1990" />
+            <Input date label="Date de naissance" value={f.salarieDateNaissance} onChange={(v) => set("salarieDateNaissance", v)} placeholder="12/05/1990" />
             <Input label="Lieu de naissance" value={f.salarieLieuNaissance} onChange={(v) => set("salarieLieuNaissance", v)} placeholder="Avignon" />
             <Input label="Nationalité" value={f.salarieNationalite} onChange={(v) => set("salarieNationalite", v)} placeholder="Française" />
           </div>
@@ -1039,12 +1040,12 @@ function ContratForm() {
             <Input label="Salaire brut mensuel (€)" value={f.salaireBrut} onChange={(v) => set("salaireBrut", v)} placeholder="1802" inputMode="decimal" />
           </div>
           <div className="mt-3 grid gap-3 sm:grid-cols-2">
-            <Input label="Date de début" value={f.dateDebut} onChange={(v) => set("dateDebut", v)} placeholder="01/07/2026" />
+            <Input date label="Date de début" value={f.dateDebut} onChange={(v) => set("dateDebut", v)} placeholder="01/07/2026" />
             <Input label="Heures / semaine" value={f.heuresSemaine} onChange={(v) => set("heuresSemaine", v)} placeholder="35" inputMode="decimal" />
           </div>
           {cdd && (
             <div className="mt-3 grid gap-3 sm:grid-cols-2">
-              <Input label="Date de fin (CDD)" value={f.dateFin} onChange={(v) => set("dateFin", v)} placeholder="31/12/2026" />
+              <Input date label="Date de fin (CDD)" value={f.dateFin} onChange={(v) => set("dateFin", v)} placeholder="31/12/2026" />
               <Input label="Motif du CDD" value={f.motifCdd} onChange={(v) => set("motifCdd", v)} placeholder="Accroissement d'activité" />
             </div>
           )}
@@ -1187,8 +1188,8 @@ function SoldeForm() {
             <Input label="Adresse du salarié (optionnel)" value={f.salarieAdresse} onChange={(v) => set("salarieAdresse", v)} placeholder="3 rue des Fleurs, 69003 Lyon" />
           </div>
           <div className="mt-3 grid gap-3 sm:grid-cols-2">
-            <Input label="Date d'entrée" value={f.dateEntree} onChange={(v) => set("dateEntree", v)} placeholder="01/03/2023" />
-            <Input label="Date de sortie" value={f.dateSortie} onChange={(v) => set("dateSortie", v)} placeholder="30/06/2026" />
+            <Input date label="Date d'entrée" value={f.dateEntree} onChange={(v) => set("dateEntree", v)} placeholder="01/03/2023" />
+            <Input date label="Date de sortie" value={f.dateSortie} onChange={(v) => set("dateSortie", v)} placeholder="30/06/2026" />
           </div>
           <div className="mt-3">
             <Input label="Motif de la rupture" value={f.motifRupture} onChange={(v) => set("motifRupture", v)} placeholder="Fin de CDD, démission, licenciement…" />
@@ -1220,7 +1221,7 @@ function SoldeForm() {
 
         <div className="grid gap-3 sm:grid-cols-2">
           <Input label="Ville (signature)" value={f.ville} onChange={(v) => set("ville", v)} placeholder="Lyon" />
-          <Input label="Date de signature" value={f.date} onChange={(v) => set("date", v)} placeholder="28/06/2026" />
+          <Input date label="Date de signature" value={f.date} onChange={(v) => set("date", v)} placeholder="28/06/2026" />
         </div>
 
         {error && <p className="text-sm font-medium text-red-600">{error}</p>}
@@ -1334,7 +1335,7 @@ function RuptureForm() {
           </div>
           <div className="mt-3 grid gap-3 sm:grid-cols-2">
             <Input label="Adresse du salarié" value={f.salarieAdresse} onChange={(v) => set("salarieAdresse", v)} placeholder="3 rue des Fleurs, 69003 Lyon" />
-            <Input label="Date d'embauche" value={f.dateEmbauche} onChange={(v) => set("dateEmbauche", v)} placeholder="01/03/2021" />
+            <Input date label="Date d'embauche" value={f.dateEmbauche} onChange={(v) => set("dateEmbauche", v)} placeholder="01/03/2021" />
           </div>
         </div>
 
@@ -1345,12 +1346,12 @@ function RuptureForm() {
             <Input label="Indemnité de rupture (€)" value={f.indemniteRupture} onChange={(v) => set("indemniteRupture", v)} placeholder="1500" inputMode="decimal" />
           </div>
           <div className="mt-3 grid gap-3 sm:grid-cols-2">
-            <Input label="Date de l'entretien" value={f.dateEntretien} onChange={(v) => set("dateEntretien", v)} placeholder="20/06/2026" />
-            <Input label="Date envisagée de rupture" value={f.dateRupture} onChange={(v) => set("dateRupture", v)} placeholder="31/07/2026" />
+            <Input date label="Date de l'entretien" value={f.dateEntretien} onChange={(v) => set("dateEntretien", v)} placeholder="20/06/2026" />
+            <Input date label="Date envisagée de rupture" value={f.dateRupture} onChange={(v) => set("dateRupture", v)} placeholder="31/07/2026" />
           </div>
           <div className="mt-3 grid gap-3 sm:grid-cols-2">
             <Input label="Ville (signature)" value={f.ville} onChange={(v) => set("ville", v)} placeholder="Lyon" />
-            <Input label="Date de signature" value={f.date} onChange={(v) => set("date", v)} placeholder="28/06/2026" />
+            <Input date label="Date de signature" value={f.date} onChange={(v) => set("date", v)} placeholder="28/06/2026" />
           </div>
           <p className="text-gris mt-3 text-xs leading-relaxed">
             L&apos;indemnité ne peut être inférieure à l&apos;indemnité légale de
@@ -1514,11 +1515,11 @@ function BailCommercialForm() {
           <p className="text-noir mb-3 text-sm font-bold">Durée & signature</p>
           <div className="grid gap-3 sm:grid-cols-2">
             <Input label="Durée" value={f.duree} onChange={(v) => set("duree", v)} placeholder="9 ans" />
-            <Input label="Date de prise d'effet" value={f.dateDebut} onChange={(v) => set("dateDebut", v)} placeholder="01/09/2026" />
+            <Input date label="Date de prise d'effet" value={f.dateDebut} onChange={(v) => set("dateDebut", v)} placeholder="01/09/2026" />
           </div>
           <div className="mt-3 grid gap-3 sm:grid-cols-2">
             <Input label="Ville (signature)" value={f.ville} onChange={(v) => set("ville", v)} placeholder="Lyon" />
-            <Input label="Date de signature" value={f.date} onChange={(v) => set("date", v)} placeholder="28/06/2026" />
+            <Input date label="Date de signature" value={f.date} onChange={(v) => set("date", v)} placeholder="28/06/2026" />
           </div>
         </div>
 
@@ -1779,7 +1780,7 @@ function StatutsForm() {
 
         <div className="grid gap-3 sm:grid-cols-2">
           <Input label="Ville (signature)" value={f.ville} onChange={(v) => set("ville", v)} placeholder="Lyon" />
-          <Input label="Date de signature" value={f.date} onChange={(v) => set("date", v)} placeholder="28/06/2026" />
+          <Input date label="Date de signature" value={f.date} onChange={(v) => set("date", v)} placeholder="28/06/2026" />
         </div>
 
         {error && <p className="text-sm font-medium text-red-600">{error}</p>}
@@ -1817,21 +1818,26 @@ function Input({
   onChange,
   placeholder,
   inputMode,
+  date,
 }: {
   label: string;
   value: string;
   onChange: (v: string) => void;
   placeholder?: string;
   inputMode?: "decimal";
+  /** true : champ date jj/mm/aaaa — les « / » s'insèrent à la saisie. */
+  date?: boolean;
 }) {
   return (
     <label className="block">
       <span className="text-noir mb-1.5 block text-sm font-medium">{label}</span>
       <input
         value={value}
-        onChange={(e) => onChange(e.target.value)}
+        onChange={(e) =>
+          onChange(date ? formatDateInput(e.target.value, value) : e.target.value)
+        }
         placeholder={placeholder}
-        inputMode={inputMode}
+        inputMode={date ? "numeric" : inputMode}
         className={FIELD}
       />
     </label>

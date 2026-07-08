@@ -8,6 +8,7 @@ import { EmailCopy } from "@/components/documents/EmailCopy";
 import { EntrepriseStep, SalarieStep, Row, ProgressBar, FIELD } from "@/components/flow/Steps";
 import { localStore, type LocalEntreprise, type LocalSalarie } from "@/lib/local/store";
 import { adresseComplete } from "@/lib/adresse";
+import { formatDateInput } from "@/lib/dates";
 import {
   calculerAnciennete,
   calculerPreavis,
@@ -215,7 +216,7 @@ export default function LicenciementFlow() {
                   <button onClick={() => setSal(null)} className="text-or-d ml-2 text-xs font-semibold hover:underline">changer</button>
                 </div>
                 <div className="grid gap-3 sm:grid-cols-2">
-                  <div><L>Date d'embauche</L><input className={FIELD} placeholder="01/03/2024" value={dateEmbauche} onChange={(e) => setDateEmbauche(e.target.value)} /></div>
+                  <div><L>Date d'embauche</L><input className={FIELD} placeholder="01/03/2024" value={dateEmbauche} onChange={(e) => setDateEmbauche(formatDateInput(e.target.value, dateEmbauche))} /></div>
                   <div><L>Type de contrat</L>
                     <select className={FIELD} value={typeContrat} onChange={(e) => setTypeContrat(e.target.value)}>
                       <option value="CDI">CDI</option>
@@ -258,8 +259,8 @@ export default function LicenciementFlow() {
           {key === "dates" && (
             <div className="space-y-4">
               <div className="grid gap-3 sm:grid-cols-2">
-                <div><L>Date de l'entretien préalable</L><input className={FIELD} placeholder="20/07/2026" value={dateEntretien} onChange={(e) => setDateEntretien(e.target.value)} /></div>
-                <div><L>Date d'envoi de la lettre</L><input className={FIELD} placeholder="24/07/2026" value={dateEnvoi} onChange={(e) => setDateEnvoi(e.target.value)} /></div>
+                <div><L>Date de l'entretien préalable</L><input className={FIELD} placeholder="20/07/2026" value={dateEntretien} onChange={(e) => setDateEntretien(formatDateInput(e.target.value, dateEntretien))} /></div>
+                <div><L>Date d'envoi de la lettre</L><input className={FIELD} placeholder="24/07/2026" value={dateEnvoi} onChange={(e) => setDateEnvoi(formatDateInput(e.target.value, dateEnvoi))} /></div>
               </div>
               {!delais.ok && delais.alertes.map((a, idx) => (
                 <div key={idx} className="flex items-start gap-2 rounded-lg bg-red-50 px-3 py-2 text-sm font-medium text-red-700">

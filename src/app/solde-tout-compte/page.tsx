@@ -18,6 +18,7 @@ import {
   type LocalSalarie,
 } from "@/lib/local/store";
 import { adresseComplete } from "@/lib/adresse";
+import { formatDateInput } from "@/lib/dates";
 
 const LABELS: Record<string, string> = {
   entreprise: "Votre entreprise",
@@ -208,7 +209,7 @@ export default function SoldeToutCompteFlow() {
             <div className="space-y-5">
               <div>
                 <label className="text-noir mb-1.5 block text-sm font-semibold">Date de sortie</label>
-                <input className={FIELD} placeholder="31/07/2026" value={dateSortie} onChange={(e) => setDateSortie(e.target.value)} />
+                <input className={FIELD} placeholder="31/07/2026" value={dateSortie} onChange={(e) => setDateSortie(formatDateInput(e.target.value, dateSortie))} />
               </div>
               <div>
                 <label className="text-noir mb-1.5 block text-sm font-semibold">Motif de la rupture</label>

@@ -7,6 +7,7 @@ import { Logo } from "@/components/brand/Logo";
 import { EmailCopy } from "@/components/documents/EmailCopy";
 import { EntrepriseStep, SalarieStep, Row, ProgressBar, FIELD } from "@/components/flow/Steps";
 import { localStore, type LocalEntreprise, type LocalSalarie } from "@/lib/local/store";
+import { formatDateInput } from "@/lib/dates";
 import { adresseComplete } from "@/lib/adresse";
 
 const LABELS: Record<string, string> = {
@@ -198,11 +199,11 @@ export default function RuptureConventionnelleFlow() {
               <div className="grid gap-3 sm:grid-cols-2">
                 <div>
                   <label className="text-noir mb-1.5 block text-sm font-semibold">Date de l'entretien</label>
-                  <input className={FIELD} placeholder="15/07/2026" value={dateEntretien} onChange={(e) => setDateEntretien(e.target.value)} />
+                  <input className={FIELD} placeholder="15/07/2026" value={dateEntretien} onChange={(e) => setDateEntretien(formatDateInput(e.target.value, dateEntretien))} />
                 </div>
                 <div>
                   <label className="text-noir mb-1.5 block text-sm font-semibold">Date de rupture envisagée</label>
-                  <input className={FIELD} placeholder="31/08/2026" value={dateRupture} onChange={(e) => setDateRupture(e.target.value)} />
+                  <input className={FIELD} placeholder="31/08/2026" value={dateRupture} onChange={(e) => setDateRupture(formatDateInput(e.target.value, dateRupture))} />
                 </div>
               </div>
               <div>

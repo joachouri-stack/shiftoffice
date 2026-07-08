@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { ArrowRight, Building2, Plus, UserPlus } from "lucide-react";
 import { SiretSearch } from "@/components/SiretSearch";
+import { formatDateInput } from "@/lib/dates";
 import {
   localStore,
   type LocalEntreprise,
@@ -245,7 +246,7 @@ export function SalarieStep({ onSelect }: { onSelect: (s: LocalSalarie) => void 
       </div>
       <input className={FIELD} type="email" placeholder="Email du salarié (pour l'envoi)" value={f.email} onChange={(e) => set("email", e.target.value)} />
       <div className="grid gap-3 sm:grid-cols-3">
-        <input className={FIELD} placeholder="Date d'entrée" value={f.dateEntree} onChange={(e) => set("dateEntree", e.target.value)} />
+        <input className={FIELD} placeholder="Date d'entrée" value={f.dateEntree} onChange={(e) => set("dateEntree", formatDateInput(e.target.value, f.dateEntree))} />
         <select className={FIELD} value={f.typeContrat} onChange={(e) => set("typeContrat", e.target.value)}>
           <option value="CDI">CDI</option>
           <option value="CDD">CDD</option>

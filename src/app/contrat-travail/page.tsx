@@ -7,6 +7,7 @@ import { Logo } from "@/components/brand/Logo";
 import { EmailCopy } from "@/components/documents/EmailCopy";
 import { EntrepriseStep, SalarieStep, Row, ProgressBar, FIELD } from "@/components/flow/Steps";
 import { localStore, type LocalEntreprise, type LocalSalarie } from "@/lib/local/store";
+import { formatDateInput } from "@/lib/dates";
 import { adresseComplete } from "@/lib/adresse";
 
 const LABELS: Record<string, string> = {
@@ -217,7 +218,7 @@ export default function ContratTravailFlow() {
             <div className="space-y-4">
               <h3 className="text-noir font-display text-lg font-bold">État civil du salarié</h3>
               <p className="text-gris -mt-2 text-xs">Mémorisé sur le salarié — demandé une seule fois.</p>
-              <input className={FIELD} placeholder="Date de naissance (jj/mm/aaaa)" value={dateNaissance} onChange={(e) => setDateNaissance(e.target.value)} />
+              <input className={FIELD} placeholder="Date de naissance (jj/mm/aaaa)" value={dateNaissance} onChange={(e) => setDateNaissance(formatDateInput(e.target.value, dateNaissance))} />
               <input className={FIELD} placeholder="Lieu de naissance" value={lieuNaissance} onChange={(e) => setLieuNaissance(e.target.value)} />
               <input className={FIELD} placeholder="Nationalité" value={nationalite} onChange={(e) => setNationalite(e.target.value)} />
             </div>
@@ -238,7 +239,7 @@ export default function ContratTravailFlow() {
               <div className="grid gap-3 sm:grid-cols-2">
                 <div>
                   <label className="text-noir mb-1.5 block text-sm font-semibold">Date de début</label>
-                  <input className={FIELD} value={dateDebut} onChange={(e) => setDateDebut(e.target.value)} />
+                  <input className={FIELD} value={dateDebut} onChange={(e) => setDateDebut(formatDateInput(e.target.value, dateDebut))} />
                 </div>
                 <div>
                   <label className="text-noir mb-1.5 block text-sm font-semibold">Période d'essai</label>
@@ -249,7 +250,7 @@ export default function ContratTravailFlow() {
                 <div className="grid gap-3 sm:grid-cols-2">
                   <div>
                     <label className="text-noir mb-1.5 block text-sm font-semibold">Date de fin (CDD)</label>
-                    <input className={FIELD} value={dateFin} onChange={(e) => setDateFin(e.target.value)} placeholder="31/12/2026" />
+                    <input className={FIELD} value={dateFin} onChange={(e) => setDateFin(formatDateInput(e.target.value, dateFin))} placeholder="31/12/2026" />
                   </div>
                   <div>
                     <label className="text-noir mb-1.5 block text-sm font-semibold">Motif du CDD</label>

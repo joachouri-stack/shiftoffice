@@ -18,6 +18,7 @@ import {
 } from "lucide-react";
 import { Logo } from "@/components/brand/Logo";
 import { SiretSearch } from "@/components/SiretSearch";
+import { formatDateInput } from "@/lib/dates";
 import {
   localStore,
   MAX_ENTREPRISES,
@@ -658,7 +659,7 @@ function SalarieForm({
       <input className={FIELD} placeholder="Adresse du salarié" value={adresse} onChange={(e) => setAdresse(e.target.value)} />
       <input className={FIELD} type="email" placeholder="Email du salarié (pour l'envoi de la fiche)" value={email} onChange={(e) => setEmail(e.target.value)} />
       <div className="grid gap-3 sm:grid-cols-3">
-        <input className={FIELD} placeholder="Date d'entrée (jj/mm/aaaa)" value={dateEntree} onChange={(e) => setDateEntree(e.target.value)} />
+        <input className={FIELD} placeholder="Date d'entrée (jj/mm/aaaa)" value={dateEntree} onChange={(e) => setDateEntree(formatDateInput(e.target.value, dateEntree))} />
         <select className={FIELD} value={typeContrat} onChange={(e) => setTypeContrat(e.target.value)}>
           <option value="CDI">CDI</option>
           <option value="CDD">CDD</option>

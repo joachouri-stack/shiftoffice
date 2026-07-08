@@ -7,6 +7,7 @@ import { Logo } from "@/components/brand/Logo";
 import { EmailCopy } from "@/components/documents/EmailCopy";
 import { EntrepriseStep, Row, ProgressBar, FIELD } from "@/components/flow/Steps";
 import { localStore, type LocalEntreprise } from "@/lib/local/store";
+import { formatDateInput } from "@/lib/dates";
 import { adresseComplete } from "@/lib/adresse";
 
 const LABELS: Record<string, string> = {
@@ -206,7 +207,7 @@ export default function BailCommercialFlow() {
 
           {key === "duree" && (
             <div className="space-y-4">
-              <div><L>Date de début</L><input className={FIELD} value={dateDebut} onChange={(e) => setDateDebut(e.target.value)} /></div>
+              <div><L>Date de début</L><input className={FIELD} value={dateDebut} onChange={(e) => setDateDebut(formatDateInput(e.target.value, dateDebut))} /></div>
               <div><L>Durée</L><input className={FIELD} value={duree} onChange={(e) => setDuree(e.target.value)} /></div>
               <div><L>Indice de révision</L><input className={FIELD} value={indiceRevision} onChange={(e) => setIndiceRevision(e.target.value)} /></div>
             </div>

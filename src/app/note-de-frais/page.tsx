@@ -8,6 +8,7 @@ import { EmailCopy } from "@/components/documents/EmailCopy";
 import { EntrepriseStep, Row, ProgressBar, FIELD } from "@/components/flow/Steps";
 import { localStore, type LocalEntreprise } from "@/lib/local/store";
 import { adresseComplete } from "@/lib/adresse";
+import { formatDateInput } from "@/lib/dates";
 
 const LABELS: Record<string, string> = {
   entreprise: "Votre entreprise",
@@ -244,7 +245,7 @@ export default function NoteFraisFlow() {
                     )}
                   </div>
                   <div className="grid gap-2 sm:grid-cols-2">
-                    <input className={FIELD} placeholder="Date (ex. 03/06)" value={l.date} onChange={(e) => setLigne(idx, "date", e.target.value)} />
+                    <input className={FIELD} placeholder="Date (ex. 03/06)" value={l.date} onChange={(e) => setLigne(idx, "date", formatDateInput(e.target.value, l.date, true))} />
                     <input className={FIELD} inputMode="decimal" placeholder="Montant TTC (€)" value={l.montant} onChange={(e) => setLigne(idx, "montant", e.target.value)} />
                   </div>
                   <input className={FIELD} placeholder="Nature (ex. Repas client)" value={l.nature} onChange={(e) => setLigne(idx, "nature", e.target.value)} />
