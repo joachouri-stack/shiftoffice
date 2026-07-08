@@ -224,6 +224,9 @@ export async function buildDocument(
         associes,
         dirigeantNom: S(d.dirigeantNom),
         dirigeantAdresse: S(d.dirigeantAdresse),
+        exerciceDebut: S(d.exerciceDebut),
+        exerciceFin: S(d.exerciceFin),
+        depotBanque: S(d.depotBanque),
         ville: S(d.ville),
         date: S(d.date),
       });

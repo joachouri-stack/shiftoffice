@@ -37,10 +37,14 @@ export default function StatutsSocieteFlow() {
   const [objet, setObjet] = useState("");
   const [siege, setSiege] = useState("");
   const [dureeSoc, setDureeSoc] = useState("99 ans");
+  const [capitalSaisi, setCapitalSaisi] = useState(""); // vide → somme des apports
   const [valeurTitre, setValeurTitre] = useState("10");
   const [associes, setAssocies] = useState<Asso[]>([{ nom: "", adresse: "", apport: "" }]);
   const [dirigeantNom, setDirigeantNom] = useState("");
   const [dirigeantAdresse, setDirigeantAdresse] = useState("");
+  const [exerciceDebut, setExerciceDebut] = useState("1er janvier");
+  const [exerciceFin, setExerciceFin] = useState("31 décembre");
+  const [depotBanque, setDepotBanque] = useState("");
   const [ville, setVille] = useState("");
 
   const [busy, setBusy] = useState(false);
@@ -51,7 +55,11 @@ export default function StatutsSocieteFlow() {
   useEffect(() => setReady(true), []);
 
   const n = (v: string) => parseFloat(v.replace(",", ".")) || 0;
-  const capital = useMemo(() => associes.reduce((s, a) => s + n(a.apport), 0), [associes]);
+  const sommeApports = useMemo(() => associes.reduce((s, a) => s + n(a.apport), 0), [associes]);
+  // Capital : saisi explicitement, sinon égal à la somme des apports.
+  const capital = capitalSaisi.trim() !== "" ? n(capitalSaisi) : sommeApports;
+  const nbParts = n(valeurTitre) > 0 ? Math.round(capital / n(valeurTitre)) : 0;
+  const capitalIncoherent = capitalSaisi.trim() !== "" && sommeApports > 0 && n(capitalSaisi) !== sommeApports;
 
   if (!ready) return null;
 
@@ -78,6 +86,9 @@ export default function StatutsSocieteFlow() {
         .map((a) => ({ nom: a.nom, adresse: a.adresse, apport: n(a.apport) })),
       dirigeantNom,
       dirigeantAdresse,
+      exerciceDebut,
+      exerciceFin,
+      depotBanque,
       ville,
       date: todayFr(),
     };
@@ -196,14 +207,49 @@ export default function StatutsSocieteFlow() {
 
           {key === "capital" && (
             <div className="space-y-4">
-              <div className="border-or/30 bg-or/5 rounded-xl border p-4"><Row label="Capital social (somme des apports)" value={eur(capital)} strong /></div>
+              <div>
+                <L>Capital social (€)</L>
+                <input
+                  className={FIELD}
+                  inputMode="decimal"
+                  placeholder={sommeApports > 0 ? `${sommeApports} (somme des apports)` : "Ex. 5000"}
+                  value={capitalSaisi}
+                  onChange={(e) => setCapitalSaisi(e.target.value)}
+                />
+                <p className="text-gris mt-1.5 text-xs">
+                  Laissez vide pour reprendre automatiquement la somme des apports ({eur(sommeApports)}).
+                </p>
+                {capitalIncoherent && (
+                  <p className="mt-2 rounded-lg bg-amber-50 px-3 py-2 text-xs font-medium text-amber-800">
+                    ⚠️ Le capital saisi ({eur(n(capitalSaisi))}) diffère de la somme des apports ({eur(sommeApports)}).
+                    Dans des statuts, le capital doit correspondre aux apports — vérifiez vos montants.
+                  </p>
+                )}
+              </div>
               <div className="grid gap-3 sm:grid-cols-2">
-                <div><L>Valeur d'une part (€)</L><input className={FIELD} inputMode="decimal" value={valeurTitre} onChange={(e) => setValeurTitre(e.target.value)} /></div>
+                <div>
+                  <L>{forme === "SAS" || forme === "SASU" ? "Valeur d'une action (€)" : "Valeur d'une part (€)"}</L>
+                  <input className={FIELD} inputMode="decimal" value={valeurTitre} onChange={(e) => setValeurTitre(e.target.value)} />
+                </div>
                 <div><L>Durée de la société</L><input className={FIELD} value={dureeSoc} onChange={(e) => setDureeSoc(e.target.value)} /></div>
               </div>
-              {n(valeurTitre) > 0 && (
-                <p className="text-gris text-xs">Soit {Math.round(capital / n(valeurTitre))} parts de {eur(n(valeurTitre))}.</p>
+              {nbParts > 0 && (
+                <div className="border-or/30 bg-or/5 rounded-xl border p-4">
+                  <Row label={forme === "SAS" || forme === "SASU" ? "Nombre d'actions" : "Nombre de parts sociales"} value={`${nbParts} × ${eur(n(valeurTitre))}`} strong />
+                  {associes.filter((a) => a.nom.trim() && n(a.apport) > 0).map((a, idx) => (
+                    <Row key={idx} label={a.nom} value={`${n(valeurTitre) > 0 ? Math.round(n(a.apport) / n(valeurTitre)) : 0} ${forme === "SAS" || forme === "SASU" ? "actions" : "parts"}`} muted />
+                  ))}
+                </div>
               )}
+              <div className="grid gap-3 sm:grid-cols-2">
+                <div><L>Début d'exercice social</L><input className={FIELD} value={exerciceDebut} onChange={(e) => setExerciceDebut(e.target.value)} /></div>
+                <div><L>Fin d'exercice social</L><input className={FIELD} value={exerciceFin} onChange={(e) => setExerciceFin(e.target.value)} /></div>
+              </div>
+              <div>
+                <L>Banque de dépôt des fonds (optionnel)</L>
+                <input className={FIELD} value={depotBanque} onChange={(e) => setDepotBanque(e.target.value)} placeholder="Ex. Crédit Agricole, agence d'Orange" />
+                <p className="text-gris mt-1.5 text-xs">Le certificat du dépositaire est exigé pour l&apos;immatriculation.</p>
+              </div>
             </div>
           )}
 
@@ -233,8 +279,14 @@ export default function StatutsSocieteFlow() {
                   <Row label="Dénomination" value={denomination || "—"} pad />
                   <Row label="Associés" value={String(associes.filter((a) => a.nom.trim()).length)} pad />
                   <Row label="Dirigeant" value={dirigeantNom || "—"} pad />
+                  <Row label={forme === "SAS" || forme === "SASU" ? "Actions" : "Parts sociales"} value={nbParts > 0 ? `${nbParts} × ${eur(n(valeurTitre))}` : "—"} pad />
                   <Row label="Capital" value={eur(capital)} pad strong />
                 </div>
+                {capitalIncoherent && (
+                  <p className="rounded-lg bg-amber-50 px-3 py-2 text-xs font-medium text-amber-800">
+                    ⚠️ Capital saisi ≠ somme des apports — vérifiez avant de générer.
+                  </p>
+                )}
                 {err && <p className="rounded-lg bg-red-50 px-3 py-2 text-sm font-medium text-red-700">{err}</p>}
                 <button onClick={generer} disabled={busy} className="bg-orange hover:bg-orange-d inline-flex w-full items-center justify-center gap-2 rounded-[10px] px-6 py-3.5 text-base font-bold text-white disabled:opacity-50">
                   {busy ? <Loader2 size={18} className="animate-spin" /> : <Download size={18} />}
