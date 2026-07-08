@@ -119,6 +119,14 @@ export async function buildAvenantPDF(d: AvenantData): Promise<Uint8Array> {
     const cAnc = M + 200;
     const cNouv = M + 350;
     const rowH = 20;
+    // Tronque une cellule trop large pour sa colonne (ajoute « … »).
+    const cell = (s: string, maxW: number, f = font) => {
+      if (f.widthOfTextAtSize(s, 9.5) <= maxW) return s;
+      let out = s;
+      while (out.length > 1 && f.widthOfTextAtSize(out + "…", 9.5) > maxW)
+        out = out.slice(0, -1);
+      return out.trimEnd() + "…";
+    };
     ensure(rowH * (modifs.length + 1) + 12);
     page.drawRectangle({ x: M, y: y - 5, width: W, height: rowH, color: INK });
     at("Élément", cInt, y, 9, bold, CREME);
@@ -128,12 +136,11 @@ export async function buildAvenantPDF(d: AvenantData): Promise<Uint8Array> {
     modifs.forEach((m, i) => {
       if (y - rowH < 72) { page = pdf.addPage(A4); y = TOP; }
       if (i % 2 === 1) page.drawRectangle({ x: M, y: y - 5, width: W, height: rowH, color: CREME });
-      at(m.intitule, cInt, y, 9.5, font, INK);
-      at(m.ancien || "—", cAnc, y, 9.5, font, GRIS);
-      at(m.nouveau || "—", cNouv, y, 9.5, bold, INK);
+      at(cell(m.intitule, cAnc - cInt - 12), cInt, y, 9.5, font, INK);
+      at(cell(m.ancien || "—", cNouv - cAnc - 12), cAnc, y, 9.5, font, GRIS);
+      at(cell(m.nouveau || "—", rightX - cNouv - 10, bold), cNouv, y, 9.5, bold, INK);
       y -= rowH;
     });
-    void rightX;
     y -= 12;
   }
 

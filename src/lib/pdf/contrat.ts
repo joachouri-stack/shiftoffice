@@ -209,14 +209,28 @@ export async function buildContratPDF(d: ContratData): Promise<Uint8Array> {
   tracked("L'ESSENTIEL DU CONTRAT", M + ipad, y - 15, 9, sansB, WHITE, 1.5);
   for (let c = 1; c < eCols; c++)
     rect(M + c * eColW, y - essH + 10, 1, essH - eHead - 20, G300);
+  // Tronque une ligne trop large pour sa colonne (ajoute « … »).
+  const clipLine = (s: string, size: number, maxW: number): string => {
+    if (sansB.widthOfTextAtSize(s, size) <= maxW) return s;
+    let out = s;
+    while (out.length > 1 && sansB.widthOfTextAtSize(out + "…", size) > maxW)
+      out = out.slice(0, -1);
+    return out.trimEnd() + "…";
+  };
   // Pour une adresse (lieu de travail), on coupe au dernier virgule :
-  // la rue sur une ligne, le code postal + ville en dessous.
+  // la rue sur une ligne, le code postal + ville en dessous. Chaque ligne est
+  // ensuite tronquée si elle dépasse la largeur de la colonne.
   const valueLines = (label: string, val: string): string[] => {
-    if (label.includes("LIEU")) {
+    let lines: string[];
+    if (label.includes("LIEU") && val.lastIndexOf(",") > 0) {
       const idx = val.lastIndexOf(",");
-      if (idx > 0) return [val.slice(0, idx).trim(), val.slice(idx + 1).trim()];
+      lines = [val.slice(0, idx).trim(), val.slice(idx + 1).trim()];
+    } else {
+      const all = wrap(val, sansB, 10, eInner);
+      lines = all.slice(0, 2);
+      if (all.length > 2) lines[1] += "…";
     }
-    return wrap(val, sansB, 10, eInner).slice(0, 2);
+    return lines.map((l) => clipLine(l, 10, eInner));
   };
   recap.forEach((cell, i) => {
     const r = Math.floor(i / eCols);
