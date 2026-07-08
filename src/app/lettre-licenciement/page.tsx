@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { AlertTriangle, ArrowLeft, ArrowRight, Check, Download, Loader2, ShieldCheck } from "lucide-react";
+import { AlertTriangle, ArrowLeft, ArrowRight, Check, Download, Loader2, ShieldCheck, Sparkles } from "lucide-react";
 import { Logo } from "@/components/brand/Logo";
 import { EmailCopy } from "@/components/documents/EmailCopy";
 import { EntrepriseStep, SalarieStep, Row, ProgressBar, FIELD } from "@/components/flow/Steps";
@@ -61,6 +61,12 @@ export default function LicenciementFlow() {
   const [err, setErr] = useState("");
   const [lastDonnees, setLastDonnees] = useState<Record<string, unknown> | null>(null);
 
+  // Assistance IA (bouton visible seulement si l'IA est configurée côté serveur).
+  const [iaOn, setIaOn] = useState(false);
+  const [iaBusy, setIaBusy] = useState(false);
+  const [iaErr, setIaErr] = useState("");
+  const [iaProp, setIaProp] = useState<{ texte: string; alerte: string; typeSuggere: string } | null>(null);
+
   useEffect(() => {
     const e = localStore.getEntreprise();
     setEnt(e);
@@ -73,8 +79,39 @@ export default function LicenciementFlow() {
     list.push("salarie", "type", "motifs", "dates", "verification");
     setSteps(list);
     setReady(true);
+    fetch("/api/config")
+      .then((r) => r.json())
+      .then((c: { ia?: boolean }) => setIaOn(Boolean(c.ia)))
+      .catch(() => setIaOn(false));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  async function ameliorerIA() {
+    if (iaBusy || motifs.trim().length < 15) return;
+    setIaBusy(true);
+    setIaErr("");
+    setIaProp(null);
+    try {
+      const r = await fetch("/api/ia/licenciement", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ motifs, type: typeKey }),
+      });
+      const data = (await r.json().catch(() => ({}))) as {
+        texte?: string; alerte?: string; typeSuggere?: string; error?: string; aiDisabled?: boolean;
+      };
+      if (data.aiDisabled) { setIaOn(false); return; }
+      if (!r.ok || !data.texte) {
+        setIaErr(data.error ?? "L'assistance IA a échoué. Réessayez.");
+        return;
+      }
+      setIaProp({ texte: data.texte, alerte: data.alerte ?? "", typeSuggere: data.typeSuggere ?? "" });
+    } catch {
+      setIaErr("L'assistance IA a échoué. Réessayez.");
+    } finally {
+      setIaBusy(false);
+    }
+  }
 
   const n = (v: string) => parseFloat(v.replace(",", ".")) || 0;
 
@@ -186,7 +223,7 @@ export default function LicenciementFlow() {
     <div className="bg-creme min-h-dvh">
       <header className="bg-noir">
         <div className="mx-auto flex h-16 max-w-2xl items-center justify-between px-4 sm:px-6">
-          <Link href="/"><Logo theme="dark" /></Link>
+          <Logo theme="dark" />
           <Link href="/espace" className="text-sm font-semibold text-white/70 hover:text-white">Mon espace</Link>
         </div>
       </header>
@@ -253,6 +290,77 @@ export default function LicenciementFlow() {
                 value={motifs}
                 onChange={(e) => setMotifs(e.target.value)}
               />
+
+              {iaOn && (
+                <div className="space-y-3">
+                  <button
+                    type="button"
+                    onClick={ameliorerIA}
+                    disabled={iaBusy || motifs.trim().length < 15}
+                    className="border-or/40 text-or-d hover:bg-or/5 inline-flex items-center gap-2 rounded-[10px] border px-4 py-2 text-sm font-bold disabled:opacity-40"
+                  >
+                    {iaBusy ? <Loader2 size={15} className="animate-spin" /> : <Sparkles size={15} />}
+                    Améliorer avec l&apos;IA
+                  </button>
+                  {motifs.trim().length < 15 && (
+                    <p className="text-gris -mt-1 text-xs">
+                      Décrivez d&apos;abord les faits en quelques phrases — l&apos;IA les
+                      reformulera en exposé précis et vérifiera la cohérence juridique.
+                    </p>
+                  )}
+                  {iaErr && (
+                    <p className="rounded-lg bg-red-50 px-3 py-2 text-xs font-medium text-red-700">{iaErr}</p>
+                  )}
+
+                  {iaProp && (
+                    <div className="border-or/30 bg-or/5 space-y-3 rounded-xl border p-4">
+                      <p className="text-or-d inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-wide">
+                        <Sparkles size={13} /> Proposition de l&apos;IA
+                      </p>
+                      <p className="text-noir whitespace-pre-wrap text-sm leading-relaxed">{iaProp.texte}</p>
+                      {iaProp.alerte && (
+                        <div className="flex items-start gap-2 rounded-lg bg-amber-50 px-3 py-2 text-xs font-medium text-amber-800">
+                          <AlertTriangle size={14} className="mt-0.5 shrink-0" />
+                          <span>
+                            {iaProp.alerte}
+                            {iaProp.typeSuggere && (
+                              <>
+                                {" "}
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    setTypeKey(iaProp.typeSuggere as TypeLicenciement);
+                                    setIaProp((p) => (p ? { ...p, alerte: "", typeSuggere: "" } : p));
+                                  }}
+                                  className="font-bold underline"
+                                >
+                                  Basculer vers «&nbsp;{TYPES.find((t) => t.key === iaProp.typeSuggere)?.label}&nbsp;»
+                                </button>
+                              </>
+                            )}
+                          </span>
+                        </div>
+                      )}
+                      <div className="flex items-center gap-2">
+                        <button
+                          type="button"
+                          onClick={() => { setMotifs(iaProp.texte); setIaProp(null); }}
+                          className="bg-noir inline-flex items-center gap-1.5 rounded-lg px-4 py-2 text-xs font-bold text-white"
+                        >
+                          <Check size={13} /> Utiliser ce texte
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setIaProp(null)}
+                          className="text-gris hover:text-noir px-2 py-2 text-xs font-semibold"
+                        >
+                          Ignorer
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
           )}
 

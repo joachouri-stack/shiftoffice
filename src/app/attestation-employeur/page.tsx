@@ -109,7 +109,7 @@ export default function AttestationEmployeurFlow() {
     <div className="bg-creme min-h-dvh">
       <header className="bg-noir">
         <div className="mx-auto flex h-16 max-w-2xl items-center justify-between px-4 sm:px-6">
-          <Link href="/"><Logo theme="dark" /></Link>
+          <Logo theme="dark" />
           <Link href="/espace" className="text-sm font-semibold text-white/70 hover:text-white">Mon espace</Link>
         </div>
       </header>

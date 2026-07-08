@@ -16,9 +16,7 @@ export function LegalPage({
     <div className="bg-creme min-h-dvh">
       <header className="bg-noir">
         <div className="mx-auto flex h-16 max-w-5xl items-center justify-between px-4 sm:px-6">
-          <Link href="/">
-            <Logo theme="dark" />
-          </Link>
+          <Logo theme="dark" />
           <Link
             href="/"
             className="inline-flex items-center gap-1.5 text-sm font-semibold text-white/70 transition-colors hover:text-white"
