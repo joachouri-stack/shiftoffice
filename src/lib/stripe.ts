@@ -36,11 +36,20 @@ export function isStripeEnabled(): boolean {
 }
 
 /**
- * Mode « test gratuit » : quand `PAIEMENT_LIBRE` vaut 1/true, le paiement est
- * neutralisé et tous les documents se génèrent directement, même si Stripe est
- * configuré. À activer pour tester, à retirer pour le lancement.
+ * MODE TEST — passer à `false` pour le lancement.
+ * Quand `true`, aucun paiement n'est exigé : tous les documents se génèrent
+ * gratuitement, quelle que soit la configuration Stripe. Les prix restent
+ * affichés sur le site.
+ */
+export const MODE_TEST_GRATUIT = true;
+
+/**
+ * Mode « test gratuit » : actif via la constante MODE_TEST_GRATUIT ci-dessus,
+ * ou via la variable d'environnement PAIEMENT_LIBRE (1/true/yes/on). Le
+ * paiement est alors neutralisé même si Stripe est configuré.
  */
 export function isPaiementLibre(): boolean {
+  if (MODE_TEST_GRATUIT) return true;
   const raw = process.env.PAIEMENT_LIBRE ?? process.env.NEXT_PUBLIC_PAIEMENT_LIBRE ?? "";
   const v = raw.trim().toLowerCase();
   return v === "1" || v === "true" || v === "yes" || v === "on";
