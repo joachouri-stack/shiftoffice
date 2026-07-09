@@ -58,6 +58,8 @@ export async function POST(req: Request) {
         `- N'ajoute aucune accusation ni aggravation ; ne minimise pas non plus.\n` +
         `- Conserve les dates au format JJ/MM/AAAA ou tel que fourni.\n` +
         `- 3 à 8 phrases maximum, à la première personne du pluriel (« Nous avons constaté… »).\n` +
+        `- La lettre est adressée AU salarié : adresse-toi à lui directement, au vouvoiement ` +
+        `(« vous êtes arrivé en retard », « qui vous ont été adressés ») — jamais « le salarié » à la troisième personne.\n` +
         `- Pas d'en-tête, pas de formule de politesse : uniquement l'exposé des faits.\n` +
         `Évalue ensuite la cohérence juridique : les faits décrits correspondent-ils au type ` +
         `« ${typeLibelle} » ? Rappels : la faute grave rend impossible le maintien dans ` +
