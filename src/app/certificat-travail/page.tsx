@@ -7,6 +7,8 @@ import { Logo } from "@/components/brand/Logo";
 import { EmailCopy } from "@/components/documents/EmailCopy";
 import { EntrepriseStep, SalarieStep, Row, ProgressBar, RequisHint, FIELD } from "@/components/flow/Steps";
 import { localStore, type LocalEntreprise, type LocalSalarie } from "@/lib/local/store";
+import { savePdf } from "@/lib/local/pdfs";
+import { useDraft } from "@/lib/local/draft";
 import { formatDateInput } from "@/lib/dates";
 import { adresseComplete } from "@/lib/adresse";
 
@@ -54,6 +56,12 @@ export default function CertificatTravailFlow() {
     setReady(true);
   }, []);
 
+  // Brouillon : la saisie survit à un rechargement de page (24 h).
+  useDraft("certificat-travail", ready, done, {
+    dateDebut: [dateDebut, setDateDebut],
+    dateFin: [dateFin, setDateFin],
+  });
+
   if (!ready) return null;
 
   const key = steps[i] ?? "verification";
@@ -74,6 +82,10 @@ export default function CertificatTravailFlow() {
     if (busy) return;
     setBusy(true);
     setErr("");
+    // Mémorise la date d'entrée sur la fiche du salarié si elle manquait.
+    if (sal?.id && !sal.dateEntree && dateDebut.trim()) {
+      localStore.updateSalarie(sal.id, { dateEntree: dateDebut.trim() });
+    }
     const donnees = {
       entrepriseNom: ent?.nom ?? "",
       entrepriseAdresse: adresseComplete(ent?.adresse, ent?.codePostal, ent?.ville),
@@ -133,7 +145,7 @@ export default function CertificatTravailFlow() {
       a.download = filename;
       a.click();
       URL.revokeObjectURL(url);
-      localStore.addDocument(docMeta);
+      void savePdf(localStore.addDocument(docMeta).id, blob);
       setDone(true);
     } catch {
       setErr("La génération a échoué. Réessayez.");

@@ -7,6 +7,8 @@ import { Logo } from "@/components/brand/Logo";
 import { EmailCopy } from "@/components/documents/EmailCopy";
 import { EntrepriseStep, Row, ProgressBar, RequisHint, FIELD } from "@/components/flow/Steps";
 import { localStore, type LocalEntreprise } from "@/lib/local/store";
+import { savePdf } from "@/lib/local/pdfs";
+import { useDraft } from "@/lib/local/draft";
 import { formatDateInput } from "@/lib/dates";
 import { adresseComplete } from "@/lib/adresse";
 
@@ -79,6 +81,29 @@ export default function BailCommercialFlow() {
     setSteps(list);
     setReady(true);
   }, []);
+
+  // Brouillon : la saisie survit à un rechargement de page (24 h).
+  useDraft("bail-commercial", ready, done, {
+    typeBail: [typeBail, setTypeBail],
+    preneurNom: [preneurNom, setPreneurNom],
+    preneurAdresse: [preneurAdresse, setPreneurAdresse],
+    preneurRcs: [preneurRcs, setPreneurRcs],
+    adresseLocal: [adresseLocal, setAdresseLocal],
+    descriptionLocal: [descriptionLocal, setDescriptionLocal],
+    surface: [surface, setSurface],
+    destination: [destination, setDestination],
+    equipe: [equipe, setEquipe],
+    materiel: [materiel, setMateriel],
+    loyerAnnuel: [loyerAnnuel, setLoyerAnnuel],
+    depotGarantie: [depotGarantie, setDepotGarantie],
+    pasDePorte: [pasDePorte, setPasDePorte],
+    pasDePorteNature: [pasDePorteNature, setPasDePorteNature],
+    charges: [charges, setCharges],
+    dateDebut: [dateDebut, setDateDebut],
+    dureeAnnees: [dureeAnnees, setDureeAnnees],
+    dureeMois: [dureeMois, setDureeMois],
+    indiceRevision: [indiceRevision, setIndiceRevision],
+  });
 
   if (!ready) return null;
 
@@ -192,7 +217,7 @@ export default function BailCommercialFlow() {
       a.download = filename;
       a.click();
       URL.revokeObjectURL(url);
-      localStore.addDocument(docMeta);
+      void savePdf(localStore.addDocument(docMeta).id, blob);
       setDone(true);
     } catch {
       setErr("La génération a échoué. Réessayez.");

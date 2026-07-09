@@ -7,6 +7,8 @@ import { Logo } from "@/components/brand/Logo";
 import { EmailCopy } from "@/components/documents/EmailCopy";
 import { EntrepriseStep, SalarieStep, Row, ProgressBar, RequisHint, FIELD } from "@/components/flow/Steps";
 import { localStore, type LocalEntreprise, type LocalSalarie } from "@/lib/local/store";
+import { savePdf } from "@/lib/local/pdfs";
+import { useDraft } from "@/lib/local/draft";
 import { adresseComplete } from "@/lib/adresse";
 import { formatDateInput } from "@/lib/dates";
 import { SMIC_MENSUEL } from "@/lib/paie/calcul";
@@ -89,6 +91,8 @@ export default function AvenantFlow() {
     setSal(s);
     if (s.poste) setAncienPoste(s.poste);
     if (s.salaireBrut) setAncienSalaire(String(s.salaireBrut));
+    // Le contrat initial date le plus souvent de l'entrée du salarié.
+    if (s.dateEntree) setDateContratInitial((prev) => prev || s.dateEntree || "");
   }
 
   // Salaire calculé au prorata pour le passage à temps partiel.
@@ -141,6 +145,28 @@ export default function AvenantFlow() {
       out.push({ level: "warn", msg: `Le passage à temps partiel requiert l'accord écrit du salarié (avenant signé par les deux parties).` });
     return out;
   }, [typeModif, nouveauSalaire, ancienSalaire]);
+
+  // Brouillon : la saisie survit à un rechargement de page (24 h).
+  useDraft("avenant-contrat", ready, done, {
+    dateContratInitial: [dateContratInitial, setDateContratInitial],
+    typeModif: [typeModif, setTypeModif],
+    dateEffet: [dateEffet, setDateEffet],
+    ancienSalaire: [ancienSalaire, setAncienSalaire],
+    nouveauSalaire: [nouveauSalaire, setNouveauSalaire],
+    ancienPoste: [ancienPoste, setAncienPoste],
+    nouveauPoste: [nouveauPoste, setNouveauPoste],
+    nouveauCoef: [nouveauCoef, setNouveauCoef],
+    ancienHoraire: [ancienHoraire, setAncienHoraire],
+    nouveauHoraire: [nouveauHoraire, setNouveauHoraire],
+    ancienLieu: [ancienLieu, setAncienLieu],
+    nouveauLieu: [nouveauLieu, setNouveauLieu],
+    dateFinInitiale: [dateFinInitiale, setDateFinInitiale],
+    nouvelleDateFin: [nouvelleDateFin, setNouvelleDateFin],
+    motifProlongation: [motifProlongation, setMotifProlongation],
+    autreIntitule: [autreIntitule, setAutreIntitule],
+    autreAncien: [autreAncien, setAutreAncien],
+    autreNouveau: [autreNouveau, setAutreNouveau],
+  });
 
   if (!ready) return null;
 
@@ -239,7 +265,17 @@ export default function AvenantFlow() {
       const a = document.createElement("a");
       a.href = url; a.download = filename; a.click();
       URL.revokeObjectURL(url);
-      localStore.addDocument(docMeta);
+      void savePdf(localStore.addDocument(docMeta).id, blob);
+      // Répercute la modification sur la fiche du salarié (poste, salaire).
+      if (sal?.id) {
+        if (typeModif === "Augmentation de salaire" && n(nouveauSalaire) > 0) {
+          localStore.updateSalarie(sal.id, { salaireBrut: n(nouveauSalaire) });
+        } else if (typeModif === "Changement de poste" && nouveauPoste.trim()) {
+          localStore.updateSalarie(sal.id, { poste: nouveauPoste.trim() });
+        } else if (typeModif === "Passage à temps partiel" && salairePartiel > 0) {
+          localStore.updateSalarie(sal.id, { salaireBrut: salairePartiel });
+        }
+      }
       setDone(true);
     } catch {
       setErr("La génération a échoué. Réessayez.");

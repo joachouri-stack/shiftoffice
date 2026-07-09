@@ -8,6 +8,8 @@ import { Logo } from "@/components/brand/Logo";
 import { EmailCopy } from "@/components/documents/EmailCopy";
 import { DOCUMENTS } from "@/lib/documents";
 import { localStore, type LocalFiche, type LocalDoc } from "@/lib/local/store";
+import { savePdf } from "@/lib/local/pdfs";
+import { clearDraft } from "@/lib/local/draft";
 
 type Pending = {
   type: string;
@@ -70,7 +72,8 @@ function SuccessInner() {
         );
         return;
       }
-      triggerDownload(await res.blob(), pending.filename);
+      const blob = await res.blob();
+      triggerDownload(blob, pending.filename);
       // Fiche de paie : on enregistre dans l'espace local (historique + reprise).
       if (pending.ficheMeta) {
         try {
@@ -81,12 +84,13 @@ function SuccessInner() {
       }
       if (pending.docMeta) {
         try {
-          localStore.addDocument(pending.docMeta);
+          void savePdf(localStore.addDocument(pending.docMeta).id, blob);
         } catch {
           /* historique best-effort */
         }
       }
       sessionStorage.removeItem(key);
+      clearDraft(params.slug);
       setStatus("done");
     } catch {
       setStatus("error");

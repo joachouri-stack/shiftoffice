@@ -7,6 +7,8 @@ import { Logo } from "@/components/brand/Logo";
 import { EmailCopy } from "@/components/documents/EmailCopy";
 import { EntrepriseStep, SalarieStep, Row, ProgressBar, RequisHint, FIELD } from "@/components/flow/Steps";
 import { localStore, type LocalEntreprise, type LocalSalarie } from "@/lib/local/store";
+import { savePdf } from "@/lib/local/pdfs";
+import { useDraft } from "@/lib/local/draft";
 import { formatDateInput } from "@/lib/dates";
 import { adresseComplete } from "@/lib/adresse";
 
@@ -83,6 +85,23 @@ export default function ContratTravailFlow() {
     setSteps(list);
     setReady(true);
   }, []);
+
+  // Brouillon : la saisie survit à un rechargement de page (24 h).
+  useDraft("contrat-travail", ready, done, {
+    dateNaissance: [dateNaissance, setDateNaissance],
+    lieuNaissance: [lieuNaissance, setLieuNaissance],
+    nationalite: [nationalite, setNationalite],
+    typeContrat: [typeContrat, setTypeContrat],
+    dateDebut: [dateDebut, setDateDebut],
+    dateFin: [dateFin, setDateFin],
+    motifCdd: [motifCdd, setMotifCdd],
+    periodeEssai: [periodeEssai, setPeriodeEssai],
+    poste: [poste, setPoste],
+    salaireBrut: [salaireBrut, setSalaireBrut],
+    heuresSemaine: [heuresSemaine, setHeuresSemaine],
+    lieuTravail: [lieuTravail, setLieuTravail],
+    convention: [convention, setConvention],
+  });
 
   if (!ready) return null;
 
@@ -193,7 +212,7 @@ export default function ContratTravailFlow() {
       a.download = filename;
       a.click();
       URL.revokeObjectURL(url);
-      localStore.addDocument(docMeta);
+      void savePdf(localStore.addDocument(docMeta).id, blob);
       setDone(true);
     } catch {
       setErr("La génération a échoué. Réessayez.");

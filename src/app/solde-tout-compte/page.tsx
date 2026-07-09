@@ -18,6 +18,8 @@ import {
   type LocalEntreprise,
   type LocalSalarie,
 } from "@/lib/local/store";
+import { savePdf } from "@/lib/local/pdfs";
+import { useDraft } from "@/lib/local/draft";
 import { adresseComplete } from "@/lib/adresse";
 import { formatDateInput } from "@/lib/dates";
 
@@ -91,6 +93,17 @@ export default function SoldeToutCompteFlow() {
     () => n(salaireDu) + n(indemniteConges) + n(indemnitePreavis) + n(indemniteRupture) + n(autresSommes),
     [salaireDu, indemniteConges, indemnitePreavis, indemniteRupture, autresSommes]
   );
+
+  // Brouillon : la saisie survit à un rechargement de page (24 h).
+  useDraft("solde-tout-compte", ready, done, {
+    dateSortie: [dateSortie, setDateSortie],
+    motif: [motif, setMotif],
+    salaireDu: [salaireDu, setSalaireDu],
+    indemniteConges: [indemniteConges, setIndemniteConges],
+    indemnitePreavis: [indemnitePreavis, setIndemnitePreavis],
+    indemniteRupture: [indemniteRupture, setIndemniteRupture],
+    autresSommes: [autresSommes, setAutresSommes],
+  });
 
   if (!ready) return null;
 
@@ -181,7 +194,7 @@ export default function SoldeToutCompteFlow() {
       a.download = filename;
       a.click();
       URL.revokeObjectURL(url);
-      localStore.addDocument(docMeta);
+      void savePdf(localStore.addDocument(docMeta).id, blob);
       setDone(true);
     } catch {
       setErr("La génération a échoué. Réessayez.");

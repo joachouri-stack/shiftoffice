@@ -14,6 +14,8 @@ import {
   ArrowRight,
   Pencil,
   FileText,
+  ChevronDown,
+  Download as DownloadIcon,
 } from "lucide-react";
 import { Logo } from "@/components/brand/Logo";
 import { SiretSearch } from "@/components/SiretSearch";
@@ -27,9 +29,22 @@ import {
   type LocalBien,
   type LocalDoc,
 } from "@/lib/local/store";
+import { getPdf } from "@/lib/local/pdfs";
 
 const FIELD =
   "border-or/30 bg-white text-noir placeholder:text-gris/50 focus:border-or focus:ring-or/15 h-11 w-full rounded-lg border px-3.5 text-sm outline-none transition-all focus:ring-4";
+
+/** Documents générables pour un salarié donné (préremplis via ?s=id). */
+const SALARIE_DOCS = [
+  { label: "Fiche de paie", href: "/fiche-de-paie" },
+  { label: "Contrat de travail", href: "/contrat-travail" },
+  { label: "Avenant au contrat", href: "/avenant-contrat" },
+  { label: "Attestation employeur", href: "/attestation-employeur" },
+  { label: "Certificat de travail", href: "/certificat-travail" },
+  { label: "Solde de tout compte", href: "/solde-tout-compte" },
+  { label: "Rupture conventionnelle", href: "/rupture-conventionnelle" },
+  { label: "Lettre de licenciement", href: "/lettre-licenciement" },
+];
 
 const NAV = [
   { label: "Tableau de bord", icon: Home, href: "#top", active: true },
@@ -48,6 +63,9 @@ export default function EspaceLocalPage() {
   const [editingEnt, setEditingEnt] = useState<string | null>(null);
   const [addingEnt, setAddingEnt] = useState(false);
   const [editingSal, setEditingSal] = useState<string | null>(null);
+  const [docMenuSal, setDocMenuSal] = useState<string | null>(null);
+  // Documents dont le PDF est encore stocké sur cet appareil (re-téléchargeables).
+  const [pdfDispo, setPdfDispo] = useState<Set<string>>(new Set());
   const [ready, setReady] = useState(false);
 
   const refreshEnts = () => {
@@ -59,9 +77,26 @@ export default function EspaceLocalPage() {
     refreshEnts();
     setSalaries(localStore.getSalaries());
     setBiens(localStore.getBiens());
-    setDocuments(localStore.getDocuments());
+    const docs = localStore.getDocuments();
+    setDocuments(docs);
     setReady(true);
+    (async () => {
+      const ids = new Set<string>();
+      for (const d of docs) if (await getPdf(d.id)) ids.add(d.id);
+      setPdfDispo(ids);
+    })();
   }, []);
+
+  async function telechargerPdf(d: LocalDoc) {
+    const blob = await getPdf(d.id);
+    if (!blob) return;
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `${[d.titre, d.libelle].filter(Boolean).join(" ").toLowerCase().replace(/[^a-z0-9à-ÿ]+/gi, "-")}.pdf`;
+    a.click();
+    URL.revokeObjectURL(url);
+  }
 
   if (!ready) return null;
 
@@ -101,13 +136,22 @@ export default function EspaceLocalPage() {
 
         {/* Contenu */}
         <main className="space-y-6">
-          <div id="top" className="scroll-mt-8">
-            <h1 className="font-display text-noir text-2xl font-extrabold tracking-tight">
-              Bonjour 👋
-            </h1>
-            <p className="text-gris mt-1 text-sm">
-              Votre espace, prêt à l&apos;emploi — sans inscription.
-            </p>
+          <div id="top" className="flex flex-wrap items-center justify-between gap-3 scroll-mt-8">
+            <div>
+              <h1 className="font-display text-noir text-2xl font-extrabold tracking-tight">
+                Bonjour 👋
+              </h1>
+              <p className="text-gris mt-1 text-sm">
+                Votre espace, prêt à l&apos;emploi — sans inscription.
+              </p>
+            </div>
+            <Link
+              href="/#produits"
+              className="bg-orange hover:bg-orange-d inline-flex items-center gap-2 rounded-[10px] px-4 py-2.5 text-sm font-bold text-white transition-colors"
+            >
+              <FileText size={15} />
+              Générer un document
+            </Link>
           </div>
 
           {/* Bandeau local + upgrade */}
@@ -314,13 +358,32 @@ export default function EspaceLocalPage() {
                       </div>
                     </div>
                     <div className="flex items-center gap-1">
-                      <Link
-                        href={`/fiche-de-paie?s=${s.id}`}
-                        className="bg-orange hover:bg-orange-d inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-bold text-white"
-                      >
-                        <FileText size={13} />
-                        Fiche de paie
-                      </Link>
+                      <div className="relative">
+                        <button
+                          onClick={() => setDocMenuSal(docMenuSal === s.id ? null : s.id)}
+                          className="bg-orange hover:bg-orange-d inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-bold text-white"
+                        >
+                          <FileText size={13} />
+                          Générer
+                          <ChevronDown size={13} className={`transition-transform ${docMenuSal === s.id ? "rotate-180" : ""}`} />
+                        </button>
+                        {docMenuSal === s.id && (
+                          <>
+                            <div className="fixed inset-0 z-10" onClick={() => setDocMenuSal(null)} />
+                            <div className="border-or/20 absolute right-0 z-20 mt-1.5 w-56 rounded-xl border bg-white py-1.5 shadow-lg">
+                              {SALARIE_DOCS.map((doc) => (
+                                <Link
+                                  key={doc.href}
+                                  href={`${doc.href}?s=${s.id}`}
+                                  className="text-noir hover:bg-or/10 block px-3.5 py-2 text-sm font-semibold"
+                                >
+                                  {doc.label}
+                                </Link>
+                              ))}
+                            </div>
+                          </>
+                        )}
+                      </div>
                       <button
                         onClick={() => setEditingSal(s.id)}
                         aria-label={`Modifier ${s.nom}`}
@@ -445,22 +508,43 @@ export default function EspaceLocalPage() {
                         </p>
                       </div>
                     </div>
-                    {d.refaireHref ? (
-                      <Link
-                        href={d.refaireHref}
-                        className="text-or-d hover:bg-or/10 inline-flex shrink-0 items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-bold"
-                      >
-                        Refaire
-                        <ArrowRight size={13} />
-                      </Link>
-                    ) : null}
+                    <div className="flex shrink-0 items-center gap-1">
+                      {pdfDispo.has(d.id) && (
+                        <button
+                          onClick={() => telechargerPdf(d)}
+                          className="bg-noir inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-bold text-white"
+                        >
+                          <DownloadIcon size={13} />
+                          Télécharger
+                        </button>
+                      )}
+                      {d.refaireHref ? (
+                        <Link
+                          href={d.refaireHref}
+                          className="text-or-d hover:bg-or/10 inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-bold"
+                        >
+                          Refaire
+                          <ArrowRight size={13} />
+                        </Link>
+                      ) : null}
+                    </div>
                   </li>
                 ))}
               </ul>
             ) : (
-              <p className="text-gris py-6 text-center text-sm">
-                Vos documents générés apparaîtront ici, prêts à être refaits en un clic.
-              </p>
+              <div className="py-6 text-center">
+                <p className="text-gris text-sm">
+                  Vos documents générés apparaîtront ici, prêts à être
+                  re-téléchargés ou refaits en un clic.
+                </p>
+                <Link
+                  href="/#produits"
+                  className="text-or-d hover:bg-or/10 mt-3 inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-bold"
+                >
+                  Choisir un document
+                  <ArrowRight size={14} />
+                </Link>
+              </div>
             )}
           </section>
         </main>

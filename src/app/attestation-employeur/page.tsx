@@ -8,6 +8,7 @@ import { EmailCopy } from "@/components/documents/EmailCopy";
 import { EntrepriseStep, SalarieStep, Row, ProgressBar, RequisHint, FIELD } from "@/components/flow/Steps";
 import { formatDateInput } from "@/lib/dates";
 import { localStore, type LocalEntreprise, type LocalSalarie } from "@/lib/local/store";
+import { savePdf } from "@/lib/local/pdfs";
 import { adresseComplete } from "@/lib/adresse";
 
 const LABELS: Record<string, string> = {
@@ -121,7 +122,7 @@ export default function AttestationEmployeurFlow() {
       a.download = filename;
       a.click();
       URL.revokeObjectURL(url);
-      localStore.addDocument(docMeta);
+      void savePdf(localStore.addDocument(docMeta).id, blob);
       setDone(true);
     } catch {
       setErr("La génération a échoué. Réessayez.");

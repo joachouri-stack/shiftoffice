@@ -7,6 +7,8 @@ import { Logo } from "@/components/brand/Logo";
 import { EmailCopy } from "@/components/documents/EmailCopy";
 import { Row, ProgressBar, RequisHint, FIELD } from "@/components/flow/Steps";
 import { localStore } from "@/lib/local/store";
+import { savePdf } from "@/lib/local/pdfs";
+import { useDraft } from "@/lib/local/draft";
 
 const FORMES = ["SARL", "SAS", "EURL", "SASU"] as const;
 const LABELS: Record<string, string> = {
@@ -52,7 +54,17 @@ export default function StatutsSocieteFlow() {
   const [err, setErr] = useState("");
   const [lastDonnees, setLastDonnees] = useState<Record<string, unknown> | null>(null);
 
-  useEffect(() => setReady(true), []);
+  const [societeAjoutee, setSocieteAjoutee] = useState(false);
+
+  useEffect(() => {
+    // Suggestion : le siège de la nouvelle société est souvent l'adresse
+    // de l'entreprise déjà enregistrée (ou le domicile du fondateur).
+    const e = localStore.getEntreprise();
+    if (e?.adresse) {
+      setSiege((prev) => prev || [e.adresse, [e.codePostal, e.ville].filter(Boolean).join(" ")].filter(Boolean).join(", "));
+    }
+    setReady(true);
+  }, []);
 
   const n = (v: string) => parseFloat(v.replace(",", ".")) || 0;
   const sommeApports = useMemo(() => associes.reduce((s, a) => s + n(a.apport), 0), [associes]);
@@ -60,6 +72,24 @@ export default function StatutsSocieteFlow() {
   const capital = capitalSaisi.trim() !== "" ? n(capitalSaisi) : sommeApports;
   const nbParts = n(valeurTitre) > 0 ? Math.round(capital / n(valeurTitre)) : 0;
   const capitalIncoherent = capitalSaisi.trim() !== "" && sommeApports > 0 && n(capitalSaisi) !== sommeApports;
+
+  // Brouillon : la saisie survit à un rechargement de page (24 h).
+  useDraft("statuts-societe", ready, done, {
+    forme: [forme, setForme],
+    denomination: [denomination, setDenomination],
+    objet: [objet, setObjet],
+    siege: [siege, setSiege],
+    dureeSoc: [dureeSoc, setDureeSoc],
+    capitalSaisi: [capitalSaisi, setCapitalSaisi],
+    valeurTitre: [valeurTitre, setValeurTitre],
+    associes: [associes, setAssocies],
+    dirigeantNom: [dirigeantNom, setDirigeantNom],
+    dirigeantAdresse: [dirigeantAdresse, setDirigeantAdresse],
+    exerciceDebut: [exerciceDebut, setExerciceDebut],
+    exerciceFin: [exerciceFin, setExerciceFin],
+    depotBanque: [depotBanque, setDepotBanque],
+    ville: [ville, setVille],
+  });
 
   if (!ready) return null;
 
@@ -165,13 +195,32 @@ export default function StatutsSocieteFlow() {
       a.download = filename;
       a.click();
       URL.revokeObjectURL(url);
-      localStore.addDocument(docMeta);
+      void savePdf(localStore.addDocument(docMeta).id, blob);
+      enregistrerSociete();
       setDone(true);
     } catch {
       setErr("La génération a échoué. Réessayez.");
     } finally {
       setBusy(false);
     }
+  }
+
+  // Enregistre la société créée dans « Mes entreprises » (si absente et
+  // sous le plafond) : elle est prête pour les prochains documents.
+  function enregistrerSociete() {
+    const nom = denomination.trim();
+    if (!nom) return;
+    const deja = localStore
+      .getEntreprises()
+      .some((e) => e.nom.trim().toLowerCase() === nom.toLowerCase());
+    if (deja) return;
+    const item = localStore.addEntreprise({
+      nom,
+      adresse: siege.trim() || undefined,
+      representantNom: dirigeantNom.trim() || undefined,
+      representantQualite: forme === "SARL" || forme === "EURL" ? "Gérant" : "Président",
+    });
+    if (item) setSocieteAjoutee(true);
   }
 
   const L = ({ children }: { children: string }) => (
@@ -297,6 +346,11 @@ export default function StatutsSocieteFlow() {
                 <div className="bg-vert-l text-vert mx-auto mb-3 grid h-12 w-12 place-items-center rounded-full"><Check size={24} /></div>
                 <p className="text-noir text-lg font-bold">Statuts générés 🎉</p>
                 <p className="text-gris mt-1 text-sm">Le PDF a été téléchargé.</p>
+                {societeAjoutee && (
+                  <p className="bg-vert-l text-vert mx-auto mt-3 inline-block rounded-lg px-3 py-1.5 text-xs font-semibold">
+                    {denomination} a été ajoutée à vos entreprises — prête pour vos prochains documents.
+                  </p>
+                )}
                 {lastDonnees && <div className="mt-5 text-left"><EmailCopy type="statuts-societe" donnees={lastDonnees} defaultEmail="" /></div>}
                 <Link href="/espace" className="bg-noir mt-5 inline-flex items-center gap-2 rounded-[10px] px-5 py-2.5 text-sm font-bold text-white">Mon espace</Link>
               </div>

@@ -7,6 +7,8 @@ import { Logo } from "@/components/brand/Logo";
 import { EmailCopy } from "@/components/documents/EmailCopy";
 import { EntrepriseStep, SalarieStep, Row, ProgressBar, RequisHint, FIELD } from "@/components/flow/Steps";
 import { localStore, type LocalEntreprise, type LocalSalarie } from "@/lib/local/store";
+import { savePdf } from "@/lib/local/pdfs";
+import { useDraft } from "@/lib/local/draft";
 import { formatDateInput } from "@/lib/dates";
 import { adresseComplete } from "@/lib/adresse";
 
@@ -82,6 +84,14 @@ export default function RuptureConventionnelleFlow() {
     const sup = annees > 10 ? (1 / 3) * brut * (annees - 10) : 0;
     return Math.round((base + sup) * 100) / 100;
   }, [salaireBrut, dateRupture, sal]);
+
+  // Brouillon : la saisie survit à un rechargement de page (24 h).
+  useDraft("rupture-conventionnelle", ready, done, {
+    dateEntretien: [dateEntretien, setDateEntretien],
+    dateRupture: [dateRupture, setDateRupture],
+    salaireBrut: [salaireBrut, setSalaireBrut],
+    indemnite: [indemnite, setIndemnite],
+  });
 
   if (!ready) return null;
 
@@ -171,7 +181,7 @@ export default function RuptureConventionnelleFlow() {
       a.download = filename;
       a.click();
       URL.revokeObjectURL(url);
-      localStore.addDocument(docMeta);
+      void savePdf(localStore.addDocument(docMeta).id, blob);
       setDone(true);
     } catch {
       setErr("La génération a échoué. Réessayez.");

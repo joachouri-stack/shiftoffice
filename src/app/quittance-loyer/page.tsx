@@ -8,6 +8,8 @@ import { EmailCopy } from "@/components/documents/EmailCopy";
 import { Row, ProgressBar, RequisHint, FIELD } from "@/components/flow/Steps";
 import { formatDateInput } from "@/lib/dates";
 import { localStore, type LocalBien } from "@/lib/local/store";
+import { savePdf } from "@/lib/local/pdfs";
+import { useDraft } from "@/lib/local/draft";
 
 const MOIS = [
   "Janvier", "Février", "Mars", "Avril", "Mai", "Juin",
@@ -56,6 +58,13 @@ export default function QuittanceLoyerFlow() {
   }, []);
 
   const total = useMemo(() => (bien?.loyer ?? 0) + (bien?.charges ?? 0), [bien]);
+
+  // Brouillon : la saisie survit à un rechargement de page (24 h).
+  useDraft("quittance-loyer", ready, done, {
+    mois: [mois, setMois],
+    annee: [annee, setAnnee],
+    datePaiement: [datePaiement, setDatePaiement],
+  });
 
   if (!ready) return null;
 
@@ -118,7 +127,7 @@ export default function QuittanceLoyerFlow() {
       a.download = filename;
       a.click();
       URL.revokeObjectURL(url);
-      localStore.addDocument(docMeta);
+      void savePdf(localStore.addDocument(docMeta).id, blob);
       setDone(true);
     } catch {
       setErr("La génération a échoué. Réessayez.");
@@ -284,6 +293,27 @@ function BienStep({ onSelect }: { onSelect: (b: LocalBien) => void }) {
         <h3 className="text-noir font-display text-lg font-bold">Le logement loué</h3>
       </div>
       <p className="text-gris -mt-2 text-xs">Saisi une fois — réutilisé chaque mois pour ce locataire.</p>
+      {(() => {
+        const ent = localStore.getEntreprise();
+        if (!ent?.nom || f.bailleurNom.trim()) return null;
+        return (
+          <button
+            type="button"
+            onClick={() =>
+              setF((p) => ({
+                ...p,
+                bailleurNom: ent.nom,
+                bailleurAdresse:
+                  p.bailleurAdresse ||
+                  [ent.adresse, [ent.codePostal, ent.ville].filter(Boolean).join(" ")].filter(Boolean).join(", "),
+              }))
+            }
+            className="border-or/30 bg-or/5 text-or-d hover:bg-or/10 inline-flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs font-bold"
+          >
+            <Plus size={13} /> Utiliser {ent.nom} comme bailleur
+          </button>
+        );
+      })()}
       <div className="grid gap-3 sm:grid-cols-2">
         <input className={FIELD} placeholder="Bailleur (vous) *" value={f.bailleurNom} onChange={(e) => set("bailleurNom", e.target.value)} />
         <input className={FIELD} placeholder="Locataire *" value={f.locataire} onChange={(e) => set("locataire", e.target.value)} />

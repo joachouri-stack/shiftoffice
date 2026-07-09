@@ -7,6 +7,8 @@ import { Logo } from "@/components/brand/Logo";
 import { EmailCopy } from "@/components/documents/EmailCopy";
 import { EntrepriseStep, SalarieStep, Row, ProgressBar, RequisHint, FIELD } from "@/components/flow/Steps";
 import { localStore, type LocalEntreprise, type LocalSalarie } from "@/lib/local/store";
+import { savePdf } from "@/lib/local/pdfs";
+import { useDraft } from "@/lib/local/draft";
 import { adresseComplete } from "@/lib/adresse";
 import { formatDateInput } from "@/lib/dates";
 import {
@@ -134,6 +136,17 @@ export default function LicenciementFlow() {
     [dateEntretien, dateEnvoi]
   );
 
+  // Brouillon : la saisie survit à un rechargement de page (24 h).
+  useDraft("lettre-licenciement", ready, done, {
+    dateEmbauche: [dateEmbauche, setDateEmbauche],
+    typeContrat: [typeContrat, setTypeContrat],
+    salaireBrut: [salaireBrut, setSalaireBrut],
+    typeKey: [typeKey, setTypeKey],
+    motifs: [motifs, setMotifs],
+    dateEntretien: [dateEntretien, setDateEntretien],
+    dateEnvoi: [dateEnvoi, setDateEnvoi],
+  });
+
   if (!ready) return null;
 
   const key = steps[i] ?? "verification";
@@ -168,6 +181,15 @@ export default function LicenciementFlow() {
     if (busy || !delais.ok) return;
     setBusy(true);
     setErr("");
+    // Mémorise les infos factuelles saisies sur la fiche du salarié
+    // (évite de les retaper au prochain document).
+    if (sal?.id) {
+      localStore.updateSalarie(sal.id, {
+        dateEntree: dateEmbauche.trim() || sal.dateEntree,
+        typeContrat: typeContrat || sal.typeContrat,
+        salaireBrut: n(salaireBrut) > 0 ? n(salaireBrut) : sal.salaireBrut,
+      });
+    }
     const donnees = {
       entrepriseNom: ent?.nom ?? "",
       entrepriseAdresse: adresseComplete(ent?.adresse, ent?.codePostal, ent?.ville),
@@ -225,7 +247,7 @@ export default function LicenciementFlow() {
       const a = document.createElement("a");
       a.href = url; a.download = filename; a.click();
       URL.revokeObjectURL(url);
-      localStore.addDocument(docMeta);
+      void savePdf(localStore.addDocument(docMeta).id, blob);
       setDone(true);
     } catch {
       setErr("La génération a échoué. Réessayez.");

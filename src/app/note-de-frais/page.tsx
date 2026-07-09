@@ -7,6 +7,8 @@ import { Logo } from "@/components/brand/Logo";
 import { EmailCopy } from "@/components/documents/EmailCopy";
 import { EntrepriseStep, Row, ProgressBar, RequisHint, FIELD } from "@/components/flow/Steps";
 import { localStore, type LocalEntreprise } from "@/lib/local/store";
+import { savePdf } from "@/lib/local/pdfs";
+import { useDraft } from "@/lib/local/draft";
 import { adresseComplete } from "@/lib/adresse";
 import { formatDateInput } from "@/lib/dates";
 
@@ -87,6 +89,15 @@ export default function NoteFraisFlow() {
       ttc: Math.round(t.ttc * 100) / 100,
     };
   }, [lignes]);
+
+  // Brouillon : la saisie survit à un rechargement de page (24 h).
+  useDraft("note-de-frais", ready, done, {
+    demandeurNom: [demandeurNom, setDemandeurNom],
+    qualite: [qualite, setQualite],
+    mois: [mois, setMois],
+    annee: [annee, setAnnee],
+    lignes: [lignes, setLignes],
+  });
 
   if (!ready) return null;
 
@@ -179,7 +190,7 @@ export default function NoteFraisFlow() {
       a.download = filename;
       a.click();
       URL.revokeObjectURL(url);
-      localStore.addDocument(docMeta);
+      void savePdf(localStore.addDocument(docMeta).id, blob);
       setDone(true);
     } catch {
       setErr("La génération a échoué. Réessayez.");

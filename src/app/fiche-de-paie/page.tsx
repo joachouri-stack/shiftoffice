@@ -24,6 +24,8 @@ import {
   type LocalEntreprise,
   type LocalSalarie,
 } from "@/lib/local/store";
+import { savePdf } from "@/lib/local/pdfs";
+import { useDraft } from "@/lib/local/draft";
 import { adresseComplete } from "@/lib/adresse";
 
 const MOIS = [
@@ -141,6 +143,20 @@ export default function FicheDePaieFlow() {
     [brutEff, heures, heuresSup, primes, tauxPAS]
   );
 
+  // Brouillon : la saisie survit à un rechargement de page (24 h).
+  useDraft("fiche-paie", ready, done, {
+    mode: [mode, setMode],
+    brut: [brut, setBrut],
+    net: [net, setNet],
+    heures: [heures, setHeures],
+    heuresSup: [heuresSup, setHeuresSup],
+    primes: [primes, setPrimes],
+    tauxPAS: [tauxPAS, setTauxPAS],
+    mois: [mois, setMois],
+    annee: [annee, setAnnee],
+    conges: [conges, setConges],
+  });
+
   if (!ready) return null;
 
   const key = steps[i] ?? "verification";
@@ -249,7 +265,7 @@ export default function FicheDePaieFlow() {
       a.click();
       URL.revokeObjectURL(url);
       localStore.addFiche(ficheMeta);
-      localStore.addDocument(docMeta);
+      void savePdf(localStore.addDocument(docMeta).id, blob);
       setDone(true);
     } catch {
       setErr("La génération a échoué. Réessayez.");
