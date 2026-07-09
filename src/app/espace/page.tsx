@@ -30,6 +30,8 @@ import {
   type LocalDoc,
 } from "@/lib/local/store";
 import { getPdf } from "@/lib/local/pdfs";
+import { isSupabaseEnabled } from "@/lib/supabase/config";
+import { createClient } from "@/lib/supabase/client";
 
 const FIELD =
   "border-or/30 bg-white text-noir placeholder:text-gris/50 focus:border-or focus:ring-or/15 h-11 w-full rounded-lg border px-3.5 text-sm outline-none transition-all focus:ring-4";
@@ -67,6 +69,9 @@ export default function EspaceLocalPage() {
   const [docMenuSal, setDocMenuSal] = useState<string | null>(null);
   // Documents dont le PDF est encore stocké sur cet appareil (re-téléchargeables).
   const [pdfDispo, setPdfDispo] = useState<Set<string>>(new Set());
+  // Compte connecté (null = pas de session ; Supabase peut être désactivé).
+  const [userEmail, setUserEmail] = useState<string | null>(null);
+  const cloudOn = isSupabaseEnabled();
   const [ready, setReady] = useState(false);
 
   const refreshEnts = () => {
@@ -75,18 +80,41 @@ export default function EspaceLocalPage() {
   };
 
   useEffect(() => {
-    refreshEnts();
-    setSalaries(localStore.getSalaries());
-    setBiens(localStore.getBiens());
-    const docs = localStore.getDocuments();
-    setDocuments(docs);
+    const load = () => {
+      refreshEnts();
+      setSalaries(localStore.getSalaries());
+      setBiens(localStore.getBiens());
+      const docs = localStore.getDocuments();
+      setDocuments(docs);
+      (async () => {
+        const ids = new Set<string>();
+        for (const d of docs) if (await getPdf(d.id)) ids.add(d.id);
+        setPdfDispo(ids);
+      })();
+    };
+    load();
     setReady(true);
-    (async () => {
-      const ids = new Set<string>();
-      for (const d of docs) if (await getPdf(d.id)) ids.add(d.id);
-      setPdfDispo(ids);
-    })();
+    // Rafraîchit l'affichage quand la synchronisation cloud met à jour les données.
+    window.addEventListener("so:refresh", load);
+
+    let unsub: (() => void) | undefined;
+    if (isSupabaseEnabled()) {
+      const sb = createClient();
+      sb.auth.getSession().then(({ data: { session } }) => setUserEmail(session?.user.email ?? null));
+      const { data } = sb.auth.onAuthStateChange((_e, session) => setUserEmail(session?.user.email ?? null));
+      unsub = () => data.subscription.unsubscribe();
+    }
+    return () => {
+      window.removeEventListener("so:refresh", load);
+      unsub?.();
+    };
   }, []);
+
+  async function seDeconnecter() {
+    const sb = createClient();
+    await sb.auth.signOut();
+    window.location.reload();
+  }
 
   async function telechargerPdf(d: LocalDoc) {
     const blob = await getPdf(d.id);
@@ -109,7 +137,7 @@ export default function EspaceLocalPage() {
           <Logo theme="dark" />
           <span className="inline-flex items-center gap-1.5 rounded-full bg-white/10 px-3 py-1 text-xs font-semibold text-white/80">
             <HardDrive size={13} />
-            Espace local · cet appareil
+            {userEmail ? `Synchronisé · ${userEmail}` : "Espace local · cet appareil"}
           </span>
         </div>
       </header>
@@ -155,22 +183,52 @@ export default function EspaceLocalPage() {
             </Link>
           </div>
 
-          {/* Bandeau local + upgrade */}
+          {/* Bandeau : local seul, ou synchronisé avec le compte */}
           <div className="border-or/30 bg-or/5 flex flex-col gap-3 rounded-2xl border p-4 sm:flex-row sm:items-center sm:justify-between">
             <div className="flex items-start gap-3">
               <div className="bg-or/15 text-or-d grid h-9 w-9 shrink-0 place-items-center rounded-lg">
                 <HardDrive size={16} />
               </div>
-              <div>
-                <p className="text-noir text-sm font-bold">
-                  Vos données sont enregistrées sur cet appareil
-                </p>
-                <p className="text-gris mt-0.5 text-xs leading-relaxed">
-                  Rien n&apos;est envoyé en ligne. Entreprise, salariés et fiches
-                  restent dans ce navigateur — aucune connexion nécessaire.
-                </p>
-              </div>
+              {userEmail ? (
+                <div>
+                  <p className="text-noir text-sm font-bold">
+                    Espace synchronisé avec votre compte
+                  </p>
+                  <p className="text-gris mt-0.5 text-xs leading-relaxed">
+                    Entreprises, salariés et historique suivent votre compte{" "}
+                    <strong className="text-noir">{userEmail}</strong> sur tous
+                    vos appareils. Les PDF restent stockés sur chaque appareil.
+                  </p>
+                </div>
+              ) : (
+                <div>
+                  <p className="text-noir text-sm font-bold">
+                    Vos données sont enregistrées sur cet appareil
+                  </p>
+                  <p className="text-gris mt-0.5 text-xs leading-relaxed">
+                    Rien n&apos;est envoyé en ligne. Entreprise, salariés et fiches
+                    restent dans ce navigateur — aucune connexion nécessaire.
+                  </p>
+                </div>
+              )}
             </div>
+            {cloudOn && (
+              userEmail ? (
+                <button
+                  onClick={seDeconnecter}
+                  className="text-gris hover:text-noir inline-flex shrink-0 items-center justify-center gap-2 rounded-[10px] px-4 py-2.5 text-sm font-semibold"
+                >
+                  Se déconnecter
+                </button>
+              ) : (
+                <Link
+                  href="/connexion"
+                  className="bg-noir inline-flex shrink-0 items-center justify-center gap-2 rounded-[10px] px-4 py-2.5 text-sm font-bold text-white"
+                >
+                  Créer un compte pour synchroniser
+                </Link>
+              )
+            )}
           </div>
 
           {/* Entreprises */}

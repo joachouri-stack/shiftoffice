@@ -23,7 +23,7 @@ function getBaseUrl(request: Request): string {
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const code = searchParams.get("code");
-  const next = searchParams.get("next") ?? "/compte";
+  const next = searchParams.get("next") ?? "/espace";
   const base = getBaseUrl(request);
 
   if (code && isSupabaseEnabled()) {

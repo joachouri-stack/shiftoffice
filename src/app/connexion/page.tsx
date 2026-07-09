@@ -21,7 +21,7 @@ export default async function ConnexionPage() {
   const googleClientId = process.env.GOOGLE_CLIENT_ID ?? "";
   if (enabled) {
     const user = await getUser();
-    if (user) redirect("/compte");
+    if (user) redirect("/espace");
   }
 
   return (

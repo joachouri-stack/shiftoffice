@@ -38,7 +38,7 @@ export function EmailPasswordForm() {
         if (error) {
           setError(messageFr(error.message));
         } else if (data.session) {
-          window.location.assign("/compte");
+          window.location.assign("/espace");
           return;
         } else {
           setInfo(
@@ -54,7 +54,7 @@ export function EmailPasswordForm() {
         if (error) {
           setError(messageFr(error.message));
         } else {
-          window.location.assign("/compte");
+          window.location.assign("/espace");
           return;
         }
       }

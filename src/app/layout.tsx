@@ -6,6 +6,7 @@ import {
   Instrument_Sans,
 } from "next/font/google";
 import "./globals.css";
+import { SyncBoot } from "@/components/SyncBoot";
 
 const jakarta = Plus_Jakarta_Sans({
   variable: "--font-jakarta",
@@ -78,7 +79,10 @@ export default function RootLayout({
       lang="fr"
       className={`${jakarta.variable} ${dmSans.variable} ${inter.variable} ${officeFont.variable} antialiased`}
     >
-      <body className="bg-noir font-sans">{children}</body>
+      <body className="bg-noir font-sans">
+        <SyncBoot />
+        {children}
+      </body>
     </html>
   );
 }

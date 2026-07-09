@@ -34,7 +34,7 @@ export function GoogleLogin({ clientId }: { clientId: string }) {
         setError("La connexion Google a échoué. Réessayez.");
         return;
       }
-      window.location.assign("/compte");
+      window.location.assign("/espace");
     }
 
     function init() {

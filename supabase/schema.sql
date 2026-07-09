@@ -46,6 +46,16 @@ create table if not exists public.salaries (
 );
 create index if not exists salaries_user_idx on public.salaries (user_id);
 
+-- ---------- espaces (synchronisation de l'espace local) ----------
+-- Une ligne par utilisateur : tout l'espace (entreprises, salariés, fiches,
+-- biens, historique local) dans une colonne JSONB — c'est la table utilisée
+-- par la synchronisation multi-appareils du site.
+create table if not exists public.espaces (
+  user_id uuid primary key references auth.users (id) on delete cascade,
+  data jsonb not null default '{}'::jsonb,
+  updated_at timestamptz not null default now()
+);
+
 -- ---------- documents_historique (suivi, sans contenu) ----------
 create table if not exists public.documents_historique (
   id uuid primary key default gen_random_uuid(),
@@ -64,6 +74,11 @@ alter table public.profiles enable row level security;
 alter table public.entreprises enable row level security;
 alter table public.salaries enable row level security;
 alter table public.documents_historique enable row level security;
+alter table public.espaces enable row level security;
+
+drop policy if exists "espaces_self" on public.espaces;
+create policy "espaces_self" on public.espaces
+  for all using (auth.uid() = user_id) with check (auth.uid() = user_id);
 
 drop policy if exists "entreprises_self" on public.entreprises;
 create policy "entreprises_self" on public.entreprises

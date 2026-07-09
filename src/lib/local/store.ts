@@ -107,6 +107,8 @@ function write<T>(key: string, value: T) {
   if (!isBrowser()) return;
   try {
     window.localStorage.setItem(key, JSON.stringify(value));
+    // Notifie la synchronisation cloud (et l'UI) qu'une donnée a changé.
+    window.dispatchEvent(new CustomEvent("so:change", { detail: key }));
   } catch {
     // quota plein ou navigation privée : on ignore silencieusement
   }
