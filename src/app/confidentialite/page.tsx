@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { LegalPage, LegalSection } from "@/components/legal/LegalPage";
 
 export const metadata: Metadata = {
-  title: "Politique de confidentialité — Shift Office",
+  title: "Politique de confidentialité",
   description: "Politique de confidentialité et traitement des données personnelles de Shift Office.",
 };
 

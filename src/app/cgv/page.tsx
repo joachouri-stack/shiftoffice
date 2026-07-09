@@ -3,7 +3,7 @@ import { LegalPage, LegalSection } from "@/components/legal/LegalPage";
 import { DOCUMENTS, formatPrice } from "@/lib/documents";
 
 export const metadata: Metadata = {
-  title: "Conditions Générales de Vente — Shift Office",
+  title: "Conditions Générales de Vente",
   description: "Conditions générales de vente des documents Shift Office.",
 };
 

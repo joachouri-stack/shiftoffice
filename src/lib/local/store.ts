@@ -1,5 +1,7 @@
 "use client";
 
+import { deletePdf } from "./pdfs";
+
 /**
  * Espace local : persistance dans le navigateur (localStorage), sans compte ni
  * serveur. Convient à un utilisateur solo sur un appareil. Aucune donnée ne
@@ -239,7 +241,10 @@ export const localStore = {
   addDocument: (d: Omit<LocalDoc, "id">) => {
     const list = read<LocalDoc[]>(K.documents, []);
     const item = { ...d, id: uid() };
-    write(K.documents, [item, ...list].slice(0, 50));
+    const next = [item, ...list];
+    write(K.documents, next.slice(0, 50));
+    // Purge les PDF des documents sortis du plafond (pas de blobs orphelins).
+    next.slice(50).forEach((doc) => void deletePdf(doc.id).catch(() => {}));
     return item;
   },
 
@@ -254,16 +259,18 @@ export const localStore = {
     write(K.biens, read<LocalBien[]>(K.biens, []).filter((b) => b.id !== id));
   },
 
+  /**
+   * Efface TOUTES les données locales du site (données, brouillons,
+   * marqueur de compte) — utilisé à la déconnexion et au changement de
+   * compte pour qu'aucune donnée ne passe d'un utilisateur à l'autre.
+   */
   clearAll: () => {
     if (!isBrowser()) return;
-    [
-      K.entreprise,
-      K.entreprises,
-      K.entrepriseActive,
-      K.salaries,
-      K.fiches,
-      K.biens,
-      K.documents,
-    ].forEach((k) => window.localStorage.removeItem(k));
+    const keys: string[] = [];
+    for (let i = 0; i < window.localStorage.length; i++) {
+      const k = window.localStorage.key(i);
+      if (k && k.startsWith("so.")) keys.push(k);
+    }
+    keys.forEach((k) => window.localStorage.removeItem(k));
   },
 };

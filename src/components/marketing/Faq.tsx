@@ -2,41 +2,8 @@
 
 import { useState } from "react";
 import { Plus } from "lucide-react";
+import { FAQ } from "./faq-data";
 
-const FAQ = [
-  {
-    q: "Les documents sont-ils vraiment conformes à la législation 2026 ?",
-    a: "Oui. Tous nos documents sont mis à jour selon la législation française en vigueur. Les fiches de paie intègrent les taux URSSAF 2026, les contrats incluent toutes les clauses obligatoires, et les CERFA sont les versions officielles les plus récentes.",
-  },
-  {
-    q: "Comment récupérer mon document après paiement ?",
-    a: "Immédiatement après confirmation du paiement, votre PDF est généré et téléchargeable directement sur la page. Vous recevez également un email avec le lien. Si vous êtes connecté, le document est sauvegardé dans votre espace personnel.",
-  },
-  {
-    q: "La quittance de loyer et l'attestation sont-elles vraiment gratuites ?",
-    a: "Oui, totalement gratuites et sans limite. Aucun compte requis. Remplissez le formulaire, téléchargez le PDF.",
-  },
-  {
-    q: "Dois-je créer un compte pour générer un document ?",
-    a: "Pour les documents gratuits, aucun compte n'est requis. Pour les documents payants, une connexion Google est demandée afin de sauvegarder votre historique et activer la continuité IA entre vos fiches de paie.",
-  },
-  {
-    q: "Qu'est-ce que la continuité IA pour les fiches de paie ?",
-    a: "Si vous générez plusieurs fiches de paie pour le même employé, l'IA pré-remplit automatiquement la fiche suivante depuis la précédente. Salaire, cotisations, cumuls annuels — tout est repris et mis à jour. Vous n'avez qu'à vérifier.",
-  },
-  {
-    q: "Puis-je modifier le PDF après génération ?",
-    a: "Le PDF est généré en version finale non modifiable. Si une information est incorrecte, vous pouvez générer un nouveau document avec les données corrigées.",
-  },
-  {
-    q: "Quels moyens de paiement sont acceptés ?",
-    a: "Carte bancaire (Visa, Mastercard, American Express) via Stripe. Paiement 100% sécurisé.",
-  },
-  {
-    q: "Puis-je obtenir un remboursement ?",
-    a: "Si votre PDF est défaillant ou illisible, nous le remboursons intégralement sous 48h sur simple demande à contact@shiftoffice.fr.",
-  },
-];
 
 export function Faq() {
   const [open, setOpen] = useState<number | null>(0);

@@ -89,12 +89,11 @@ export async function POST(req: Request) {
 
     return Response.json({ url: session.url });
   } catch (err) {
+    // Détail complet dans les logs serveur ; message générique côté client
+    // (le diagnostic fin passe par /api/status?stripe=1).
     console.error("Stripe checkout error", err);
-    // On remonte le message d'erreur Stripe (jamais de secret dedans) pour
-    // permettre un diagnostic direct depuis le navigateur.
-    const detail = err instanceof Error ? err.message : String(err);
     return Response.json(
-      { error: `La création du paiement a échoué : ${detail}` },
+      { error: "La création du paiement a échoué. Réessayez dans un instant." },
       { status: 502 }
     );
   }

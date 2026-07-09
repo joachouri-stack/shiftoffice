@@ -29,7 +29,7 @@ import {
   type LocalBien,
   type LocalDoc,
 } from "@/lib/local/store";
-import { getPdf } from "@/lib/local/pdfs";
+import { getPdf, clearAllPdfs } from "@/lib/local/pdfs";
 import { isSupabaseEnabled } from "@/lib/supabase/config";
 import { createClient } from "@/lib/supabase/client";
 
@@ -115,6 +115,10 @@ export default function EspaceLocalPage() {
   async function seDeconnecter() {
     const sb = createClient();
     await sb.auth.signOut();
+    // Confidentialité : on efface les données locales (elles restent dans le
+    // compte cloud) pour qu'un autre utilisateur de l'appareil ne les voie pas.
+    localStore.clearAll();
+    await clearAllPdfs().catch(() => {});
     window.location.reload();
   }
 

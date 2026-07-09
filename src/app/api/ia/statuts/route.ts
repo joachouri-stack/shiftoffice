@@ -1,4 +1,5 @@
 import { getAnthropic, isAIEnabled, AI_MODEL } from "@/lib/ia/anthropic";
+import { rateLimitOk, clientIp } from "@/lib/ratelimit";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -11,6 +12,12 @@ export const dynamic = "force-dynamic";
  */
 export async function POST(req: Request) {
   if (!isAIEnabled()) return Response.json({ aiDisabled: true });
+  if (!rateLimitOk(`ia-statuts:${clientIp(req)}`, 10, 60_000)) {
+    return Response.json(
+      { error: "Trop de demandes — patientez une minute." },
+      { status: 429 }
+    );
+  }
 
   let body: { activite?: string };
   try {
@@ -23,6 +30,12 @@ export async function POST(req: Request) {
   if (activite.length < 5) {
     return Response.json(
       { error: "Décrivez d'abord l'activité en quelques mots." },
+      { status: 400 }
+    );
+  }
+  if (activite.length > 500) {
+    return Response.json(
+      { error: "La description est trop longue (500 caractères maximum)." },
       { status: 400 }
     );
   }

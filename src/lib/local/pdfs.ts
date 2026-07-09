@@ -55,3 +55,16 @@ export async function deletePdf(id: string): Promise<void> {
   });
   db.close();
 }
+
+/** Vide tous les PDF stockés (déconnexion / changement de compte). */
+export async function clearAllPdfs(): Promise<void> {
+  const db = await openDb();
+  if (!db) return;
+  await new Promise<void>((resolve) => {
+    const tx = db.transaction(STORE, "readwrite");
+    tx.objectStore(STORE).clear();
+    tx.oncomplete = () => resolve();
+    tx.onerror = () => resolve();
+  });
+  db.close();
+}

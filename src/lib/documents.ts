@@ -144,3 +144,8 @@ export function formatPrice(price: number): string {
 export function flowHref(slug: string): string {
   return slug === "fiche-paie" ? "/fiche-de-paie" : `/${slug}`;
 }
+
+/** Prix catalogue d'un document (0 si gratuit ou inconnu). */
+export function prixDoc(slug: string): number {
+  return DOCUMENTS.find((d) => d.slug === slug)?.price ?? 0;
+}

@@ -9,7 +9,9 @@ import { isSupabaseEnabled } from "@/lib/supabase/config";
 import { getUser } from "@/lib/supabase/auth";
 
 export const metadata: Metadata = {
-  title: "Connexion — Shift Office",
+  title: "Connexion",
+  description: "Connectez-vous à votre espace Shift Office pour synchroniser vos entreprises, salariés et documents sur tous vos appareils.",
+  robots: { index: false },
 };
 
 // Toujours évalué au runtime : reflète la présence (ou non) des variables

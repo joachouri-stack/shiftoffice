@@ -18,6 +18,7 @@
 
 import { createClient } from "./client";
 import { isSupabaseEnabled } from "./config";
+import { clearAllPdfs } from "@/lib/local/pdfs";
 
 const DATA_KEYS = [
   "so.entreprises",
@@ -27,6 +28,20 @@ const DATA_KEYS = [
   "so.biens",
   "so.documents",
 ] as const;
+
+/** Dernier compte synchronisé sur cet appareil (anti-fusion entre comptes). */
+const LAST_USER_KEY = "so.lastUserId";
+
+/** Efface toutes les données locales du site (localStorage so.* + PDF). */
+function purgeLocal() {
+  const keys: string[] = [];
+  for (let i = 0; i < window.localStorage.length; i++) {
+    const k = window.localStorage.key(i);
+    if (k && k.startsWith("so.")) keys.push(k);
+  }
+  keys.forEach((k) => window.localStorage.removeItem(k));
+  void clearAllPdfs().catch(() => {});
+}
 
 type Snapshot = Record<string, unknown>;
 
@@ -127,6 +142,12 @@ export function startEspaceSync(): void {
       data: { session },
     } = await supabase.auth.getSession();
     if (!session) return;
+    // Anti-fusion : si les données locales appartiennent à un AUTRE compte
+    // (navigateur partagé), on les purge au lieu de les fusionner — les
+    // salariés/salaires d'un compte ne doivent jamais fuiter vers un autre.
+    const prev = window.localStorage.getItem(LAST_USER_KEY);
+    if (prev && prev !== session.user.id) purgeLocal();
+    window.localStorage.setItem(LAST_USER_KEY, session.user.id);
     const { data } = await supabase
       .from("espaces")
       .select("data")
@@ -142,6 +163,8 @@ export function startEspaceSync(): void {
   void pullAndMerge().catch(() => {});
   supabase.auth.onAuthStateChange((event) => {
     if (event === "SIGNED_IN") void pullAndMerge().catch(() => {});
+    // Déconnexion (y compris depuis un autre onglet) : on purge l'appareil.
+    if (event === "SIGNED_OUT") purgeLocal();
   });
 
   window.addEventListener("so:change", pushDebounced);

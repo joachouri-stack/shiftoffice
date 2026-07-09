@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { LegalPage, LegalSection } from "@/components/legal/LegalPage";
 
 export const metadata: Metadata = {
-  title: "Conditions Générales d'Utilisation — Shift Office",
+  title: "Conditions Générales d'Utilisation",
   description: "Conditions générales d'utilisation du site Shift Office.",
 };
 
