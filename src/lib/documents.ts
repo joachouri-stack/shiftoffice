@@ -11,7 +11,18 @@ export type DocItem = {
   free: boolean;
 };
 
+/**
+ * Ordre stratégique de la vitrine (grille de 3 colonnes) :
+ *  Rangée 1 — les plus demandés : le produit star (fiche de paie), un
+ *             gratuit d'appel (certificat) et l'embauche (contrat).
+ *  Rangée 2 — 100 % gratuite : attestation, note de frais, quittance —
+ *             l'essai sans risque qui installe la confiance.
+ *  Rangée 3 — le moment « fin de contrat » : solde, rupture, licenciement
+ *             (documents qui s'achètent souvent ensemble).
+ *  Rangée 4 — les gros tickets : avenant, statuts, bail commercial.
+ */
 export const DOCUMENTS: DocItem[] = [
+  // ── Rangée 1 : les plus demandés ─────────────────────────────
   {
     slug: "fiche-paie",
     title: "Fiche de paie",
@@ -22,6 +33,15 @@ export const DOCUMENTS: DocItem[] = [
     free: false,
   },
   {
+    slug: "certificat-travail",
+    title: "Certificat de travail",
+    badge: "Gratuit",
+    price: 0,
+    desc: "Certificat de travail officiel à remettre au salarié en fin de contrat.",
+    tags: ["Fin de contrat", "Sans compte", "PDF immédiat"],
+    free: true,
+  },
+  {
     slug: "contrat-travail",
     title: "Contrat de travail",
     badge: "CDI / CDD",
@@ -30,6 +50,35 @@ export const DOCUMENTS: DocItem[] = [
     tags: ["Clauses légales", "Période d'essai", "Convention"],
     free: false,
   },
+  // ── Rangée 2 : les gratuits du quotidien ─────────────────────
+  {
+    slug: "attestation-employeur",
+    title: "Attestation employeur",
+    badge: "Gratuit",
+    price: 0,
+    desc: "Attestation employeur officielle, prête à remettre, sans compte.",
+    tags: ["Officiel", "Sans compte", "PDF immédiat"],
+    free: true,
+  },
+  {
+    slug: "note-de-frais",
+    title: "Note de frais",
+    badge: "Gratuit",
+    price: 0,
+    desc: "Relevé de dépenses professionnelles avec calcul TVA automatique.",
+    tags: ["Calcul TVA auto", "Sans compte", "PDF immédiat"],
+    free: true,
+  },
+  {
+    slug: "quittance-loyer",
+    title: "Quittance de loyer",
+    badge: "Gratuit",
+    price: 0,
+    desc: "Quittance pour votre locataire : loyer, charges et total calculés.",
+    tags: ["Loyer + charges", "Sans compte", "PDF immédiat"],
+    free: true,
+  },
+  // ── Rangée 3 : la fin de contrat ─────────────────────────────
   {
     slug: "solde-tout-compte",
     title: "Solde de tout compte",
@@ -49,21 +98,22 @@ export const DOCUMENTS: DocItem[] = [
     free: false,
   },
   {
-    slug: "bail-commercial",
-    title: "Bail commercial",
-    badge: "3-6-9 / précaire",
-    price: 9,
-    desc: "Bail 3-6-9 ou bail précaire : clauses complètes, matériel inclus, pas-de-porte.",
-    tags: ["3-6-9 ou précaire", "Pas-de-porte", "Matériel inventorié", "Révision ILC"],
+    slug: "lettre-licenciement",
+    title: "Lettre de licenciement",
+    badge: "Légal",
+    price: 12,
+    desc: "Lettre officielle avec calcul des indemnités et vérification des délais légaux 2026.",
+    tags: ["Indemnités calculées", "Délais légaux", "Faute grave", "Licenciement éco"],
     free: false,
   },
+  // ── Rangée 4 : les gros tickets ──────────────────────────────
   {
-    slug: "certificat-travail",
-    title: "Certificat de travail",
-    badge: "Officiel",
-    price: 3,
-    desc: "Certificat de travail à remettre au salarié en fin de contrat.",
-    tags: ["Fin de contrat", "Mentions légales", "PDF"],
+    slug: "avenant-contrat",
+    title: "Avenant au contrat",
+    badge: "Nouveau",
+    price: 5,
+    desc: "Modification du contrat : salaire, poste, horaires, prolongation CDD.",
+    tags: ["Salaire", "Poste", "Temps partiel", "Clauses 2026"],
     free: false,
   },
   {
@@ -76,49 +126,13 @@ export const DOCUMENTS: DocItem[] = [
     free: false,
   },
   {
-    slug: "note-de-frais",
-    title: "Note de frais",
-    badge: "Nouveau",
-    price: 3,
-    desc: "Relevé de dépenses professionnelles avec calcul TVA automatique.",
-    tags: ["Calcul TVA auto", "Toutes catégories", "Conforme 2026"],
+    slug: "bail-commercial",
+    title: "Bail commercial",
+    badge: "3-6-9 / précaire",
+    price: 9,
+    desc: "Bail 3-6-9 ou bail précaire : clauses complètes, matériel inclus, pas-de-porte.",
+    tags: ["3-6-9 ou précaire", "Pas-de-porte", "Matériel inventorié", "Révision ILC"],
     free: false,
-  },
-  {
-    slug: "avenant-contrat",
-    title: "Avenant au contrat",
-    badge: "Nouveau",
-    price: 5,
-    desc: "Modification du contrat : salaire, poste, horaires, prolongation CDD.",
-    tags: ["Salaire", "Poste", "Temps partiel", "Clauses 2026"],
-    free: false,
-  },
-  {
-    slug: "lettre-licenciement",
-    title: "Lettre de licenciement",
-    badge: "Légal",
-    price: 12,
-    desc: "Lettre officielle avec calcul des indemnités et vérification des délais légaux 2026.",
-    tags: ["Indemnités calculées", "Délais légaux", "Faute grave", "Licenciement éco"],
-    free: false,
-  },
-  {
-    slug: "quittance-loyer",
-    title: "Quittance de loyer",
-    badge: "Gratuit",
-    price: 0,
-    desc: "Quittance pour votre locataire : loyer, charges et total calculés.",
-    tags: ["Loyer + charges", "Sans compte", "PDF immédiat"],
-    free: true,
-  },
-  {
-    slug: "attestation-employeur",
-    title: "Attestation employeur",
-    badge: "Gratuit",
-    price: 0,
-    desc: "Attestation employeur officielle, prête à remettre, sans compte.",
-    tags: ["Officiel", "Sans compte", "PDF immédiat"],
-    free: true,
   },
 ];
 

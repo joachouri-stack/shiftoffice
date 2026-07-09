@@ -109,26 +109,8 @@ export default function CertificatTravailFlow() {
     };
     setLastDonnees(donnees);
     try {
-      const co = await fetch("/api/checkout", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ type: "certificat-travail", slug: "certificat-travail" }),
-      });
-      const cod = (await co.json().catch(() => ({}))) as { url?: string; paymentDisabled?: boolean; error?: string };
-      if (cod?.url) {
-        sessionStorage.setItem(
-          "shiftoffice:pending:certificat-travail",
-          JSON.stringify({ type: "certificat-travail", donnees, filename, docMeta })
-        );
-        window.location.assign(cod.url);
-        return;
-      }
-      if (!cod?.paymentDisabled) {
-        setErr(cod?.error ?? "Le paiement n'a pas pu démarrer. Réessayez dans un instant.");
-        setBusy(false);
-        return;
-      }
-      const r = await fetch("/api/documents/generer", {
+      // Document gratuit → génération directe, sans paiement.
+      const r = await fetch("/api/documents/generer-gratuit", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ type_document: "certificat-travail", donnees }),
@@ -225,7 +207,7 @@ export default function CertificatTravailFlow() {
                 {err && <p className="rounded-lg bg-red-50 px-3 py-2 text-sm font-medium text-red-700">{err}</p>}
                 <button onClick={generer} disabled={busy} className="bg-orange hover:bg-orange-d inline-flex w-full items-center justify-center gap-2 rounded-[10px] px-6 py-3.5 text-base font-bold text-white disabled:opacity-50">
                   {busy ? <Loader2 size={18} className="animate-spin" /> : <Download size={18} />}
-                  Générer le certificat de travail
+                  Générer le certificat (gratuit)
                 </button>
               </div>
             )

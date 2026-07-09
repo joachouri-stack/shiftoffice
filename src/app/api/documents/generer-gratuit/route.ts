@@ -1,10 +1,12 @@
 import { buildDocument } from "@/lib/pdf/build";
 import { enregistrerHistorique } from "@/lib/supabase/historique";
+import { DOCUMENTS } from "@/lib/documents";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-const FREE_TYPES = ["quittance-loyer", "attestation-employeur"];
+// Dérivé du catalogue : un document marqué « free » y est toujours accepté.
+const FREE_TYPES = DOCUMENTS.filter((d) => d.free).map((d) => d.slug);
 
 export async function POST(req: Request) {
   let body: { type_document?: string; donnees?: Record<string, unknown> };
