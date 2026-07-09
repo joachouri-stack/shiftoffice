@@ -14,6 +14,7 @@ export function SiretSearch({ onSelect }: { onSelect: (e: Result) => void }) {
   const [results, setResults] = useState<Result[]>([]);
   const [loading, setLoading] = useState(false);
   const [open, setOpen] = useState(false);
+  const [panne, setPanne] = useState(false);
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const ctrl = useRef<AbortController | null>(null);
 
@@ -22,9 +23,11 @@ export function SiretSearch({ onSelect }: { onSelect: (e: Result) => void }) {
     if (q.trim().length < 3) {
       setResults([]);
       setLoading(false);
+      setPanne(false);
       return;
     }
     setLoading(true);
+    setPanne(false);
     timer.current = setTimeout(async () => {
       ctrl.current?.abort();
       ctrl.current = new AbortController();
@@ -32,12 +35,16 @@ export function SiretSearch({ onSelect }: { onSelect: (e: Result) => void }) {
         const r = await fetch(`/api/entreprises/search?q=${encodeURIComponent(q.trim())}`, {
           signal: ctrl.current.signal,
         });
+        if (!r.ok) throw new Error("search failed");
         const data = (await r.json()) as Result[];
         setResults(data);
         setOpen(true);
-      } catch {
-        /* requête annulée / réseau : on ignore */
-      } finally {
+        setLoading(false);
+      } catch (e) {
+        // Requête annulée (nouvelle frappe) : on laisse la suivante conclure.
+        if (e instanceof DOMException && e.name === "AbortError") return;
+        setResults([]);
+        setPanne(true);
         setLoading(false);
       }
     }, 300);
@@ -93,7 +100,13 @@ export function SiretSearch({ onSelect }: { onSelect: (e: Result) => void }) {
         </ul>
       )}
 
-      {open && !loading && q.trim().length >= 3 && results.length === 0 && (
+      {panne && !loading && (
+        <p className="text-or-d mt-1.5 text-xs font-medium">
+          La recherche est indisponible pour le moment — saisissez les
+          informations à la main ci-dessous.
+        </p>
+      )}
+      {!panne && open && !loading && q.trim().length >= 3 && results.length === 0 && (
         <p className="text-gris mt-1.5 text-xs">
           Aucun résultat — vous pouvez saisir les informations à la main ci-dessous.
         </p>

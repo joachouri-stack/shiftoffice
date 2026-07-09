@@ -251,7 +251,17 @@ export default function StatutsSocieteFlow() {
                 </div>
               </div>
               <div><L>Dénomination</L><input className={FIELD} value={denomination} onChange={(e) => setDenomination(e.target.value)} placeholder="Ex. Martin & Co" /></div>
-              <div><L>Objet social</L><input className={FIELD} value={objet} onChange={(e) => setObjet(e.target.value)} placeholder="Conseil aux entreprises…" /></div>
+              <div>
+                <L>Objet social</L>
+                <input className={FIELD} value={objet} onChange={(e) => setObjet(e.target.value)} placeholder="Conseil aux entreprises…" />
+                <p className="text-gris mt-1 text-xs">
+                  L&apos;activité de la société, en une ou deux phrases. Voyez
+                  large : une formulation étroite obligera à modifier les
+                  statuts pour toute nouvelle activité (ex. «&nbsp;conseil,
+                  formation et services aux entreprises&nbsp;» plutôt que
+                  «&nbsp;conseil en paie&nbsp;»).
+                </p>
+              </div>
               <div><L>Siège social</L><input className={FIELD} value={siege} onChange={(e) => setSiege(e.target.value)} placeholder="12 rue… 84100 Orange" /></div>
             </div>
           )}
@@ -311,6 +321,12 @@ export default function StatutsSocieteFlow() {
                 </div>
                 <div><L>Durée de la société</L><input className={FIELD} value={dureeSoc} onChange={(e) => setDureeSoc(e.target.value)} /></div>
               </div>
+              <p className="text-gris -mt-2 text-xs">
+                La valeur d&apos;une {forme === "SAS" || forme === "SASU" ? "action" : "part"} est
+                libre (souvent 1, 10 ou 100&nbsp;€) — elle sert juste à découper
+                le capital. 10&nbsp;€ convient dans la plupart des cas. La durée
+                classique est 99 ans (le maximum légal).
+              </p>
               {nbParts > 0 && (
                 <div className="border-or/30 bg-or/5 rounded-xl border p-4">
                   <Row label={forme === "SAS" || forme === "SASU" ? "Nombre d'actions" : "Nombre de parts sociales"} value={`${nbParts} × ${eur(n(valeurTitre))}`} strong />

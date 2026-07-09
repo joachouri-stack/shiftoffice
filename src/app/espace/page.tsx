@@ -44,6 +44,7 @@ const SALARIE_DOCS = [
   { label: "Solde de tout compte", href: "/solde-tout-compte" },
   { label: "Rupture conventionnelle", href: "/rupture-conventionnelle" },
   { label: "Lettre de licenciement", href: "/lettre-licenciement" },
+  { label: "Note de frais", href: "/note-de-frais" },
 ];
 
 const NAV = [

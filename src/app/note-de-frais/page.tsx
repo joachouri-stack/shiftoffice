@@ -63,6 +63,10 @@ export default function NoteFraisFlow() {
     const now = new Date();
     setMois(MOIS[now.getMonth()]);
     setAnnee(String(now.getFullYear()));
+    // Salarié prérempli via ?s=id (menu « Générer » de l'espace).
+    const id = new URLSearchParams(window.location.search).get("s");
+    const found = id ? localStore.getSalaries().find((x) => x.id === id) : null;
+    if (found) setDemandeurNom(found.nom);
     const list: string[] = [];
     if (!e) list.push("entreprise");
     list.push("demandeur", "periode", "depenses", "verification");

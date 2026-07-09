@@ -144,11 +144,12 @@ function SuccessInner() {
             <>
               <CheckCircle2 size={44} className="text-vert mx-auto" />
               <h1 className="font-display text-noir mt-5 text-2xl font-extrabold">
-                C&apos;est prêt !
+                Document généré 🎉
               </h1>
               <p className="text-gris mt-2 text-sm">
-                Votre {doc?.title ?? "document"} a été téléchargé. Le téléchargement
-                ne démarre pas&nbsp;?
+                Votre {doc?.title ?? "document"} a été téléchargé — il reste
+                disponible dans Mon espace. Le téléchargement ne démarre
+                pas&nbsp;?
               </p>
               <button
                 onClick={retry}
@@ -166,13 +167,12 @@ function SuccessInner() {
                   />
                 </div>
               )}
-              <p className="text-gris mt-4 text-xs">
-                Retrouvez-le dans{" "}
-                <Link href="/espace" className="text-or-d font-semibold underline">
-                  Mon espace
-                </Link>
-                .
-              </p>
+              <Link
+                href="/espace"
+                className="bg-noir mt-5 inline-flex items-center gap-2 rounded-[10px] px-5 py-2.5 text-sm font-bold text-white"
+              >
+                Mon espace
+              </Link>
             </>
           )}
 
