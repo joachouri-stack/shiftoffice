@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { ArrowLeft, ArrowRight, Check, Download, Loader2, Plus, Trash2 } from "lucide-react";
+import { ArrowLeft, ArrowRight, Check, Download, Loader2, Plus, Sparkles, Trash2 } from "lucide-react";
 import { Logo } from "@/components/brand/Logo";
 import { EmailCopy } from "@/components/documents/EmailCopy";
 import { Row, ProgressBar, RequisHint, FIELD } from "@/components/flow/Steps";
@@ -56,6 +56,39 @@ export default function StatutsSocieteFlow() {
 
   const [societeAjoutee, setSocieteAjoutee] = useState(false);
 
+  // Assistance IA (bouton visible seulement si l'IA est configurée côté serveur).
+  const [iaOn, setIaOn] = useState(false);
+  const [iaBusy, setIaBusy] = useState(false);
+  const [iaErr, setIaErr] = useState("");
+  const [iaProp, setIaProp] = useState<string | null>(null);
+
+  async function redigerObjetIA() {
+    if (iaBusy || objet.trim().length < 5) return;
+    setIaBusy(true);
+    setIaErr("");
+    setIaProp(null);
+    try {
+      const r = await fetch("/api/ia/statuts", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ activite: objet }),
+      });
+      const data = (await r.json().catch(() => ({}))) as {
+        objet?: string; error?: string; aiDisabled?: boolean;
+      };
+      if (data.aiDisabled) { setIaOn(false); return; }
+      if (!r.ok || !data.objet) {
+        setIaErr(data.error ?? "L'assistance IA a échoué. Réessayez.");
+        return;
+      }
+      setIaProp(data.objet);
+    } catch {
+      setIaErr("L'assistance IA a échoué. Réessayez.");
+    } finally {
+      setIaBusy(false);
+    }
+  }
+
   useEffect(() => {
     // Suggestion : le siège de la nouvelle société est souvent l'adresse
     // de l'entreprise déjà enregistrée (ou le domicile du fondateur).
@@ -64,6 +97,10 @@ export default function StatutsSocieteFlow() {
       setSiege((prev) => prev || [e.adresse, [e.codePostal, e.ville].filter(Boolean).join(" ")].filter(Boolean).join(", "));
     }
     setReady(true);
+    fetch("/api/config")
+      .then((r) => r.json())
+      .then((c: { ia?: boolean }) => setIaOn(Boolean(c.ia)))
+      .catch(() => setIaOn(false));
   }, []);
 
   const n = (v: string) => parseFloat(v.replace(",", ".")) || 0;
@@ -261,6 +298,53 @@ export default function StatutsSocieteFlow() {
                   formation et services aux entreprises&nbsp;» plutôt que
                   «&nbsp;conseil en paie&nbsp;»).
                 </p>
+                {iaOn && (
+                  <div className="mt-2 space-y-2.5">
+                    <button
+                      type="button"
+                      onClick={redigerObjetIA}
+                      disabled={iaBusy || objet.trim().length < 5}
+                      className="border-or/40 text-or-d hover:bg-or/10 inline-flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs font-bold disabled:opacity-50"
+                    >
+                      {iaBusy ? <Loader2 size={13} className="animate-spin" /> : <Sparkles size={13} />}
+                      Rédiger l&apos;objet social avec l&apos;IA
+                    </button>
+                    {objet.trim().length < 5 && (
+                      <p className="text-gris text-xs">
+                        Décrivez d&apos;abord l&apos;activité en quelques mots
+                        (ex. «&nbsp;plomberie&nbsp;»), l&apos;IA rédige la
+                        formulation juridique complète.
+                      </p>
+                    )}
+                    {iaErr && (
+                      <p className="rounded-lg bg-red-50 px-3 py-2 text-xs font-medium text-red-700">{iaErr}</p>
+                    )}
+                    {iaProp && (
+                      <div className="border-or/30 bg-or/5 space-y-2.5 rounded-xl border p-3.5">
+                        <p className="text-or-d inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-wide">
+                          <Sparkles size={13} /> Proposition de l&apos;IA
+                        </p>
+                        <p className="text-noir text-sm leading-relaxed">{iaProp}</p>
+                        <div className="flex flex-wrap items-center gap-2">
+                          <button
+                            type="button"
+                            onClick={() => { setObjet(iaProp); setIaProp(null); }}
+                            className="bg-noir inline-flex items-center gap-1.5 rounded-lg px-3.5 py-2 text-xs font-bold text-white"
+                          >
+                            <Check size={13} /> Utiliser ce texte
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => setIaProp(null)}
+                            className="text-gris hover:text-noir px-2 py-2 text-xs font-semibold"
+                          >
+                            Ignorer
+                          </button>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
               <div><L>Siège social</L><input className={FIELD} value={siege} onChange={(e) => setSiege(e.target.value)} placeholder="12 rue… 84100 Orange" /></div>
             </div>
