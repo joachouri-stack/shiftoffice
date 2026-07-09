@@ -4,6 +4,7 @@ import {
   priceForSlug,
   titleForSlug,
 } from "@/lib/stripe";
+import { utilisateurGratuit } from "@/lib/gratuit";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -41,6 +42,11 @@ export async function POST(req: Request) {
   // Paiement inactif (Stripe absent ou mode « test gratuit » PAIEMENT_LIBRE) →
   // le client générera directement le document, sans passer par Stripe.
   if (!paiementActif()) {
+    return Response.json({ paymentDisabled: true });
+  }
+
+  // Compte VIP (EMAILS_GRATUITS) connecté → génération directe sans paiement.
+  if (await utilisateurGratuit()) {
     return Response.json({ paymentDisabled: true });
   }
 

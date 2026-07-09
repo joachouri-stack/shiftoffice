@@ -1,8 +1,10 @@
 import { getStripe, paiementActif } from "@/lib/stripe";
+import { utilisateurGratuit } from "@/lib/gratuit";
 
 /**
  * Vérifie qu'un paiement valide autorise la production du document `type`.
  * - Paiement inactif (Stripe absent ou mode libre) → true (génération directe).
+ * - Compte VIP connecté (EMAILS_GRATUITS) → true, sans paiement.
  * - Paiement actif → la session Checkout doit être payée et porter le bon type.
  */
 export async function paiementAutorise(
@@ -10,6 +12,7 @@ export async function paiementAutorise(
   sessionId: string | undefined
 ): Promise<boolean> {
   if (!paiementActif()) return true;
+  if (await utilisateurGratuit()) return true;
   const stripe = getStripe();
   if (!stripe) return true;
   if (!sessionId) return false;
