@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { ArrowRight, Building2, Plus, UserPlus } from "lucide-react";
+import { ArrowRight, Building2, UserPlus } from "lucide-react";
 import { SiretSearch } from "@/components/SiretSearch";
 import { formatDateInput } from "@/lib/dates";
 import {
@@ -120,6 +120,18 @@ export function Chips({
   );
 }
 
+/* ───────────── Message « champ requis » (partagé) ─────────────
+   Affiché au-dessus de la navigation quand un champ obligatoire de
+   l'étape courante est vide ; le bouton Continuer est alors désactivé. */
+export function RequisHint({ msg }: { msg?: string | null }) {
+  if (!msg) return null;
+  return (
+    <p className="border-or/30 bg-or/10 text-or-d mt-4 rounded-lg border px-3 py-2 text-xs font-semibold">
+      {msg}
+    </p>
+  );
+}
+
 /* ───────────── Étape Entreprise (partagée) ───────────── */
 export function EntrepriseStep({ onSave }: { onSave: (e: LocalEntreprise) => void }) {
   const [f, setF] = useState<LocalEntreprise>({
@@ -170,8 +182,9 @@ export function EntrepriseStep({ onSave }: { onSave: (e: LocalEntreprise) => voi
         <input className={FIELD} placeholder="Représentant (ex. Jean Martin)" value={f.representantNom ?? ""} onChange={(e) => set("representantNom", e.target.value)} />
         <input className={FIELD} placeholder="Qualité (Gérant…)" value={f.representantQualite ?? ""} onChange={(e) => set("representantQualite", e.target.value)} />
       </div>
+      <RequisHint msg={f.nom.trim() ? null : "Indiquez au moins le nom de l'entreprise pour continuer."} />
       <div className="flex justify-end">
-        <button type="submit" className="bg-noir inline-flex items-center gap-2 rounded-[10px] px-5 py-2.5 text-sm font-bold text-white">
+        <button type="submit" disabled={!f.nom.trim()} className="bg-noir inline-flex items-center gap-2 rounded-[10px] px-5 py-2.5 text-sm font-bold text-white disabled:opacity-50">
           Continuer <ArrowRight size={16} />
         </button>
       </div>
@@ -257,14 +270,15 @@ export function SalarieStep({ onSelect }: { onSelect: (s: LocalSalarie) => void 
         La classification (ex. «&nbsp;Employé Niveau II&nbsp;») figure sur le
         contrat de travail — laissez vide si vous ne la connaissez pas.
       </p>
+      <RequisHint msg={f.nom.trim() ? null : "Indiquez au moins le nom et prénom du salarié pour continuer."} />
       <div className="flex items-center justify-between">
         {existing.length > 0 ? (
           <button type="button" onClick={() => setCreating(false)} className="text-gris hover:text-noir text-sm font-semibold">
             ← Choisir un salarié existant
           </button>
         ) : <span />}
-        <button type="submit" className="bg-noir inline-flex items-center gap-2 rounded-[10px] px-5 py-2.5 text-sm font-bold text-white">
-          <Plus size={16} /> Continuer
+        <button type="submit" disabled={!f.nom.trim()} className="bg-noir inline-flex items-center gap-2 rounded-[10px] px-5 py-2.5 text-sm font-bold text-white disabled:opacity-50">
+          Continuer <ArrowRight size={16} />
         </button>
       </div>
     </form>

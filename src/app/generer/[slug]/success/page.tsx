@@ -162,6 +162,13 @@ function SuccessInner() {
                   />
                 </div>
               )}
+              <p className="text-gris mt-4 text-xs">
+                Retrouvez-le dans{" "}
+                <Link href="/espace" className="text-or-d font-semibold underline">
+                  Mon espace
+                </Link>
+                .
+              </p>
             </>
           )}
 

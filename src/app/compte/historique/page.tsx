@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { FileText } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
-import { formatPrice } from "@/lib/documents";
+import { formatPrice, flowHref } from "@/lib/documents";
 
 export const dynamic = "force-dynamic";
 
@@ -64,7 +64,7 @@ export default async function HistoriquePage() {
                     {l.prix != null ? formatPrice(l.prix) : ""}
                   </span>
                   <Link
-                    href={`/generer/${l.type}`}
+                    href={flowHref(l.type)}
                     className="text-orange text-sm font-semibold hover:underline"
                   >
                     Régénérer

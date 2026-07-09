@@ -125,3 +125,8 @@ export const DOCUMENTS: DocItem[] = [
 export function formatPrice(price: number): string {
   return price === 0 ? "Gratuit" : `${price}€`;
 }
+
+/** Route du parcours de génération d'un document (seul « fiche-paie » diffère de son slug). */
+export function flowHref(slug: string): string {
+  return slug === "fiche-paie" ? "/fiche-de-paie" : `/${slug}`;
+}

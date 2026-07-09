@@ -5,7 +5,7 @@ import Link from "next/link";
 import { ArrowLeft, ArrowRight, Check, Download, Loader2, Home as HomeIcon, Plus } from "lucide-react";
 import { Logo } from "@/components/brand/Logo";
 import { EmailCopy } from "@/components/documents/EmailCopy";
-import { Row, ProgressBar, FIELD } from "@/components/flow/Steps";
+import { Row, ProgressBar, RequisHint, FIELD } from "@/components/flow/Steps";
 import { formatDateInput } from "@/lib/dates";
 import { localStore, type LocalBien } from "@/lib/local/store";
 
@@ -62,6 +62,18 @@ export default function QuittanceLoyerFlow() {
   const key = steps[i] ?? "verification";
   const goNext = () => setI((v) => Math.min(steps.length - 1, v + 1));
   const goBack = () => setI((v) => Math.max(0, v - 1));
+
+  // Champ obligatoire manquant sur l'étape courante (null = rien ne manque).
+  const manque =
+    key === "periode"
+      ? !/^\d{4}$/.test(annee.trim())
+        ? "Indiquez l'année sur 4 chiffres (ex. 2026)."
+        : !datePaiement.trim()
+          ? "Indiquez la date de paiement du loyer."
+          : !(total > 0)
+            ? "Le loyer de ce logement est à 0 € — modifiez-le dans Mon espace, ou créez un nouveau logement."
+            : null
+      : null;
 
   async function generer() {
     if (busy || !bien) return;
@@ -199,16 +211,19 @@ export default function QuittanceLoyerFlow() {
           )}
 
           {!done && key !== "bien" && (
-            <div className="mt-6 flex items-center justify-between">
-              <button onClick={goBack} disabled={i === 0} className="text-gris hover:text-noir inline-flex items-center gap-1.5 text-sm font-semibold disabled:opacity-0">
-                <ArrowLeft size={16} /> Précédent
-              </button>
-              {key !== "verification" && (
-                <button onClick={goNext} className="bg-noir inline-flex items-center gap-2 rounded-[10px] px-5 py-2.5 text-sm font-bold text-white">
-                  Continuer <ArrowRight size={16} />
+            <>
+              <RequisHint msg={manque} />
+              <div className="mt-6 flex items-center justify-between">
+                <button onClick={goBack} disabled={i === 0} className="text-gris hover:text-noir inline-flex items-center gap-1.5 text-sm font-semibold disabled:opacity-0">
+                  <ArrowLeft size={16} /> Précédent
                 </button>
-              )}
-            </div>
+                {key !== "verification" && (
+                  <button onClick={goNext} disabled={!!manque} className="bg-noir inline-flex items-center gap-2 rounded-[10px] px-5 py-2.5 text-sm font-bold text-white disabled:opacity-50">
+                    Continuer <ArrowRight size={16} />
+                  </button>
+                )}
+              </div>
+            </>
           )}
         </div>
       </div>
@@ -280,12 +295,19 @@ function BienStep({ onSelect }: { onSelect: (b: LocalBien) => void }) {
         <input className={FIELD} inputMode="decimal" placeholder="Charges (€)" value={f.charges} onChange={(e) => set("charges", e.target.value)} />
         <input className={FIELD} placeholder="Ville" value={f.ville} onChange={(e) => set("ville", e.target.value)} />
       </div>
+      <RequisHint
+        msg={
+          !f.bailleurNom.trim() || !f.locataire.trim()
+            ? "Indiquez au moins le bailleur et le locataire pour continuer."
+            : null
+        }
+      />
       <div className="flex items-center justify-between">
         {existing.length > 0 ? (
           <button type="button" onClick={() => setCreating(false)} className="text-gris hover:text-noir text-sm font-semibold">← Choisir un logement existant</button>
         ) : <span />}
-        <button type="submit" className="bg-noir inline-flex items-center gap-2 rounded-[10px] px-5 py-2.5 text-sm font-bold text-white">
-          <Plus size={16} /> Continuer
+        <button type="submit" disabled={!f.bailleurNom.trim() || !f.locataire.trim()} className="bg-noir inline-flex items-center gap-2 rounded-[10px] px-5 py-2.5 text-sm font-bold text-white disabled:opacity-50">
+          Continuer <ArrowRight size={16} />
         </button>
       </div>
     </form>

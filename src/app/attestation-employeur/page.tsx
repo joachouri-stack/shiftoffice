@@ -5,7 +5,8 @@ import Link from "next/link";
 import { ArrowLeft, Check, Download, Loader2 } from "lucide-react";
 import { Logo } from "@/components/brand/Logo";
 import { EmailCopy } from "@/components/documents/EmailCopy";
-import { EntrepriseStep, SalarieStep, Row, ProgressBar } from "@/components/flow/Steps";
+import { EntrepriseStep, SalarieStep, Row, ProgressBar, RequisHint, FIELD } from "@/components/flow/Steps";
+import { formatDateInput } from "@/lib/dates";
 import { localStore, type LocalEntreprise, type LocalSalarie } from "@/lib/local/store";
 import { adresseComplete } from "@/lib/adresse";
 
@@ -32,6 +33,11 @@ export default function AttestationEmployeurFlow() {
   const [err, setErr] = useState("");
   const [lastDonnees, setLastDonnees] = useState<Record<string, unknown> | null>(null);
 
+  // Complément inline si la fiche du salarié est incomplète (poste, date d'entrée) :
+  // mémorisé sur le salarié au moment de la génération.
+  const [posteComp, setPosteComp] = useState("");
+  const [dateEntreeComp, setDateEntreeComp] = useState("");
+
   useEffect(() => {
     const e = localStore.getEntreprise();
     setEnt(e);
@@ -51,10 +57,29 @@ export default function AttestationEmployeurFlow() {
   const key = steps[i] ?? "verification";
   const goNext = () => setI((v) => Math.min(steps.length - 1, v + 1));
 
+  // Valeurs effectives : fiche du salarié, complétée inline si besoin.
+  const posteEff = (sal?.poste || posteComp).trim();
+  const dateEntreeEff = (sal?.dateEntree || dateEntreeComp).trim();
+  const manque =
+    key === "verification" && !done
+      ? !posteEff
+        ? "Indiquez le poste du salarié ci-dessus."
+        : !dateEntreeEff
+          ? "Indiquez la date d'entrée du salarié ci-dessus."
+          : null
+      : null;
+
   async function generer() {
-    if (busy) return;
+    if (busy || !posteEff || !dateEntreeEff) return;
     setBusy(true);
     setErr("");
+    // Mémorise les compléments sur la fiche du salarié pour les prochains documents.
+    if (sal?.id && (!sal.poste || !sal.dateEntree)) {
+      localStore.updateSalarie(sal.id, {
+        poste: sal.poste || posteEff,
+        dateEntree: sal.dateEntree || dateEntreeEff,
+      });
+    }
     const donnees = {
       entrepriseNom: ent?.nom ?? "",
       entrepriseAdresse: adresseComplete(ent?.adresse, ent?.codePostal, ent?.ville),
@@ -62,9 +87,9 @@ export default function AttestationEmployeurFlow() {
       representantNom: ent?.representantNom ?? "",
       representantQualite: ent?.representantQualite ?? "",
       salarieNom: sal?.nom ?? "",
-      poste: sal?.poste ?? "",
+      poste: posteEff,
       typeContrat: sal?.typeContrat === "CDD" ? "determinee" : "indeterminee",
-      dateEmbauche: sal?.dateEntree ?? "",
+      dateEmbauche: dateEntreeEff,
       ville: ent?.ville ?? "",
       date: todayFr(),
     };
@@ -156,13 +181,30 @@ export default function AttestationEmployeurFlow() {
                 <div className="divide-or/10 divide-y">
                   <Row label="Entreprise" value={ent?.nom ?? "—"} pad />
                   <Row label="Salarié" value={sal?.nom ?? "—"} pad />
-                  <Row label="Poste" value={sal?.poste ?? "—"} pad />
+                  <Row label="Poste" value={posteEff || "—"} pad />
                   <Row label="Type de contrat" value={sal?.typeContrat ?? "CDI"} pad />
-                  <Row label="Depuis le" value={sal?.dateEntree || "—"} pad />
+                  <Row label="Depuis le" value={dateEntreeEff || "—"} pad />
                 </div>
+                {(!sal?.poste || !sal?.dateEntree) && (
+                  <div className="grid gap-3 sm:grid-cols-2">
+                    {!sal?.poste && (
+                      <div>
+                        <label className="text-noir mb-1.5 block text-sm font-semibold">Poste du salarié</label>
+                        <input className={FIELD} placeholder="Assistante administrative" value={posteComp} onChange={(e) => setPosteComp(e.target.value)} />
+                      </div>
+                    )}
+                    {!sal?.dateEntree && (
+                      <div>
+                        <label className="text-noir mb-1.5 block text-sm font-semibold">Date d'entrée</label>
+                        <input className={FIELD} placeholder="01/03/2024" value={dateEntreeComp} onChange={(e) => setDateEntreeComp(formatDateInput(e.target.value, dateEntreeComp))} />
+                      </div>
+                    )}
+                  </div>
+                )}
                 <p className="text-gris text-xs">Attestation de travail — document gratuit.</p>
+                <RequisHint msg={manque} />
                 {err && <p className="rounded-lg bg-red-50 px-3 py-2 text-sm font-medium text-red-700">{err}</p>}
-                <button onClick={generer} disabled={busy} className="bg-orange hover:bg-orange-d inline-flex w-full items-center justify-center gap-2 rounded-[10px] px-6 py-3.5 text-base font-bold text-white disabled:opacity-50">
+                <button onClick={generer} disabled={busy || !!manque} className="bg-orange hover:bg-orange-d inline-flex w-full items-center justify-center gap-2 rounded-[10px] px-6 py-3.5 text-base font-bold text-white disabled:opacity-50">
                   {busy ? <Loader2 size={18} className="animate-spin" /> : <Download size={18} />}
                   Générer l'attestation (gratuit)
                 </button>

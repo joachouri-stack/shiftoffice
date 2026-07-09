@@ -5,7 +5,7 @@ import Link from "next/link";
 import { ArrowLeft, ArrowRight, Check, Download, Loader2, Sparkles } from "lucide-react";
 import { Logo } from "@/components/brand/Logo";
 import { EmailCopy } from "@/components/documents/EmailCopy";
-import { EntrepriseStep, SalarieStep, Row, ProgressBar, FIELD } from "@/components/flow/Steps";
+import { EntrepriseStep, SalarieStep, Row, ProgressBar, RequisHint, FIELD } from "@/components/flow/Steps";
 import { localStore, type LocalEntreprise, type LocalSalarie } from "@/lib/local/store";
 import { formatDateInput } from "@/lib/dates";
 import { adresseComplete } from "@/lib/adresse";
@@ -88,6 +88,20 @@ export default function RuptureConventionnelleFlow() {
   const key = steps[i] ?? "verification";
   const goNext = () => setI((v) => Math.min(steps.length - 1, v + 1));
   const goBack = () => setI((v) => Math.max(0, v - 1));
+
+  // Champ obligatoire manquant sur l'étape courante (null = rien ne manque).
+  const manque =
+    key === "modalites"
+      ? !dateEntretien.trim()
+        ? "Indiquez la date de l'entretien."
+        : !dateRupture.trim()
+          ? "Indiquez la date de rupture envisagée."
+          : !(n(salaireBrut) > 0)
+            ? "Indiquez le salaire brut mensuel."
+            : !(n(indemnite) > 0)
+              ? "Indiquez l'indemnité de rupture (au moins le minimum légal estimé)."
+              : null
+      : null;
 
   async function generer() {
     if (busy) return;
@@ -272,16 +286,19 @@ export default function RuptureConventionnelleFlow() {
           )}
 
           {!done && key !== "entreprise" && key !== "salarie" && (
-            <div className="mt-6 flex items-center justify-between">
-              <button onClick={goBack} disabled={i === 0} className="text-gris hover:text-noir inline-flex items-center gap-1.5 text-sm font-semibold disabled:opacity-0">
-                <ArrowLeft size={16} /> Précédent
-              </button>
-              {key !== "verification" && (
-                <button onClick={goNext} className="bg-noir inline-flex items-center gap-2 rounded-[10px] px-5 py-2.5 text-sm font-bold text-white">
-                  Continuer <ArrowRight size={16} />
+            <>
+              <RequisHint msg={manque} />
+              <div className="mt-6 flex items-center justify-between">
+                <button onClick={goBack} disabled={i === 0} className="text-gris hover:text-noir inline-flex items-center gap-1.5 text-sm font-semibold disabled:opacity-0">
+                  <ArrowLeft size={16} /> Précédent
                 </button>
-              )}
-            </div>
+                {key !== "verification" && (
+                  <button onClick={goNext} disabled={!!manque} className="bg-noir inline-flex items-center gap-2 rounded-[10px] px-5 py-2.5 text-sm font-bold text-white disabled:opacity-50">
+                    Continuer <ArrowRight size={16} />
+                  </button>
+                )}
+              </div>
+            </>
           )}
         </div>
       </div>

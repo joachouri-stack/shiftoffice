@@ -5,7 +5,7 @@ import Link from "next/link";
 import { AlertTriangle, ArrowLeft, ArrowRight, Check, Download, Loader2, ShieldCheck, Sparkles } from "lucide-react";
 import { Logo } from "@/components/brand/Logo";
 import { EmailCopy } from "@/components/documents/EmailCopy";
-import { EntrepriseStep, SalarieStep, Row, ProgressBar, FIELD } from "@/components/flow/Steps";
+import { EntrepriseStep, SalarieStep, Row, ProgressBar, RequisHint, FIELD } from "@/components/flow/Steps";
 import { localStore, type LocalEntreprise, type LocalSalarie } from "@/lib/local/store";
 import { adresseComplete } from "@/lib/adresse";
 import { formatDateInput } from "@/lib/dates";
@@ -143,6 +143,26 @@ export default function LicenciementFlow() {
     anc.totalMois > 0
       ? [anc.annees ? `${anc.annees} an${anc.annees > 1 ? "s" : ""}` : "", anc.mois ? `${anc.mois} mois` : ""].filter(Boolean).join(" et ")
       : "moins d'un mois";
+
+  // Champ obligatoire manquant sur l'étape courante (null = rien ne manque).
+  const manque =
+    key === "salarie" && sal
+      ? !dateEmbauche.trim()
+        ? "Indiquez la date d'embauche (nécessaire au calcul du préavis et de l'indemnité)."
+        : null
+      : key === "motifs"
+        ? motifs.trim().length < 15
+          ? "Décrivez les faits reprochés en quelques phrases."
+          : null
+        : key === "dates"
+          ? !dateEntretien.trim()
+            ? "Indiquez la date de l'entretien préalable."
+            : !dateEnvoi.trim()
+              ? "Indiquez la date d'envoi de la lettre."
+              : !delais.ok
+                ? "Corrigez les dates : le délai légal n'est pas respecté."
+                : null
+          : null;
 
   async function generer() {
     if (busy || !delais.ok) return;
@@ -421,12 +441,15 @@ export default function LicenciementFlow() {
           )}
 
           {!done && key !== "entreprise" && !(key === "salarie" && !sal) && (
-            <div className="mt-6 flex items-center justify-between">
-              <button onClick={goBack} disabled={i === 0} className="text-gris hover:text-noir inline-flex items-center gap-1.5 text-sm font-semibold disabled:opacity-0"><ArrowLeft size={16} /> Précédent</button>
-              {key !== "verification" && (
-                <button onClick={goNext} className="bg-noir inline-flex items-center gap-2 rounded-[10px] px-5 py-2.5 text-sm font-bold text-white">Continuer <ArrowRight size={16} /></button>
-              )}
-            </div>
+            <>
+              <RequisHint msg={manque} />
+              <div className="mt-6 flex items-center justify-between">
+                <button onClick={goBack} disabled={i === 0} className="text-gris hover:text-noir inline-flex items-center gap-1.5 text-sm font-semibold disabled:opacity-0"><ArrowLeft size={16} /> Précédent</button>
+                {key !== "verification" && (
+                  <button onClick={goNext} disabled={!!manque} className="bg-noir inline-flex items-center gap-2 rounded-[10px] px-5 py-2.5 text-sm font-bold text-white disabled:opacity-50">Continuer <ArrowRight size={16} /></button>
+                )}
+              </div>
+            </>
           )}
         </div>
       </div>

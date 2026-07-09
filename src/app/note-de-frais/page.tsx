@@ -5,7 +5,7 @@ import Link from "next/link";
 import { ArrowLeft, ArrowRight, Check, Download, Loader2, Plus, Trash2 } from "lucide-react";
 import { Logo } from "@/components/brand/Logo";
 import { EmailCopy } from "@/components/documents/EmailCopy";
-import { EntrepriseStep, Row, ProgressBar, FIELD } from "@/components/flow/Steps";
+import { EntrepriseStep, Row, ProgressBar, RequisHint, FIELD } from "@/components/flow/Steps";
 import { localStore, type LocalEntreprise } from "@/lib/local/store";
 import { adresseComplete } from "@/lib/adresse";
 import { formatDateInput } from "@/lib/dates";
@@ -96,6 +96,24 @@ export default function NoteFraisFlow() {
   const setLigne = (idx: number, k: keyof Ligne, v: string | number) =>
     setLignes((p) => p.map((l, j) => (j === idx ? { ...l, [k]: v } : l)));
   const periode = `${mois} ${annee}`.trim();
+
+  // Champ obligatoire manquant sur l'étape courante (null = rien ne manque).
+  const manque =
+    key === "demandeur"
+      ? !demandeurNom.trim()
+        ? "Indiquez le nom du demandeur (la personne remboursée)."
+        : null
+      : key === "periode"
+        ? !/^\d{4}$/.test(annee.trim())
+          ? "Indiquez l'année sur 4 chiffres (ex. 2026)."
+          : null
+        : key === "depenses"
+          ? !(totaux.ttc > 0)
+            ? "Saisissez au moins une dépense avec son montant TTC."
+            : lignes.some((l) => n(l.montant) > 0 && !l.nature.trim())
+              ? "Indiquez la nature de chaque dépense saisie."
+              : null
+          : null;
 
   async function generer() {
     if (busy) return;
@@ -298,12 +316,15 @@ export default function NoteFraisFlow() {
           )}
 
           {!done && key !== "entreprise" && (
-            <div className="mt-6 flex items-center justify-between">
-              <button onClick={goBack} disabled={i === 0} className="text-gris hover:text-noir inline-flex items-center gap-1.5 text-sm font-semibold disabled:opacity-0"><ArrowLeft size={16} /> Précédent</button>
-              {key !== "verification" && (
-                <button onClick={goNext} className="bg-noir inline-flex items-center gap-2 rounded-[10px] px-5 py-2.5 text-sm font-bold text-white">Continuer <ArrowRight size={16} /></button>
-              )}
-            </div>
+            <>
+              <RequisHint msg={manque} />
+              <div className="mt-6 flex items-center justify-between">
+                <button onClick={goBack} disabled={i === 0} className="text-gris hover:text-noir inline-flex items-center gap-1.5 text-sm font-semibold disabled:opacity-0"><ArrowLeft size={16} /> Précédent</button>
+                {key !== "verification" && (
+                  <button onClick={goNext} disabled={!!manque} className="bg-noir inline-flex items-center gap-2 rounded-[10px] px-5 py-2.5 text-sm font-bold text-white disabled:opacity-50">Continuer <ArrowRight size={16} /></button>
+                )}
+              </div>
+            </>
           )}
         </div>
       </div>

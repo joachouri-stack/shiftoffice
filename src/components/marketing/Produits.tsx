@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
-import { DOCUMENTS, formatPrice, type DocItem } from "@/lib/documents";
+import { DOCUMENTS, formatPrice, flowHref, type DocItem } from "@/lib/documents";
 
 export function Produits() {
   return (
@@ -69,33 +69,7 @@ function DocCard({ doc }: { doc: DocItem }) {
           )}
         </span>
         <Link
-          href={
-            doc.slug === "fiche-paie"
-              ? "/fiche-de-paie"
-              : doc.slug === "solde-tout-compte"
-                ? "/solde-tout-compte"
-                : doc.slug === "rupture-conventionnelle"
-                  ? "/rupture-conventionnelle"
-                  : doc.slug === "certificat-travail"
-                    ? "/certificat-travail"
-                    : doc.slug === "attestation-employeur"
-                      ? "/attestation-employeur"
-                      : doc.slug === "contrat-travail"
-                        ? "/contrat-travail"
-                        : doc.slug === "quittance-loyer"
-                          ? "/quittance-loyer"
-                          : doc.slug === "bail-commercial"
-                            ? "/bail-commercial"
-                            : doc.slug === "statuts-societe"
-                              ? "/statuts-societe"
-                              : doc.slug === "note-de-frais"
-                                ? "/note-de-frais"
-                                : doc.slug === "avenant-contrat"
-                                  ? "/avenant-contrat"
-                                  : doc.slug === "lettre-licenciement"
-                                    ? "/lettre-licenciement"
-                                    : `/generer/${doc.slug}`
-          }
+          href={flowHref(doc.slug)}
           className="bg-orange hover:bg-orange-d inline-flex items-center gap-1.5 rounded-[10px] px-4 py-2.5 text-sm font-bold text-white transition-colors"
         >
           Générer

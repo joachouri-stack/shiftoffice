@@ -5,7 +5,7 @@ import Link from "next/link";
 import { AlertTriangle, ArrowLeft, ArrowRight, Check, Download, Loader2 } from "lucide-react";
 import { Logo } from "@/components/brand/Logo";
 import { EmailCopy } from "@/components/documents/EmailCopy";
-import { EntrepriseStep, SalarieStep, Row, ProgressBar, FIELD } from "@/components/flow/Steps";
+import { EntrepriseStep, SalarieStep, Row, ProgressBar, RequisHint, FIELD } from "@/components/flow/Steps";
 import { localStore, type LocalEntreprise, type LocalSalarie } from "@/lib/local/store";
 import { adresseComplete } from "@/lib/adresse";
 import { formatDateInput } from "@/lib/dates";
@@ -147,6 +147,40 @@ export default function AvenantFlow() {
   const key = steps[i] ?? "verification";
   const goNext = () => setI((v) => Math.min(steps.length - 1, v + 1));
   const goBack = () => setI((v) => Math.max(0, v - 1));
+
+  // Champ obligatoire manquant sur l'étape courante (null = rien ne manque).
+  const manqueConditions =
+    typeModif === "Augmentation de salaire"
+      ? !(n(nouveauSalaire) > 0)
+        ? "Indiquez le nouveau salaire brut."
+        : null
+      : typeModif === "Changement de poste"
+        ? !nouveauPoste.trim()
+          ? "Indiquez le nouveau poste."
+          : null
+        : typeModif === "Passage à temps partiel"
+          ? !(n(nouveauHoraire) > 0)
+            ? "Indiquez la nouvelle durée hebdomadaire."
+            : null
+          : typeModif === "Changement de lieu de travail"
+            ? !nouveauLieu.trim()
+              ? "Indiquez le nouveau lieu de travail."
+              : null
+            : typeModif === "Prolongation CDD"
+              ? !nouvelleDateFin.trim()
+                ? "Indiquez la nouvelle date de fin du CDD."
+                : null
+              : !autreIntitule.trim() || !autreNouveau.trim()
+                ? "Indiquez l'élément modifié et la nouvelle disposition."
+                : null;
+  const manque =
+    key === "salarie" && sal
+      ? !dateContratInitial.trim()
+        ? "Indiquez la date du contrat de travail initial."
+        : null
+      : key === "conditions"
+        ? manqueConditions ?? (!dateEffet.trim() ? "Indiquez la date d'effet de la modification." : null)
+        : null;
 
   async function generer() {
     if (busy) return;
@@ -383,12 +417,15 @@ export default function AvenantFlow() {
           )}
 
           {!done && key !== "entreprise" && !(key === "salarie" && !sal) && (
-            <div className="mt-6 flex items-center justify-between">
-              <button onClick={goBack} disabled={i === 0} className="text-gris hover:text-noir inline-flex items-center gap-1.5 text-sm font-semibold disabled:opacity-0"><ArrowLeft size={16} /> Précédent</button>
-              {key !== "verification" && (
-                <button onClick={goNext} className="bg-noir inline-flex items-center gap-2 rounded-[10px] px-5 py-2.5 text-sm font-bold text-white">Continuer <ArrowRight size={16} /></button>
-              )}
-            </div>
+            <>
+              <RequisHint msg={manque} />
+              <div className="mt-6 flex items-center justify-between">
+                <button onClick={goBack} disabled={i === 0} className="text-gris hover:text-noir inline-flex items-center gap-1.5 text-sm font-semibold disabled:opacity-0"><ArrowLeft size={16} /> Précédent</button>
+                {key !== "verification" && (
+                  <button onClick={goNext} disabled={!!manque} className="bg-noir inline-flex items-center gap-2 rounded-[10px] px-5 py-2.5 text-sm font-bold text-white disabled:opacity-50">Continuer <ArrowRight size={16} /></button>
+                )}
+              </div>
+            </>
           )}
         </div>
       </div>

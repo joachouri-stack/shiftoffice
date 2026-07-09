@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { FileClock, Users, ArrowRight, Sparkles } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
-import { DOCUMENTS, formatPrice } from "@/lib/documents";
+import { DOCUMENTS, formatPrice, flowHref } from "@/lib/documents";
 
 export const dynamic = "force-dynamic";
 
@@ -104,7 +104,7 @@ export default async function ComptePage() {
           {suggestions.map((doc) => (
             <Link
               key={doc.slug}
-              href={`/generer/${doc.slug}`}
+              href={flowHref(doc.slug)}
               className="border-or/20 hover:border-or/50 group rounded-xl border bg-white p-4 transition-colors"
             >
               <p className="text-noir font-display font-bold">{doc.title}</p>

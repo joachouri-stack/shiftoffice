@@ -11,7 +11,6 @@ import {
   Plus,
   Trash2,
   HardDrive,
-  CloudUpload,
   ArrowRight,
   Pencil,
   FileText,
@@ -127,10 +126,6 @@ export default function EspaceLocalPage() {
                 </p>
               </div>
             </div>
-            <button className="bg-noir inline-flex shrink-0 items-center justify-center gap-2 rounded-[10px] px-4 py-2.5 text-sm font-bold text-white">
-              <CloudUpload size={16} />
-              Créer un compte pour synchroniser
-            </button>
           </div>
 
           {/* Entreprises */}

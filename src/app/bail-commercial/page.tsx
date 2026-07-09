@@ -5,13 +5,13 @@ import Link from "next/link";
 import { AlertTriangle, ArrowLeft, ArrowRight, Check, Download, Loader2, Plus, Trash2 } from "lucide-react";
 import { Logo } from "@/components/brand/Logo";
 import { EmailCopy } from "@/components/documents/EmailCopy";
-import { EntrepriseStep, Row, ProgressBar, FIELD } from "@/components/flow/Steps";
+import { EntrepriseStep, Row, ProgressBar, RequisHint, FIELD } from "@/components/flow/Steps";
 import { localStore, type LocalEntreprise } from "@/lib/local/store";
 import { formatDateInput } from "@/lib/dates";
 import { adresseComplete } from "@/lib/adresse";
 
 const LABELS: Record<string, string> = {
-  entreprise: "Le bailleur",
+  entreprise: "Votre entreprise (bailleur)",
   type: "Type de bail",
   preneur: "Le preneur",
   local: "Le local & le matériel",
@@ -93,6 +93,28 @@ export default function BailCommercialFlow() {
   const duree = precaire ? `${n(dureeMois) || "—"} mois` : `${n(dureeAnnees) || 9} ans`;
   const dureeIllegale = precaire && n(dureeMois) > 36;
   const mensuel = n(loyerAnnuel) / 12;
+
+  // Champ obligatoire manquant sur l'étape courante (null = rien ne manque).
+  const manque =
+    key === "preneur"
+      ? !preneurNom.trim()
+        ? "Indiquez le nom du preneur (locataire)."
+        : null
+      : key === "local"
+        ? !adresseLocal.trim()
+          ? "Indiquez l'adresse du local loué."
+          : null
+        : key === "loyer"
+          ? !(n(loyerAnnuel) > 0)
+            ? "Indiquez le loyer annuel hors charges."
+            : null
+          : key === "duree"
+            ? !dateDebut.trim()
+              ? "Indiquez la date de prise d'effet du bail."
+              : dureeIllegale
+                ? "Durée illégale pour un bail précaire : 36 mois maximum."
+                : null
+            : null;
 
   async function generer() {
     if (busy || dureeIllegale) return;
@@ -390,12 +412,15 @@ export default function BailCommercialFlow() {
           )}
 
           {!done && key !== "entreprise" && (
-            <div className="mt-6 flex items-center justify-between">
-              <button onClick={goBack} disabled={i === 0} className="text-gris hover:text-noir inline-flex items-center gap-1.5 text-sm font-semibold disabled:opacity-0"><ArrowLeft size={16} /> Précédent</button>
-              {key !== "verification" && (
-                <button onClick={goNext} className="bg-noir inline-flex items-center gap-2 rounded-[10px] px-5 py-2.5 text-sm font-bold text-white">Continuer <ArrowRight size={16} /></button>
-              )}
-            </div>
+            <>
+              <RequisHint msg={manque} />
+              <div className="mt-6 flex items-center justify-between">
+                <button onClick={goBack} disabled={i === 0} className="text-gris hover:text-noir inline-flex items-center gap-1.5 text-sm font-semibold disabled:opacity-0"><ArrowLeft size={16} /> Précédent</button>
+                {key !== "verification" && (
+                  <button onClick={goNext} disabled={!!manque} className="bg-noir inline-flex items-center gap-2 rounded-[10px] px-5 py-2.5 text-sm font-bold text-white disabled:opacity-50">Continuer <ArrowRight size={16} /></button>
+                )}
+              </div>
+            </>
           )}
         </div>
       </div>

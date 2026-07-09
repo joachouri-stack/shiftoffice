@@ -5,7 +5,7 @@ import Link from "next/link";
 import { ArrowLeft, ArrowRight, Check, Download, Loader2 } from "lucide-react";
 import { Logo } from "@/components/brand/Logo";
 import { EmailCopy } from "@/components/documents/EmailCopy";
-import { EntrepriseStep, SalarieStep, Row, ProgressBar, FIELD } from "@/components/flow/Steps";
+import { EntrepriseStep, SalarieStep, Row, ProgressBar, RequisHint, FIELD } from "@/components/flow/Steps";
 import { localStore, type LocalEntreprise, type LocalSalarie } from "@/lib/local/store";
 import { formatDateInput } from "@/lib/dates";
 import { adresseComplete } from "@/lib/adresse";
@@ -90,6 +90,22 @@ export default function ContratTravailFlow() {
   const cdd = typeContrat === "cdd";
   const goNext = () => setI((v) => Math.min(steps.length - 1, v + 1));
   const goBack = () => setI((v) => Math.max(0, v - 1));
+
+  // Champ obligatoire manquant sur l'étape courante (null = rien ne manque).
+  const manque =
+    key === "contrat"
+      ? !dateDebut.trim()
+        ? "Indiquez la date de début du contrat."
+        : cdd && !dateFin.trim()
+          ? "Indiquez la date de fin du CDD."
+          : null
+      : key === "poste"
+        ? !poste.trim()
+          ? "Indiquez le poste du salarié."
+          : !(parseFloat(salaireBrut.replace(",", ".")) > 0)
+            ? "Indiquez le salaire brut mensuel."
+            : null
+        : null;
 
   // Mémorise l'état civil sur le salarié en quittant l'étape dédiée.
   const saveEtatCivil = () => {
@@ -331,16 +347,19 @@ export default function ContratTravailFlow() {
           )}
 
           {!done && key !== "entreprise" && key !== "salarie" && (
-            <div className="mt-6 flex items-center justify-between">
-              <button onClick={goBack} disabled={i === 0} className="text-gris hover:text-noir inline-flex items-center gap-1.5 text-sm font-semibold disabled:opacity-0">
-                <ArrowLeft size={16} /> Précédent
-              </button>
-              {key !== "verification" && (
-                <button onClick={() => { if (key === "etatcivil") saveEtatCivil(); goNext(); }} className="bg-noir inline-flex items-center gap-2 rounded-[10px] px-5 py-2.5 text-sm font-bold text-white">
-                  Continuer <ArrowRight size={16} />
+            <>
+              <RequisHint msg={manque} />
+              <div className="mt-6 flex items-center justify-between">
+                <button onClick={goBack} disabled={i === 0} className="text-gris hover:text-noir inline-flex items-center gap-1.5 text-sm font-semibold disabled:opacity-0">
+                  <ArrowLeft size={16} /> Précédent
                 </button>
-              )}
-            </div>
+                {key !== "verification" && (
+                  <button onClick={() => { if (key === "etatcivil") saveEtatCivil(); goNext(); }} disabled={!!manque} className="bg-noir inline-flex items-center gap-2 rounded-[10px] px-5 py-2.5 text-sm font-bold text-white disabled:opacity-50">
+                    Continuer <ArrowRight size={16} />
+                  </button>
+                )}
+              </div>
+            </>
           )}
         </div>
       </div>

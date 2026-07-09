@@ -10,6 +10,7 @@ import {
   SalarieStep,
   Row,
   ProgressBar,
+  RequisHint,
   FIELD,
 } from "@/components/flow/Steps";
 import {
@@ -96,6 +97,18 @@ export default function SoldeToutCompteFlow() {
   const key = steps[i] ?? "verification";
   const goNext = () => setI((v) => Math.min(steps.length - 1, v + 1));
   const goBack = () => setI((v) => Math.max(0, v - 1));
+
+  // Champ obligatoire manquant sur l'étape courante (null = rien ne manque).
+  const manque =
+    key === "rupture"
+      ? !dateSortie.trim()
+        ? "Indiquez la date de sortie du salarié."
+        : null
+      : key === "montants"
+        ? !(total > 0)
+          ? "Renseignez au moins une somme versée (le total doit être supérieur à 0 €)."
+          : null
+        : null;
 
   async function generer() {
     if (busy) return;
@@ -273,16 +286,19 @@ export default function SoldeToutCompteFlow() {
           )}
 
           {!done && key !== "entreprise" && key !== "salarie" && (
-            <div className="mt-6 flex items-center justify-between">
-              <button onClick={goBack} disabled={i === 0} className="text-gris hover:text-noir inline-flex items-center gap-1.5 text-sm font-semibold disabled:opacity-0">
-                <ArrowLeft size={16} /> Précédent
-              </button>
-              {key !== "verification" && (
-                <button onClick={goNext} className="bg-noir inline-flex items-center gap-2 rounded-[10px] px-5 py-2.5 text-sm font-bold text-white">
-                  Continuer <ArrowRight size={16} />
+            <>
+              <RequisHint msg={manque} />
+              <div className="mt-6 flex items-center justify-between">
+                <button onClick={goBack} disabled={i === 0} className="text-gris hover:text-noir inline-flex items-center gap-1.5 text-sm font-semibold disabled:opacity-0">
+                  <ArrowLeft size={16} /> Précédent
                 </button>
-              )}
-            </div>
+                {key !== "verification" && (
+                  <button onClick={goNext} disabled={!!manque} className="bg-noir inline-flex items-center gap-2 rounded-[10px] px-5 py-2.5 text-sm font-bold text-white disabled:opacity-50">
+                    Continuer <ArrowRight size={16} />
+                  </button>
+                )}
+              </div>
+            </>
           )}
         </div>
       </div>

@@ -5,7 +5,7 @@ import Link from "next/link";
 import { ArrowLeft, ArrowRight, Check, Download, Loader2, Plus, Trash2 } from "lucide-react";
 import { Logo } from "@/components/brand/Logo";
 import { EmailCopy } from "@/components/documents/EmailCopy";
-import { Row, ProgressBar, FIELD } from "@/components/flow/Steps";
+import { Row, ProgressBar, RequisHint, FIELD } from "@/components/flow/Steps";
 import { localStore } from "@/lib/local/store";
 
 const FORMES = ["SARL", "SAS", "EURL", "SASU"] as const;
@@ -68,6 +68,35 @@ export default function StatutsSocieteFlow() {
   const goBack = () => setI((v) => Math.max(0, v - 1));
   const setAsso = (idx: number, k: keyof Asso, v: string) =>
     setAssocies((p) => p.map((a, j) => (j === idx ? { ...a, [k]: v } : a)));
+
+  // Champ obligatoire manquant sur l'étape courante (null = rien ne manque).
+  const assoRemplis = associes.filter((a) => a.nom.trim());
+  const manque =
+    key === "societe"
+      ? !denomination.trim()
+        ? "Indiquez la dénomination sociale (le nom de la société)."
+        : !siege.trim()
+          ? "Indiquez l'adresse du siège social."
+          : !objet.trim()
+            ? "Décrivez l'objet social (l'activité de la société)."
+            : null
+      : key === "associes"
+        ? assoRemplis.length === 0
+          ? "Ajoutez au moins un associé (nom et apport)."
+          : assoRemplis.some((a) => !(n(a.apport) > 0))
+            ? "Indiquez l'apport en euros de chaque associé."
+            : null
+        : key === "capital"
+          ? !(capital > 0)
+            ? "Le capital social doit être supérieur à 0 €."
+            : !(n(valeurTitre) > 0)
+              ? "Indiquez la valeur d'une part (ou action)."
+              : null
+          : key === "dirigeant"
+            ? !dirigeantNom.trim()
+              ? `Indiquez le nom du ${forme === "SARL" || forme === "EURL" ? "gérant" : "président"}.`
+              : null
+            : null;
 
   async function generer() {
     if (busy) return;
@@ -297,12 +326,15 @@ export default function StatutsSocieteFlow() {
           )}
 
           {!done && (
-            <div className="mt-6 flex items-center justify-between">
-              <button onClick={goBack} disabled={i === 0} className="text-gris hover:text-noir inline-flex items-center gap-1.5 text-sm font-semibold disabled:opacity-0"><ArrowLeft size={16} /> Précédent</button>
-              {key !== "verification" && (
-                <button onClick={goNext} className="bg-noir inline-flex items-center gap-2 rounded-[10px] px-5 py-2.5 text-sm font-bold text-white">Continuer <ArrowRight size={16} /></button>
-              )}
-            </div>
+            <>
+              <RequisHint msg={manque} />
+              <div className="mt-6 flex items-center justify-between">
+                <button onClick={goBack} disabled={i === 0} className="text-gris hover:text-noir inline-flex items-center gap-1.5 text-sm font-semibold disabled:opacity-0"><ArrowLeft size={16} /> Précédent</button>
+                {key !== "verification" && (
+                  <button onClick={goNext} disabled={!!manque} className="bg-noir inline-flex items-center gap-2 rounded-[10px] px-5 py-2.5 text-sm font-bold text-white disabled:opacity-50">Continuer <ArrowRight size={16} /></button>
+                )}
+              </div>
+            </>
           )}
         </div>
       </div>

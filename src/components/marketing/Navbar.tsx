@@ -62,10 +62,10 @@ export function Navbar() {
             </a>
           ))}
           <Link
-            href="/connexion"
+            href="/espace"
             className="border-or/50 hover:border-or hover:bg-or/10 rounded-[10px] border-2 px-4 py-2 text-sm font-semibold text-white transition-colors"
           >
-            Se connecter
+            Mon espace
           </Link>
         </nav>
 
@@ -96,11 +96,11 @@ export function Navbar() {
               </a>
             ))}
             <Link
-              href="/connexion"
+              href="/espace"
               onClick={() => setOpen(false)}
               className="border-or/50 text-or mt-2 rounded-[10px] border-2 px-4 py-3 text-center text-base font-bold"
             >
-              Se connecter
+              Mon espace
             </Link>
           </nav>
         </div>

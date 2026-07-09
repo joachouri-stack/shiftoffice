@@ -13,7 +13,7 @@ import {
 } from "lucide-react";
 import { Logo } from "@/components/brand/Logo";
 import { EmailCopy } from "@/components/documents/EmailCopy";
-import { EntrepriseStep, SalarieStep, Chips, Row, ProgressBar, FIELD } from "@/components/flow/Steps";
+import { EntrepriseStep, SalarieStep, Chips, Row, ProgressBar, RequisHint, FIELD } from "@/components/flow/Steps";
 import {
   calculerFichePaie,
   brutPourNetAvantImpot,
@@ -443,7 +443,9 @@ export default function FicheDePaieFlow() {
 
           {/* Navigation (sauf étapes à formulaire propre : entreprise, salarié) */}
           {!done && key !== "entreprise" && key !== "salarie" && (
-            <div className="mt-6 flex items-center justify-between">
+            <>
+              <RequisHint msg={key === "remuneration" && !(brutEff > 0) ? "Indiquez le salaire (brut ou net) pour continuer." : null} />
+              <div className="mt-6 flex items-center justify-between">
               <button onClick={goBack} disabled={i === 0} className="text-gris hover:text-noir inline-flex items-center gap-1.5 text-sm font-semibold disabled:opacity-0">
                 <ArrowLeft size={16} /> Précédent
               </button>
@@ -452,7 +454,8 @@ export default function FicheDePaieFlow() {
                   Continuer <ArrowRight size={16} />
                 </button>
               )}
-            </div>
+              </div>
+            </>
           )}
         </div>
       </div>
