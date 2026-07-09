@@ -66,6 +66,8 @@ export default function EspaceLocalPage() {
   const [editingEnt, setEditingEnt] = useState<string | null>(null);
   const [addingEnt, setAddingEnt] = useState(false);
   const [editingSal, setEditingSal] = useState<string | null>(null);
+  const [addingSal, setAddingSal] = useState(false);
+  const [addingBien, setAddingBien] = useState(false);
   const [docMenuSal, setDocMenuSal] = useState<string | null>(null);
   // Documents dont le PDF est encore stocké sur cet appareil (re-téléchargeables).
   const [pdfDispo, setPdfDispo] = useState<Set<string>>(new Set());
@@ -135,17 +137,19 @@ export default function EspaceLocalPage() {
       <header className="bg-noir">
         <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-4 sm:px-6">
           <Logo theme="dark" />
-          <span className="inline-flex items-center gap-1.5 rounded-full bg-white/10 px-3 py-1 text-xs font-semibold text-white/80">
-            <HardDrive size={13} />
-            {userEmail ? `Synchronisé · ${userEmail}` : "Espace local · cet appareil"}
+          <span className="inline-flex min-w-0 max-w-[60vw] items-center gap-1.5 rounded-full bg-white/10 px-3 py-1 text-xs font-semibold text-white/80 sm:max-w-none">
+            <HardDrive size={13} className="shrink-0" />
+            <span className="truncate">
+              {userEmail ? `Synchronisé · ${userEmail}` : "Espace local · cet appareil"}
+            </span>
           </span>
         </div>
       </header>
 
       <div className="mx-auto grid max-w-6xl gap-8 px-4 py-8 sm:px-6 lg:grid-cols-[220px_1fr]">
         {/* Sidebar */}
-        <aside className="lg:sticky lg:top-8 lg:self-start">
-          <nav className="flex gap-2 overflow-x-auto lg:flex-col">
+        <aside className="min-w-0 max-lg:sticky max-lg:top-0 max-lg:z-30 max-lg:-mx-4 max-lg:bg-creme/95 max-lg:px-4 max-lg:py-2 max-lg:backdrop-blur sm:max-lg:-mx-6 sm:max-lg:px-6 lg:sticky lg:top-8 lg:self-start">
+          <nav className="-mx-4 flex gap-2 overflow-x-auto px-4 pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden sm:-mx-6 sm:px-6 lg:mx-0 lg:flex-col lg:px-0 lg:pb-0">
             {NAV.map((item) => (
               <a
                 key={item.label}
@@ -164,7 +168,7 @@ export default function EspaceLocalPage() {
         </aside>
 
         {/* Contenu */}
-        <main className="space-y-6">
+        <main className="min-w-0 space-y-6">
           <div id="top" className="flex flex-wrap items-center justify-between gap-3 scroll-mt-8">
             <div>
               <h1 className="font-display text-noir text-2xl font-extrabold tracking-tight">
@@ -176,7 +180,7 @@ export default function EspaceLocalPage() {
             </div>
             <Link
               href="/#produits"
-              className="bg-orange hover:bg-orange-d inline-flex items-center gap-2 rounded-[10px] px-4 py-2.5 text-sm font-bold text-white transition-colors"
+              className="bg-orange hover:bg-orange-d inline-flex w-full items-center justify-center gap-2 rounded-[10px] px-4 py-2.5 text-sm font-bold text-white transition-colors sm:w-auto"
             >
               <FileText size={15} />
               Générer un document
@@ -277,7 +281,7 @@ export default function EspaceLocalPage() {
                         onCancel={() => setEditingEnt(null)}
                       />
                     ) : (
-                      <div className="flex items-center justify-between gap-4">
+                      <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2">
                         <button
                           onClick={() => {
                             localStore.setEntrepriseActive(e.id);
@@ -390,7 +394,7 @@ export default function EspaceLocalPage() {
                       }}
                     />
                    ) : (
-                    <div className="flex items-center justify-between gap-4">
+                    <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2">
                     <div className="flex min-w-0 items-center gap-3">
                       <div className="bg-or/15 text-or-d grid h-9 w-9 shrink-0 place-items-center rounded-lg text-xs font-bold">
                         {s.nom
@@ -429,7 +433,7 @@ export default function EspaceLocalPage() {
                         {docMenuSal === s.id && (
                           <>
                             <div className="fixed inset-0 z-10" onClick={() => setDocMenuSal(null)} />
-                            <div className="border-or/20 absolute right-0 z-20 mt-1.5 w-56 rounded-xl border bg-white py-1.5 shadow-lg">
+                            <div className="border-or/20 absolute left-0 z-20 mt-1.5 w-56 rounded-xl border bg-white py-1.5 shadow-lg sm:left-auto sm:right-0">
                               {SALARIE_DOCS.map((doc) => (
                                 <Link
                                   key={doc.href}
@@ -468,12 +472,24 @@ export default function EspaceLocalPage() {
               </ul>
             )}
 
-            <SalarieForm
-              onSubmit={(s) => {
-                localStore.addSalarie(s);
-                setSalaries(localStore.getSalaries());
-              }}
-            />
+            {addingSal ? (
+              <SalarieForm
+                onSubmit={(s) => {
+                  localStore.addSalarie(s);
+                  setSalaries(localStore.getSalaries());
+                  setAddingSal(false);
+                }}
+                onCancel={() => setAddingSal(false)}
+              />
+            ) : (
+              <button
+                onClick={() => setAddingSal(true)}
+                className="border-or/30 text-or-d hover:bg-or/5 inline-flex w-full items-center justify-center gap-2 rounded-xl border border-dashed px-4 py-3 text-sm font-bold"
+              >
+                <Plus size={16} />
+                Ajouter un salarié
+              </button>
+            )}
           </section>
 
           {/* Locations */}
@@ -489,7 +505,7 @@ export default function EspaceLocalPage() {
             {biens.length > 0 && (
               <ul className="divide-or/10 mb-4 divide-y">
                 {biens.map((b) => (
-                  <li key={b.id} className="flex items-center justify-between gap-4 py-3">
+                  <li key={b.id} className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2 py-3">
                     <div className="flex min-w-0 items-center gap-3">
                       <div className="bg-or/15 text-or-d grid h-9 w-9 shrink-0 place-items-center rounded-lg">
                         <KeyRound size={16} />
@@ -527,12 +543,24 @@ export default function EspaceLocalPage() {
               </ul>
             )}
 
-            <BienForm
-              onAdd={(b) => {
-                localStore.addBien(b);
-                setBiens(localStore.getBiens());
-              }}
-            />
+            {addingBien ? (
+              <BienForm
+                onAdd={(b) => {
+                  localStore.addBien(b);
+                  setBiens(localStore.getBiens());
+                  setAddingBien(false);
+                }}
+                onCancel={() => setAddingBien(false)}
+              />
+            ) : (
+              <button
+                onClick={() => setAddingBien(true)}
+                className="border-or/30 text-or-d hover:bg-or/5 inline-flex w-full items-center justify-center gap-2 rounded-xl border border-dashed px-4 py-3 text-sm font-bold"
+              >
+                <Plus size={16} />
+                Ajouter une location
+              </button>
+            )}
           </section>
 
           {/* Mes documents */}
@@ -551,7 +579,7 @@ export default function EspaceLocalPage() {
             {documents.length > 0 ? (
               <ul className="divide-or/10 divide-y">
                 {documents.map((d) => (
-                  <li key={d.id} className="flex items-center justify-between gap-4 py-3">
+                  <li key={d.id} className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2 py-3">
                     <div className="flex min-w-0 items-center gap-3">
                       <div className="bg-or/15 text-or-d grid h-9 w-9 shrink-0 place-items-center rounded-lg">
                         <FileText size={16} />
@@ -819,7 +847,7 @@ function SalarieForm({
   );
 }
 
-function BienForm({ onAdd }: { onAdd: (b: Omit<LocalBien, "id">) => void }) {
+function BienForm({ onAdd, onCancel }: { onAdd: (b: Omit<LocalBien, "id">) => void; onCancel?: () => void }) {
   const [f, setF] = useState({ bailleurNom: "", bailleurAdresse: "", locataire: "", adresseBien: "", loyer: "", charges: "", ville: "" });
   const set = (k: keyof typeof f, v: string) => setF((p) => ({ ...p, [k]: v }));
   return (
@@ -851,10 +879,17 @@ function BienForm({ onAdd }: { onAdd: (b: Omit<LocalBien, "id">) => void }) {
         <input className={FIELD} inputMode="decimal" placeholder="Charges (€)" value={f.charges} onChange={(e) => set("charges", e.target.value)} />
         <input className={FIELD} placeholder="Ville" value={f.ville} onChange={(e) => set("ville", e.target.value)} />
       </div>
-      <button type="submit" className="bg-noir inline-flex items-center justify-center gap-2 rounded-[10px] px-5 py-2.5 text-sm font-bold text-white">
-        <Plus size={16} />
-        Ajouter la location
-      </button>
+      <div className="flex items-center gap-2">
+        <button type="submit" className="bg-noir inline-flex items-center justify-center gap-2 rounded-[10px] px-5 py-2.5 text-sm font-bold text-white">
+          <Plus size={16} />
+          Ajouter la location
+        </button>
+        {onCancel && (
+          <button type="button" onClick={onCancel} className="text-gris hover:text-noir px-3 py-2.5 text-sm font-semibold">
+            Annuler
+          </button>
+        )}
+      </div>
     </form>
   );
 }
