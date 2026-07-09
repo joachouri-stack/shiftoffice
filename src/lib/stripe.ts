@@ -36,12 +36,12 @@ export function isStripeEnabled(): boolean {
 }
 
 /**
- * MODE TEST — passer à `false` pour le lancement.
- * Quand `true`, aucun paiement n'est exigé : tous les documents se génèrent
- * gratuitement, quelle que soit la configuration Stripe. Les prix restent
- * affichés sur le site.
+ * MODE TEST — `false` depuis le lancement : le paiement Stripe est exigé
+ * pour les documents payants (hors liste VIP EMAILS_GRATUITS).
+ * Repasser à `true` (ou poser PAIEMENT_LIBRE=1 dans l'environnement, sans
+ * redéployer le code) pour neutraliser temporairement le paiement.
  */
-export const MODE_TEST_GRATUIT = true;
+export const MODE_TEST_GRATUIT = false;
 
 /**
  * Mode « test gratuit » : actif via la constante MODE_TEST_GRATUIT ci-dessus,
