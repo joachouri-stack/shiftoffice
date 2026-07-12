@@ -196,6 +196,16 @@ export default function EspaceLocalPage() {
                 {item.label}
               </a>
             ))}
+            {/* Entrée admin : visible uniquement pour les comptes EMAILS_ADMIN. */}
+            {userEmail && estAdmin && (
+              <Link
+                href="/admin"
+                className="text-orange hover:bg-orange/10 inline-flex shrink-0 items-center gap-2.5 rounded-lg px-3.5 py-2.5 text-sm font-bold transition-colors"
+              >
+                <BarChart3 size={17} />
+                Statistiques
+              </Link>
+            )}
           </nav>
         </aside>
 
