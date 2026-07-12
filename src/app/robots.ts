@@ -5,7 +5,7 @@ export default function robots(): MetadataRoute.Robots {
     rules: {
       userAgent: "*",
       allow: "/",
-      disallow: ["/espace", "/compte", "/connexion", "/generer/", "/auth/", "/api/"],
+      disallow: ["/espace", "/compte", "/connexion", "/generer/", "/auth/", "/api/", "/admin"],
     },
     sitemap: "https://shiftoffice.fr/sitemap.xml",
   };

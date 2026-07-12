@@ -16,6 +16,7 @@ import {
   FileText,
   ChevronDown,
   Download as DownloadIcon,
+  BarChart3,
 } from "lucide-react";
 import { Logo } from "@/components/brand/Logo";
 import { SiretSearch } from "@/components/SiretSearch";
@@ -73,6 +74,8 @@ export default function EspaceLocalPage() {
   const [pdfDispo, setPdfDispo] = useState<Set<string>>(new Set());
   // Compte connecté (null = pas de session ; Supabase peut être désactivé).
   const [userEmail, setUserEmail] = useState<string | null>(null);
+  // Compte administrateur (vérifié côté serveur) → lien vers /admin.
+  const [estAdmin, setEstAdmin] = useState(false);
   const cloudOn = isSupabaseEnabled();
   const [ready, setReady] = useState(false);
 
@@ -112,6 +115,20 @@ export default function EspaceLocalPage() {
     };
   }, []);
 
+  useEffect(() => {
+    if (!userEmail) return;
+    let actif = true;
+    fetch("/api/config")
+      .then((r) => r.json())
+      .then((c) => {
+        if (actif) setEstAdmin(Boolean(c?.admin));
+      })
+      .catch(() => {});
+    return () => {
+      actif = false;
+    };
+  }, [userEmail]);
+
   async function seDeconnecter() {
     const sb = createClient();
     await sb.auth.signOut();
@@ -141,12 +158,23 @@ export default function EspaceLocalPage() {
       <header className="bg-noir">
         <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-4 sm:px-6">
           <Logo theme="dark" />
-          <span className="inline-flex min-w-0 max-w-[60vw] items-center gap-1.5 rounded-full bg-white/10 px-3 py-1 text-xs font-semibold text-white/80 sm:max-w-none">
-            <HardDrive size={13} className="shrink-0" />
-            <span className="truncate">
-              {userEmail ? `Synchronisé · ${userEmail}` : "Espace local · cet appareil"}
+          <div className="flex min-w-0 items-center gap-2">
+            {userEmail && estAdmin && (
+              <Link
+                href="/admin"
+                className="bg-orange hover:bg-orange-d inline-flex shrink-0 items-center gap-1.5 rounded-full px-3 py-1 text-xs font-bold text-white transition-colors"
+              >
+                <BarChart3 size={13} />
+                Stats
+              </Link>
+            )}
+            <span className="inline-flex min-w-0 max-w-[60vw] items-center gap-1.5 rounded-full bg-white/10 px-3 py-1 text-xs font-semibold text-white/80 sm:max-w-none">
+              <HardDrive size={13} className="shrink-0" />
+              <span className="truncate">
+                {userEmail ? `Synchronisé · ${userEmail}` : "Espace local · cet appareil"}
+              </span>
             </span>
-          </span>
+          </div>
         </div>
       </header>
 

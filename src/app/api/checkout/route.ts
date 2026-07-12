@@ -5,6 +5,7 @@ import {
   titleForSlug,
 } from "@/lib/stripe";
 import { utilisateurGratuit } from "@/lib/gratuit";
+import { trackServeur } from "@/lib/track";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -86,6 +87,10 @@ export async function POST(req: Request) {
       success_url: `${origin}/generer/${slug}/success?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${origin}/generer/${slug}?paiement=annule`,
     });
+
+    // Statistiques : panier initié (l'écart avec les paiements confirmés
+    // donne le taux d'abandon dans /admin).
+    await trackServeur({ event: "checkout", doc: slug, montant: price, ref: session.id });
 
     return Response.json({ url: session.url });
   } catch (err) {

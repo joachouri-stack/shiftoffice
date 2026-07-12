@@ -1,7 +1,8 @@
 import { buildDocument } from "@/lib/pdf/build";
-import { priceForSlug } from "@/lib/stripe";
+import { priceForSlug, paiementActif } from "@/lib/stripe";
 import { paiementAutorise } from "@/lib/payment";
 import { enregistrerHistorique } from "@/lib/supabase/historique";
+import { trackServeur } from "@/lib/track";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -54,6 +55,20 @@ export async function POST(req: Request) {
   }
 
   await enregistrerHistorique(type);
+
+  // Statistiques : vente confirmée. Uniquement quand un paiement Stripe a
+  // réellement été vérifié (pas en mode libre ni pour les comptes VIP, qui
+  // génèrent sans session_id). Dédupliqué par `ref` côté lecture : le bouton
+  // « Télécharger à nouveau » ne compte pas double.
+  if (body.session_id && paiementActif()) {
+    await trackServeur({
+      event: "paiement",
+      doc: type,
+      montant: priceForSlug(type) ?? undefined,
+      ref: body.session_id,
+    });
+  }
+
   return pdfResponse(built.pdf, built.filename);
 }
 

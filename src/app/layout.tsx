@@ -7,6 +7,7 @@ import {
 } from "next/font/google";
 import "./globals.css";
 import { SyncBoot } from "@/components/SyncBoot";
+import { Track } from "@/components/analytics/Track";
 
 const jakarta = Plus_Jakarta_Sans({
   variable: "--font-jakarta",
@@ -81,6 +82,7 @@ export default function RootLayout({
     >
       <body className="bg-noir font-sans">
         <SyncBoot />
+        <Track />
         {children}
       </body>
     </html>

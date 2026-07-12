@@ -1,6 +1,7 @@
 import { buildDocument } from "@/lib/pdf/build";
 import { enregistrerHistorique } from "@/lib/supabase/historique";
 import { DOCUMENTS } from "@/lib/documents";
+import { trackServeur } from "@/lib/track";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -35,6 +36,7 @@ export async function POST(req: Request) {
   }
 
   await enregistrerHistorique(type);
+  await trackServeur({ event: "gratuit", doc: type });
 
   return new Response(Buffer.from(built.pdf), {
     status: 200,
