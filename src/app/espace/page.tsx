@@ -271,7 +271,7 @@ export default function EspaceLocalPage() {
                   href="/connexion"
                   className="bg-noir inline-flex shrink-0 items-center justify-center gap-2 rounded-[10px] px-4 py-2.5 text-sm font-bold text-white"
                 >
-                  Créer un compte pour synchroniser
+                  Se connecter ou créer un compte
                 </Link>
               )
             )}
