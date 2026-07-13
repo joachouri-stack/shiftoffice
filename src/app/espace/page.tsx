@@ -17,6 +17,7 @@ import {
   ChevronDown,
   Download as DownloadIcon,
   BarChart3,
+  LogOut,
 } from "lucide-react";
 import { Logo } from "@/components/brand/Logo";
 import { SiretSearch } from "@/components/SiretSearch";
@@ -262,8 +263,9 @@ export default function EspaceLocalPage() {
               userEmail ? (
                 <button
                   onClick={seDeconnecter}
-                  className="text-gris hover:text-noir inline-flex shrink-0 items-center justify-center gap-2 rounded-[10px] px-4 py-2.5 text-sm font-semibold"
+                  className="border-or/40 text-noir hover:border-or hover:bg-or/10 inline-flex shrink-0 items-center justify-center gap-2 rounded-[10px] border bg-white px-4 py-2.5 text-sm font-bold transition-colors"
                 >
+                  <LogOut size={15} />
                   Se déconnecter
                 </button>
               ) : (
