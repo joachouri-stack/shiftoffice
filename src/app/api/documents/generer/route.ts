@@ -1,8 +1,9 @@
 import { buildDocument } from "@/lib/pdf/build";
-import { priceForSlug, paiementActif } from "@/lib/stripe";
+import { getStripe, priceForSlug, titleForSlug, paiementActif } from "@/lib/stripe";
 import { paiementAutorise } from "@/lib/payment";
 import { enregistrerHistorique } from "@/lib/supabase/historique";
 import { trackServeur } from "@/lib/track";
+import { isEmailEnabled, isValidEmail, sendEmail } from "@/lib/email/mailer";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -67,9 +68,52 @@ export async function POST(req: Request) {
       montant: priceForSlug(type) ?? undefined,
       ref: body.session_id,
     });
+    // Filet de sécurité : le PDF part aussi par email à l'adresse saisie lors
+    // du paiement Stripe. En arrière-plan, sans retarder le téléchargement.
+    void envoyerCopieAcheteur(body.session_id, type, built.pdf, built.filename);
   }
 
   return pdfResponse(built.pdf, built.filename);
+}
+
+// Sessions Stripe déjà servies par email — évite le doublon quand le client
+// clique « Télécharger à nouveau » (mémoire du processus : suffisant, un
+// éventuel double envoi après redémarrage est sans gravité).
+const emailsEnvoyes = new Set<string>();
+
+async function envoyerCopieAcheteur(
+  sessionId: string,
+  type: string,
+  pdf: Uint8Array,
+  filename: string
+): Promise<void> {
+  if (!isEmailEnabled() || emailsEnvoyes.has(sessionId)) return;
+  emailsEnvoyes.add(sessionId);
+  try {
+    const stripe = getStripe();
+    if (!stripe) return;
+    const session = await stripe.checkout.sessions.retrieve(sessionId);
+    const email = session.customer_details?.email ?? "";
+    if (!isValidEmail(email)) return;
+    const titre = titleForSlug(type);
+    await sendEmail({
+      to: email,
+      subject: `Votre achat Shift Office — ${titre}`,
+      text:
+        `Bonjour,\n\n` +
+        `Merci pour votre achat ! Vous trouverez ci-joint votre document ` +
+        `« ${titre} » au format PDF.\n\n` +
+        `Il reste aussi disponible dans « Mon espace » sur shiftoffice.fr ` +
+        `depuis l'appareil utilisé pour le générer.\n\n` +
+        `Un souci, une question ? Répondez simplement à cet email.\n\n` +
+        `— L'équipe Shift Office\nshiftoffice.fr`,
+      attachments: [{ filename, content: Buffer.from(pdf) }],
+    });
+  } catch (err) {
+    // Best-effort : l'échec de l'email ne doit pas gêner le téléchargement.
+    emailsEnvoyes.delete(sessionId);
+    console.error("email acheteur:", err);
+  }
 }
 
 function pdfResponse(pdf: Uint8Array, filename: string): Response {

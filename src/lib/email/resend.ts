@@ -1,10 +1,8 @@
 import { Resend } from "resend";
 
 /**
- * Envoi d'email via Resend. Activé seulement si RESEND_API_KEY est défini.
- * EMAIL_FROM doit utiliser un domaine vérifié dans Resend ; par défaut on
- * utilise l'expéditeur de test « onboarding@resend.dev » (utile avant la
- * vérification du domaine shiftoffice.fr).
+ * Client Resend — transport de secours du mailer (voir mailer.ts, qui
+ * privilégie le SMTP). Activé seulement si RESEND_API_KEY est défini.
  */
 let cached: Resend | null = null;
 
@@ -13,15 +11,4 @@ export function getResend(): Resend | null {
   if (!key) return null;
   if (!cached) cached = new Resend(key);
   return cached;
-}
-
-export function isEmailEnabled(): boolean {
-  return Boolean(process.env.RESEND_API_KEY);
-}
-
-export const EMAIL_FROM =
-  process.env.EMAIL_FROM || "Shift Office <onboarding@resend.dev>";
-
-export function isValidEmail(email: string): boolean {
-  return /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email);
 }

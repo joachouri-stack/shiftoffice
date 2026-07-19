@@ -1,24 +1,27 @@
 import { buildDocument } from "@/lib/pdf/build";
-import {
-  getResend,
-  isEmailEnabled,
-  isValidEmail,
-  EMAIL_FROM,
-} from "@/lib/email/resend";
+import { isEmailEnabled, isValidEmail, sendEmail } from "@/lib/email/mailer";
 import { priceForSlug, titleForSlug } from "@/lib/stripe";
 import { paiementAutorise } from "@/lib/payment";
+import { rateLimitOk, clientIp } from "@/lib/ratelimit";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 /**
- * Envoie le PDF d'un document par email (Resend). No-op si l'email n'est pas
- * configuré (réponse { emailDisabled: true }). Pour les documents payants, le
- * même contrôle de paiement que la génération est appliqué.
+ * Envoie le PDF d'un document par email (SMTP ou Resend). No-op si l'email
+ * n'est pas configuré (réponse { emailDisabled: true }). Pour les documents
+ * payants, le même contrôle de paiement que la génération est appliqué.
  */
 export async function POST(req: Request) {
   if (!isEmailEnabled()) {
     return Response.json({ emailDisabled: true });
+  }
+
+  if (!rateLimitOk(`email:${clientIp(req)}`, 10, 60_000)) {
+    return Response.json(
+      { error: "Trop d'envois. Patientez une minute." },
+      { status: 429 }
+    );
   }
 
   let body: {
@@ -60,29 +63,22 @@ export async function POST(req: Request) {
     );
   }
 
-  const resend = getResend();
-  if (!resend) return Response.json({ emailDisabled: true });
-
   const titre = titleForSlug(type);
-  const { error } = await resend.emails.send({
-    from: EMAIL_FROM,
-    to: email,
-    subject: `Votre document — ${titre}`,
-    text:
-      `Bonjour,\n\n` +
-      `Vous trouverez ci-joint votre document « ${titre} » généré via Shift Office.\n\n` +
-      `Ce document est fourni à titre de modèle ; pensez à le vérifier avant usage officiel.\n\n` +
-      `— L'équipe Shift Office\nshiftoffice.fr`,
-    attachments: [
-      {
-        filename: built.filename,
-        content: Buffer.from(built.pdf).toString("base64"),
-      },
-    ],
-  });
-
-  if (error) {
-    console.error("Resend error", error);
+  try {
+    await sendEmail({
+      to: email,
+      subject: `Votre document — ${titre}`,
+      text:
+        `Bonjour,\n\n` +
+        `Vous trouverez ci-joint votre document « ${titre} » généré via Shift Office.\n\n` +
+        `Ce document est fourni à titre de modèle ; pensez à le vérifier avant usage officiel.\n\n` +
+        `— L'équipe Shift Office\nshiftoffice.fr`,
+      attachments: [
+        { filename: built.filename, content: Buffer.from(built.pdf) },
+      ],
+    });
+  } catch (err) {
+    console.error("email error", err);
     return Response.json(
       { error: "L'envoi de l'email a échoué." },
       { status: 502 }

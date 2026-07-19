@@ -1,4 +1,4 @@
-import { isEmailEnabled } from "@/lib/email/resend";
+import { isEmailEnabled } from "@/lib/email/mailer";
 import { isAIEnabled } from "@/lib/ia/anthropic";
 import { utilisateurAdmin } from "@/lib/admin";
 
