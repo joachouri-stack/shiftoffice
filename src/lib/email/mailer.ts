@@ -24,16 +24,36 @@ function clean(raw: string | undefined): string {
   return (raw ?? "").trim().replace(/^[='"]+/, "").replace(/['"]+$/, "");
 }
 
+/**
+ * Lit une variable d'environnement en tolérant les noms abîmés par un
+ * copier-coller dans l'interface d'hébergement : espaces autour du nom,
+ * minuscules, tiret au lieu du underscore…
+ */
+function envVal(nom: string): string | undefined {
+  const direct = process.env[nom];
+  if (direct !== undefined && direct !== "") return direct;
+  const cible = nom.replace(/[^a-z0-9]/gi, "").toLowerCase();
+  for (const [k, v] of Object.entries(process.env)) {
+    if (k.replace(/[^a-z0-9]/gi, "").toLowerCase() === cible && v) return v;
+  }
+  return direct;
+}
+
 export function smtpConfig() {
-  const host = clean(process.env.SMTP_HOST).toLowerCase();
-  const user = clean(process.env.SMTP_USER);
+  const host = clean(envVal("SMTP_HOST")).toLowerCase();
+  const user = clean(envVal("SMTP_USER"));
   // Les mots de passe d'application Gmail sont affichés avec des espaces
   // (« abcd efgh ijkl mnop ») : on les retire, aucun mot de passe SMTP
   // valide n'en contient.
-  const pass = clean(process.env.SMTP_PASS).replace(/\s+/g, "");
-  const port = Number(clean(process.env.SMTP_PORT) || "465") || 465;
+  const pass = clean(envVal("SMTP_PASS")).replace(/\s+/g, "");
+  const port = Number(clean(envVal("SMTP_PORT")) || "465") || 465;
   if (!host || !user || !pass) return null;
   return { host, port, user, pass };
+}
+
+/** Noms de variables d'environnement évoquant le SMTP (diagnostic, jamais les valeurs). */
+export function nomsSmtpVus(): string[] {
+  return Object.keys(process.env).filter((k) => /smtp|mail/i.test(k));
 }
 
 export function isEmailEnabled(): boolean {

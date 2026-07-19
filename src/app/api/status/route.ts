@@ -1,5 +1,5 @@
 import { getStripe, isStripeEnabled, isPaiementLibre, paiementActif } from "@/lib/stripe";
-import { isEmailEnabled, smtpConfig, getTransport } from "@/lib/email/mailer";
+import { isEmailEnabled, smtpConfig, getTransport, nomsSmtpVus } from "@/lib/email/mailer";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -24,7 +24,7 @@ export async function GET(req: Request) {
   const smtp = smtpConfig();
   const base = {
     ok: true,
-    build: "2026-07-status-3",
+    build: "2026-07-status-4",
     stripeConfigure: isStripeEnabled(),
     paiementLibre: isPaiementLibre(),
     paiementActif: paiementActif(),
@@ -35,8 +35,11 @@ export async function GET(req: Request) {
       hostVu: smtp?.host ?? Boolean((process.env.SMTP_HOST ?? "").trim()),
       portVu: smtp?.port ?? Boolean((process.env.SMTP_PORT ?? "").trim()),
       userVu: smtp?.user ?? Boolean((process.env.SMTP_USER ?? "").trim()),
-      passPresent: Boolean((process.env.SMTP_PASS ?? "").trim()),
-      passLongueur: (process.env.SMTP_PASS ?? "").replace(/\s+/g, "").trim().length,
+      passPresent: Boolean(smtp?.pass),
+      passLongueur: smtp?.pass.length ?? 0,
+      // Noms des variables liées au mail réellement reçues par le serveur
+      // (JAMAIS les valeurs) — révèle les fautes de frappe invisibles.
+      nomsVus: nomsSmtpVus(),
     },
   };
 
