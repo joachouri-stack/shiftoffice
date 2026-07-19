@@ -16,11 +16,22 @@ import { getResend } from "./resend";
  * les blocs « Recevoir par email » restent masqués).
  */
 
-function smtpConfig() {
-  const host = (process.env.SMTP_HOST ?? "").trim();
-  const user = (process.env.SMTP_USER ?? "").trim();
-  const pass = (process.env.SMTP_PASS ?? "").trim();
-  const port = Number(process.env.SMTP_PORT ?? "465") || 465;
+/**
+ * Nettoie une valeur collée dans l'environnement : espaces, `=` en trop
+ * (saisie « KEY==valeur ») et guillemets d'encadrement.
+ */
+function clean(raw: string | undefined): string {
+  return (raw ?? "").trim().replace(/^[='"]+/, "").replace(/['"]+$/, "");
+}
+
+export function smtpConfig() {
+  const host = clean(process.env.SMTP_HOST).toLowerCase();
+  const user = clean(process.env.SMTP_USER);
+  // Les mots de passe d'application Gmail sont affichés avec des espaces
+  // (« abcd efgh ijkl mnop ») : on les retire, aucun mot de passe SMTP
+  // valide n'en contient.
+  const pass = clean(process.env.SMTP_PASS).replace(/\s+/g, "");
+  const port = Number(clean(process.env.SMTP_PORT) || "465") || 465;
   if (!host || !user || !pass) return null;
   return { host, port, user, pass };
 }
@@ -44,7 +55,7 @@ export function isValidEmail(email: string): boolean {
 let cachedTransport: Transporter | null = null;
 let cachedKey = "";
 
-function getTransport(): Transporter | null {
+export function getTransport(): Transporter | null {
   const smtp = smtpConfig();
   if (!smtp) return null;
   const key = `${smtp.host}:${smtp.port}:${smtp.user}`;
