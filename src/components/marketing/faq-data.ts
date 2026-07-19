@@ -30,6 +30,6 @@ export const FAQ = [
   },
   {
     q: "Puis-je obtenir un remboursement ?",
-    a: "Si votre PDF est défaillant ou illisible, nous le remboursons intégralement sur simple demande à info@shiftoffice.fr, sous 14 jours.",
+    a: "Si votre PDF est défaillant ou illisible, nous le remboursons intégralement sur simple demande à johaneshift@gmail.com, sous 14 jours.",
   },
 ];

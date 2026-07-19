@@ -41,7 +41,7 @@ export default function MentionsLegalesPage() {
             (franchise en base de TVA)
           </li>
           <li>
-            E-mail : <strong>info@shiftoffice.fr</strong>
+            E-mail : <strong>johaneshift@gmail.com</strong>
           </li>
           <li>
             Téléphone : <strong>07 69 01 02 02</strong>
@@ -97,7 +97,7 @@ export default function MentionsLegalesPage() {
       <LegalSection n={6} title="Contact">
         <p>
           Pour toute question, vous pouvez nous écrire à{" "}
-          <strong>info@shiftoffice.fr</strong>.
+          <strong>johaneshift@gmail.com</strong>.
         </p>
       </LegalSection>
     </LegalPage>

@@ -5,11 +5,11 @@ import { getResend } from "./resend";
  * Envoi d'email unifié.
  *
  * Deux transports possibles, dans cet ordre de priorité :
- *  1. SMTP (boîte Hostinger info@shiftoffice.fr) — variables d'environnement :
- *       SMTP_HOST=smtp.hostinger.com
+ *  1. SMTP — variables d'environnement (Gmail : mot de passe d'application) :
+ *       SMTP_HOST=smtp.gmail.com        (ou smtp.hostinger.com…)
  *       SMTP_PORT=465
- *       SMTP_USER=info@shiftoffice.fr
- *       SMTP_PASS=le mot de passe de la boîte
+ *       SMTP_USER=adresse d'envoi
+ *       SMTP_PASS=mot de passe SMTP de la boîte
  *  2. Resend (RESEND_API_KEY) — conservé en secours.
  *
  * Sans configuration, l'email est simplement désactivé (le site fonctionne,

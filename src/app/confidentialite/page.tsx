@@ -13,7 +13,7 @@ export default function ConfidentialitePage() {
         <p>
           Le responsable du traitement des données personnelles collectées sur{" "}
           <strong>shiftoffice.fr</strong> est <strong>Shift Office</strong>,
-          joignable à l&apos;adresse <strong>info@shiftoffice.fr</strong>.
+          joignable à l&apos;adresse <strong>johaneshift@gmail.com</strong>.
         </p>
         <p>
           Cas particulier : lorsque vous saisissez des informations concernant
@@ -142,7 +142,7 @@ export default function ConfidentialitePage() {
           Libertés&nbsp;», vous disposez d&apos;un droit d&apos;accès, de
           rectification, d&apos;effacement, de limitation, d&apos;opposition et
           de portabilité de vos données. Vous pouvez exercer ces droits en nous
-          écrivant à <strong>info@shiftoffice.fr</strong>. Vous avez également
+          écrivant à <strong>johaneshift@gmail.com</strong>. Vous avez également
           le droit d&apos;introduire une réclamation auprès de la CNIL
           (www.cnil.fr).
         </p>

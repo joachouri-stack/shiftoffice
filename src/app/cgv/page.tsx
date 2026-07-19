@@ -78,7 +78,7 @@ export default function CgvPage() {
           immédiatement après la confirmation du paiement. Aucun envoi postal
           n&apos;est effectué. En cas de difficulté de téléchargement, le client
           peut nous contacter à{" "}
-          <strong>info@shiftoffice.fr</strong>.
+          <strong>johaneshift@gmail.com</strong>.
         </p>
       </LegalSection>
 
@@ -111,7 +111,7 @@ export default function CgvPage() {
           être accordé en cas de problème technique ayant empêché la génération
           ou le téléchargement du document commandé et payé, après prise de
           contact avec notre support. La demande doit être adressée à{" "}
-          <strong>info@shiftoffice.fr</strong> dans un délai de 14 jours.
+          <strong>johaneshift@gmail.com</strong> dans un délai de 14 jours.
         </p>
       </LegalSection>
 
