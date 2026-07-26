@@ -36,7 +36,7 @@ import { isSupabaseEnabled } from "@/lib/supabase/config";
 import { createClient } from "@/lib/supabase/client";
 
 const FIELD =
-  "border-or/30 bg-white text-noir placeholder:text-gris/50 focus:border-or focus:ring-or/15 h-11 w-full rounded-lg border px-3.5 text-sm outline-none transition-all focus:ring-4";
+  "border-or/30 bg-white text-noir placeholder:text-gris/50 focus:border-or focus:ring-or/25 h-11 w-full rounded-lg border px-3.5 text-sm outline-none transition-all focus:ring-4";
 
 /** Documents générables pour un salarié donné (préremplis via ?s=id). */
 const SALARIE_DOCS = [

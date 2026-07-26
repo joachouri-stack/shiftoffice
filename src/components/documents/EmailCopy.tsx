@@ -83,7 +83,7 @@ export function EmailCopy({
             if (state === "error") setState("idle");
           }}
           placeholder="votre@email.fr"
-          className="border-or/30 bg-white text-noir placeholder:text-gris/50 focus:border-or focus:ring-or/15 h-11 flex-1 rounded-lg border px-3.5 text-sm outline-none transition-all focus:ring-4"
+          className="border-or/30 bg-white text-noir placeholder:text-gris/50 focus:border-or focus:ring-or/25 h-11 flex-1 rounded-lg border px-3.5 text-sm outline-none transition-all focus:ring-4"
         />
         <button
           type="button"

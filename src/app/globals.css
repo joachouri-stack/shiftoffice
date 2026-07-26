@@ -41,6 +41,13 @@
     color: var(--color-noir);
     -webkit-font-smoothing: antialiased;
   }
+  /* Curseur de saisie (caret) bien visible dans tous les champs, PC et mobile */
+  input,
+  textarea,
+  select,
+  [contenteditable="true"] {
+    caret-color: var(--color-orange);
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {

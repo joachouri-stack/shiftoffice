@@ -5,7 +5,7 @@ import { addSalarie, deleteSalarie } from "./actions";
 export const dynamic = "force-dynamic";
 
 const FIELD =
-  "border-or/30 bg-white text-noir placeholder:text-gris/50 focus:border-or focus:ring-or/15 h-11 w-full rounded-lg border px-3.5 text-sm outline-none transition-all focus:ring-4";
+  "border-or/30 bg-white text-noir placeholder:text-gris/50 focus:border-or focus:ring-or/25 h-11 w-full rounded-lg border px-3.5 text-sm outline-none transition-all focus:ring-4";
 
 type Salarie = {
   id: string;

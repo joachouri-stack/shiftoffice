@@ -11,7 +11,7 @@ import {
 } from "@/lib/local/store";
 
 export const FIELD =
-  "border-or/30 bg-white text-noir placeholder:text-gris/50 focus:border-or focus:ring-or/15 h-12 w-full rounded-lg border px-3.5 text-base outline-none transition-all focus:ring-4";
+  "border-or/30 bg-white text-noir placeholder:text-gris/50 focus:border-or focus:ring-or/25 h-12 w-full rounded-lg border px-3.5 text-base outline-none transition-all focus:ring-4";
 
 /* ───────────── Barre de progression ───────────── */
 export function ProgressBar({
