@@ -9,12 +9,17 @@ type Mode = "login" | "signup";
 function messageFr(raw: string): string {
   const m = raw.toLowerCase();
   if (m.includes("invalid login")) return "Email ou mot de passe incorrect.";
+  if (m.includes("not confirmed"))
+    return "Email non confirmé : cliquez le lien reçu par email (regardez les spams).";
+  if (m.includes("rate limit") || m.includes("too many") || m.includes("security purposes"))
+    return "Trop de tentatives — patientez quelques minutes puis réessayez.";
   if (m.includes("already registered") || m.includes("already been registered"))
     return "Un compte existe déjà avec cet email. Connectez-vous.";
   if (m.includes("password") && m.includes("6"))
     return "Le mot de passe doit faire au moins 6 caractères.";
-  if (m.includes("email")) return "Adresse email invalide.";
-  return "Une erreur est survenue. Réessayez.";
+  if (m.includes("invalid") && m.includes("email")) return "Adresse email invalide.";
+  // Cause inattendue : on l'affiche pour pouvoir diagnostiquer.
+  return `Une erreur est survenue (${raw}). Réessayez.`;
 }
 
 export function EmailPasswordForm() {
