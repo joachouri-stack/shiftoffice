@@ -14,7 +14,7 @@ import { getUser } from "@/lib/supabase/auth";
 function listeEmailsGratuits(): string[] {
   return (process.env.EMAILS_GRATUITS ?? "")
     .split(/[,;\s]+/)
-    .map((e) => e.trim().toLowerCase())
+    .map((e) => e.trim().replace(/^[='"]+/, "").replace(/['"]+$/, "").toLowerCase())
     .filter((e) => e.includes("@"));
 }
 
